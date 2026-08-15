@@ -45,7 +45,7 @@ npm install
 npm run dev        # Dev-Server (http://localhost:5173)
 npm run build      # Typecheck + Produktions-Build nach dist/
 npm run preview    # Build lokal ansehen
-npm run test       # Vitest (63 Tests)
+npm run test       # Vitest (70 Tests)
 npm run typecheck  # vue-tsc --noEmit
 npm run format     # Prettier
 ```
@@ -96,12 +96,13 @@ scp KodiniSans-Regular.woff2 root@server:/var/www/kodinitools.com/public/fonts/
 
 | Datei | Ergebnis |
 |---|---|
-| `KodiniSans-Regular.woff2` | Kodini Sans, 400 normal |
-| `KodiniSans-Bold.woff2` | Kodini Sans, 700 normal |
-| `KodiniSans-BoldItalic.woff2` | Kodini Sans, 700 kursiv |
-| `Open_Sans-600.woff2` | Open Sans, 600 normal |
-| `Roboto-VariableFont_wght.ttf` | Roboto, 100–900 |
-| `KodiniBrand.woff2` | Kodini Brand, 400 normal |
+| `Switzer-Regular.woff2` | Switzer, 400 normal |
+| `Switzer-Bold.woff2` | Switzer, 700 normal |
+| `Switzer-BoldItalic.woff2` | Switzer, 700 kursiv |
+| `ClashDisplay-Regular.woff2` | Clash Display, 400 normal |
+| `Hind-SemiBold.woff2` | Hind, 600 normal |
+| `Ranade-Variable.woff2` | Ranade, 100–900 |
+| `Tanker-Regular.woff2` | Tanker, 400 normal |
 
 Erkannt werden `thin`, `extralight`, `light`, `regular`, `medium`, `semibold`, `bold`,
 `extrabold`, `black` (auch numerisch: `-300`), dazu `italic`/`oblique` und `VariableFont`.
@@ -112,8 +113,13 @@ Weitere Eigenschaften:
 
 - **Formate**: `woff2` (empfohlen), `woff`, `ttf`, `otf`. Liegt derselbe Schnitt mehrfach vor,
   gewinnt das modernste Format – der Browser laedt nur eine Datei.
-- **Geladen wird erst bei Auswahl.** Solange niemand eine eigene Schrift waehlt, macht der
-  Editor weiterhin **null Netzwerkaufrufe**.
+- **Geladen wird erst bei Auswahl, und dann nur eine Datei.** Alle Schnitte werden beim
+  Browser angemeldet, geholt wird aber nur der eine, den das Textfeld darstellt (400 normal).
+  Switzer bringt 20 Schnitte mit -- der Browser laedt genau `Switzer-Regular.woff2`.
+  Solange niemand eine eigene Schrift waehlt, macht der Editor **null Netzwerkaufrufe**.
+- **Variable Fonts**: Liegt neben `X-Variable.woff2` auch ein `X-Regular.woff2`, gewinnt die
+  statische Datei (kleiner, und sonst waere nicht definiert, welche greift). Fehlt das Regular
+  -- wie bei Ranade --, uebernimmt der Variable Font.
 - **Faellt das Laden aus**, greift der Fallback-Stack – der Text bleibt lesbar.
 - **Dateinamen** duerfen Buchstaben, Ziffern und `. _ - ,` enthalten. Alles andere (Umlaute,
   Leerzeichen, Anfuehrungszeichen) wird uebersprungen und beim Deploy als Warnung genannt.

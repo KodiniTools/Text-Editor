@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  dropRedundantVariableFaces,
   fontExtension,
   groupFontFiles,
   parseFontFileName,
@@ -139,5 +140,91 @@ describe('sortByFormatPreference', () => {
       'a.ttf',
       'a.otf',
     ])
+  })
+})
+
+describe('dropRedundantVariableFaces', () => {
+  it('verwirft den Variable Font, wenn eine statische 400er-Datei da ist', () => {
+    // Switzer: beide passen auf 400/normal -- sonst waere unklar, welche greift.
+    const kept = dropRedundantVariableFaces([
+      { file: 'Switzer-Regular.woff2', weight: '400', style: 'normal' },
+      { file: 'Switzer-Variable.woff2', weight: '100 900', style: 'normal' },
+      { file: 'Switzer-Bold.woff2', weight: '700', style: 'normal' },
+    ])
+    expect(kept.map((f) => f.file)).toEqual(['Switzer-Regular.woff2', 'Switzer-Bold.woff2'])
+  })
+
+  it('behaelt den Variable Font, wenn keine 400er-Datei existiert', () => {
+    // Ranade hat kein Regular -- ohne den Variable Font gaebe es kein 400.
+    const kept = dropRedundantVariableFaces([
+      { file: 'Ranade-Medium.woff2', weight: '500', style: 'normal' },
+      { file: 'Ranade-Variable.woff2', weight: '100 900', style: 'normal' },
+    ])
+    expect(kept.map((f) => f.file)).toContain('Ranade-Variable.woff2')
+  })
+
+  it('betrachtet Kursiv getrennt', () => {
+    // Italic 400 vorhanden -> VariableItalic weg; normal 400 fehlt -> Variable bleibt.
+    const kept = dropRedundantVariableFaces([
+      { file: 'Ranade-Italic.woff2', weight: '400', style: 'italic' },
+      { file: 'Ranade-VariableItalic.woff2', weight: '100 900', style: 'italic' },
+      { file: 'Ranade-Variable.woff2', weight: '100 900', style: 'normal' },
+    ])
+    expect(kept.map((f) => f.file)).toEqual(['Ranade-Italic.woff2', 'Ranade-Variable.woff2'])
+  })
+})
+
+describe('echter Ordnerinhalt (Fontshare)', () => {
+  const FILES =
+    `Alpino-Black Alpino-Bold Alpino-Light Alpino-Medium Alpino-Regular Alpino-Thin Alpino-Variable
+    Author-Bold Author-BoldItalic Author-Extralight Author-ExtralightItalic Author-Italic Author-Light
+    Author-LightItalic Author-Medium Author-MediumItalic Author-Regular Author-Semibold Author-SemiboldItalic
+    Author-Variable Author-VariableItalic Chillax-Regular Chillax-Variable ClashDisplay-Regular
+    ClashDisplay-Variable GeneralSans-Regular GeneralSans-Variable Hind-Regular Hind-SemiBold Hind-Variable
+    Ranade-Bold Ranade-BoldItalic Ranade-Italic Ranade-Medium Ranade-MediumItalic Ranade-ThinItalic
+    Ranade-Variable Ranade-VariableItalic Satoshi-Regular Satoshi-Variable Supreme-Extrabold Supreme-Regular
+    Switzer-Regular Switzer-Variable Tanker-Regular Telma-Regular Zodiak-Regular Zodiak-Variable`
+      .split(/\s+/)
+      .map((n) => `${n}.woff2`)
+
+  const groups = groupFontFiles(FILES)
+
+  it('erkennt jede Familie genau einmal', () => {
+    expect(groups.map((g) => g.label)).toEqual([
+      'Alpino',
+      'Author',
+      'Chillax',
+      'Clash Display',
+      'General Sans',
+      'Hind',
+      'Ranade',
+      'Satoshi',
+      'Supreme',
+      'Switzer',
+      'Tanker',
+      'Telma',
+      'Zodiak',
+    ])
+  })
+
+  it('hat fuer jede Familie einen darstellbaren 400er-Schnitt', () => {
+    for (const g of groups) {
+      const passt = g.files.some(
+        (f) => f.style === 'normal' && (f.weight === '400' || f.weight.includes(' ')),
+      )
+      expect(passt, `${g.label} hat keinen Schnitt fuer 400/normal`).toBe(true)
+    }
+  })
+
+  it('laesst pro Familie und Schnitt nur eine Datei uebrig', () => {
+    for (const g of groups) {
+      const keys = g.files.map((f) => `${f.weight}/${f.style}`)
+      expect(new Set(keys).size, `${g.label} hat doppelte Schnitte`).toBe(keys.length)
+    }
+  })
+
+  it('erkennt Hind-SemiBold trotz Binnenmajuskel', () => {
+    const hind = groups.find((g) => g.label === 'Hind')!
+    expect(hind.files.some((f) => f.weight === '600')).toBe(true)
   })
 })
