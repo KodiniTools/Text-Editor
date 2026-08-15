@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import type { Transform } from '@/utils/textTransforms'
 import { buildSearchRegex, countMatches as countInText, type FindOptions } from '@/utils/find'
-import { pageAspect } from '@/utils/pageFormats'
+import { pageDimensions } from '@/utils/pageFormats'
+import { DEFAULT_MARGIN_MM, mmToPx, pageCount } from '@/utils/renderPages'
 import { useI18n } from '@/i18n'
 
 const store = useEditorStore()
@@ -30,53 +31,95 @@ const editorStyle = computed(() => ({
 }))
 
 /* ---------- Seiten-Ansicht (A4/A3/...) ---------- */
+/**
+ * In der Seiten-Ansicht ist das Textfeld exakt so breit wie der Textbereich der
+ * Exportseite (Papierbreite minus Rand, in px bei 96 dpi). Bei identischer
+ * Schriftgroesse, Laufweite und Umbruch-Regel bricht der Editor damit an genau
+ * denselben Stellen um wie die spaeter gespeicherte/gedruckte Datei. Der
+ * Zoom-Regler skaliert nur die Darstellung (CSS-Transform) und aendert den
+ * Umbruch nicht.
+ */
 const host = ref<HTMLElement | null>(null)
-const sheetSize = ref<{ w: number; h: number } | null>(null)
+const textHeight = ref(0)
 
 const pageActive = computed(() => store.settings.pageFormat !== 'none')
-const aspect = computed(() => pageAspect(store.settings.pageFormat, store.settings.pageOrientation))
+const zoom = computed(() => store.settings.pageZoom)
 
-/**
- * Blattgroesse in px, so dass die Seite mit korrektem Seitenverhaeltnis in den
- * verfuegbaren Bereich passt (fuer Hoch- wie Querformat). Ueber einen
- * ResizeObserver an die Fenstergroesse gekoppelt.
- */
-function recomputeSheet(): void {
-  if (!pageActive.value || !host.value || !aspect.value) {
-    sheetSize.value = null
-    return
-  }
-  const pad = 32 // Rand des grauen Hintergrunds (1rem je Seite)
-  const availW = host.value.clientWidth - pad
-  const availH = host.value.clientHeight - pad
-  if (availW <= 0 || availH <= 0) return
-  const a = aspect.value
-  let w: number
-  let h: number
-  if (availW / availH > a) {
-    h = availH
-    w = h * a
-  } else {
-    w = availW
-    h = w / a
-  }
-  sheetSize.value = { w: Math.max(80, Math.floor(w)), h: Math.max(80, Math.floor(h)) }
-}
+/** Seitenmasse in px (96 dpi) -- dieselbe Umrechnung wie im Export. */
+const metrics = computed(() => {
+  const dims = pageDimensions(store.settings.pageFormat, store.settings.pageOrientation)
+  if (!dims) return null
+  const pageW = Math.round(mmToPx(dims.widthMm))
+  const pageH = Math.round(mmToPx(dims.heightMm))
+  const margin = Math.round(mmToPx(DEFAULT_MARGIN_MM))
+  return { pageW, pageH, margin, contentW: pageW - 2 * margin, contentH: pageH - 2 * margin }
+})
 
-const sheetStyle = computed(() =>
-  sheetSize.value ? { width: `${sheetSize.value.w}px`, height: `${sheetSize.value.h}px` } : {},
+/** Blatthoehe = Rand oben/unten + mitwachsende Texthoehe (mind. eine Seite). */
+const sheetHeight = computed(() => {
+  const m = metrics.value
+  if (!m) return 0
+  return 2 * m.margin + Math.max(m.contentH, textHeight.value)
+})
+
+/** Aeussere (skalierte) Masse -- damit der graue Bereich korrekt scrollt. */
+const canvasStyle = computed(() =>
+  metrics.value
+    ? {
+        width: `${metrics.value.pageW * zoom.value}px`,
+        height: `${sheetHeight.value * zoom.value}px`,
+      }
+    : undefined,
 )
 
-let resizeObserver: ResizeObserver | null = null
-onMounted(() => {
-  if (typeof ResizeObserver !== 'undefined') {
-    resizeObserver = new ResizeObserver(recomputeSheet)
-    if (host.value) resizeObserver.observe(host.value)
-  }
-  recomputeSheet()
+const sheetStyle = computed(() =>
+  metrics.value
+    ? {
+        width: `${metrics.value.pageW}px`,
+        padding: `${metrics.value.margin}px`,
+        transform: `scale(${zoom.value})`,
+        transformOrigin: 'top left',
+      }
+    : undefined,
+)
+
+const textStyle = computed(() =>
+  pageActive.value ? { height: `${textHeight.value}px` } : undefined,
+)
+
+/** Fuehrungslinien dort, wo im Export eine neue Seite beginnt. */
+const pageBreaks = computed<number[]>(() => {
+  const m = metrics.value
+  if (!m || !pageActive.value) return []
+  const n = pageCount(Math.max(m.contentH, textHeight.value), m.contentH)
+  const lines: number[] = []
+  for (let k = 1; k < n; k++) lines.push(m.margin + k * m.contentH)
+  return lines
 })
-onBeforeUnmount(() => resizeObserver?.disconnect())
-watch([pageActive, aspect], () => nextTick(recomputeSheet))
+
+/** Textfeldhoehe an den Inhalt anpassen (Textareas wachsen nicht von selbst). */
+function syncHeight(): void {
+  const el = textarea.value
+  if (!el || !pageActive.value) return
+  el.style.height = 'auto'
+  textHeight.value = el.scrollHeight
+  el.style.height = `${el.scrollHeight}px`
+}
+
+onMounted(() => nextTick(syncHeight))
+watch(content, () => nextTick(syncHeight))
+watch(
+  () => [
+    pageActive.value,
+    metrics.value?.contentW,
+    store.settings.fontSize,
+    store.settings.lineHeight,
+    store.settings.letterSpacing,
+    store.settings.fontFamily,
+    store.settings.wordWrap,
+  ],
+  () => nextTick(syncHeight),
+)
 
 /* ---------- Cursor-Position ---------- */
 function reportCursor(): void {
@@ -235,24 +278,35 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="host" class="flex h-full min-h-0 w-full" :class="pageActive ? 'page-backdrop' : ''">
-    <div
-      class="flex min-h-0"
-      :class="pageActive ? 'page-sheet' : 'h-full w-full'"
-      :style="pageActive ? sheetStyle : undefined"
-    >
-      <textarea
-        ref="textarea"
-        v-model="content"
-        class="editor-text min-h-0 w-full flex-1 resize-none bg-transparent px-6 py-5 outline-none placeholder:text-zinc-400"
-        :style="editorStyle"
-        spellcheck="true"
-        :placeholder="t.editor.placeholder"
-        @keydown.tab="onTab"
-        @keyup="reportCursor"
-        @click="reportCursor"
-        @select="reportCursor"
-      />
+  <div ref="host" :class="pageActive ? 'page-backdrop' : 'flex h-full min-h-0 w-full'">
+    <!-- Aeusserer Rahmen: haelt (in der Seiten-Ansicht) die skalierte Groesse,
+         damit der graue Bereich korrekt scrollt. -->
+    <div :class="pageActive ? 'page-canvas' : 'flex h-full min-h-0 w-full'" :style="canvasStyle">
+      <div :class="pageActive ? 'page-sheet' : 'flex h-full min-h-0 w-full'" :style="sheetStyle">
+        <!-- Seitenumbruch-Markierungen an den Stellen der Export-Seiten. -->
+        <div
+          v-for="(y, i) in pageBreaks"
+          :key="i"
+          class="page-break-guide"
+          :style="{ top: `${y}px` }"
+          aria-hidden="true"
+        />
+        <textarea
+          ref="textarea"
+          v-model="content"
+          class="editor-text resize-none bg-transparent outline-none placeholder:text-zinc-400"
+          :class="
+            pageActive ? 'relative block w-full overflow-hidden' : 'min-h-0 w-full flex-1 px-6 py-5'
+          "
+          :style="[editorStyle, textStyle]"
+          spellcheck="true"
+          :placeholder="t.editor.placeholder"
+          @keydown.tab="onTab"
+          @keyup="reportCursor"
+          @click="reportCursor"
+          @select="reportCursor"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -268,11 +322,17 @@ defineExpose({
   text-align: var(--editor-align);
   /* Ohne eigene Textfarbe greift der Wert aus den Tailwind-Klassen. */
   color: var(--editor-color, inherit);
+  /* Umbruch-Regeln wie im Export (renderPages), damit die Zeilen an denselben
+     Stellen brechen. */
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
-/* Grauer Hintergrund, auf dem das Blatt zentriert schwebt. */
+/* Grauer Hintergrund, auf dem das Blatt schwebt (oben ausgerichtet, damit lange
+   Dokumente von oben nach unten gescrollt werden). */
 .page-backdrop {
-  align-items: center;
+  display: flex;
+  align-items: flex-start;
   justify-content: center;
   overflow: auto;
   padding: 1rem;
@@ -282,15 +342,36 @@ defineExpose({
   background: rgb(9 9 11); /* zinc-950 */
 }
 
-/* Das "Blatt": weiss/dunkel je Theme, mit Schatten. Groesse kommt aus dem Style. */
-.page-sheet {
+/* Aeusserer Rahmen: nimmt die skalierte Groesse ein, damit korrekt gescrollt
+   wird (der Zoom skaliert das Blatt per CSS-Transform). */
+.page-canvas {
+  position: relative;
   flex: 0 0 auto;
+}
+
+/* Das "Blatt": weiss/dunkel je Theme, mit Schatten. Breite = echte Seitenbreite;
+   die Hoehe waechst mit dem Inhalt. */
+.page-sheet {
+  position: relative;
+  box-sizing: border-box;
   background: #ffffff;
   box-shadow: 0 4px 24px rgb(0 0 0 / 0.18);
   border-radius: 2px;
-  overflow: hidden;
 }
 :global(.dark) .page-sheet {
   background: rgb(24 24 27); /* zinc-900 */
+}
+
+/* Markierung, wo im Export eine neue Seite beginnt. */
+.page-break-guide {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed rgb(161 161 170); /* zinc-400 */
+  pointer-events: none;
+}
+:global(.dark) .page-break-guide {
+  border-top-color: rgb(82 82 91); /* zinc-600 */
 }
 </style>

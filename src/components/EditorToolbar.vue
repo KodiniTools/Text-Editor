@@ -15,6 +15,7 @@ const emit = defineEmits<{
   toggleFind: []
   print: []
   exportPdf: []
+  preview: []
 }>()
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -156,13 +157,7 @@ defineExpose({ download, copyAll, triggerImport })
 
     <span class="mx-1 h-5 w-px bg-zinc-200 dark:bg-zinc-700" />
 
-    <button
-      type="button"
-      class="tb-btn"
-      :class="store.settings.showPreview ? 'text-accent' : ''"
-      :title="t.toolbar.previewTitle"
-      @click="store.updateSettings({ showPreview: !store.settings.showPreview })"
-    >
+    <button type="button" class="tb-btn" :title="t.toolbar.previewTitle" @click="emit('preview')">
       {{ t.toolbar.preview }}
     </button>
     <button

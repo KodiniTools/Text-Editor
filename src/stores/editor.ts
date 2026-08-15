@@ -35,6 +35,8 @@ export interface EditorSettings {
   /** Papierformat der Seiten-Ansicht ('none' = bildschirmfuellend). */
   pageFormat: PageFormatId
   pageOrientation: PageOrientation
+  /** Zoom der Seiten-Ansicht (1 = 100 %). Nur Darstellung, nicht im Export. */
+  pageZoom: number
   showPreview: boolean
   showFormatBar: boolean
   focusMode: boolean
@@ -46,6 +48,7 @@ export const LIMITS = {
   fontSize: { min: 10, max: 42, step: 1 },
   lineHeight: { min: 1, max: 3, step: 0.1 },
   letterSpacing: { min: -1, max: 8, step: 0.1 },
+  zoom: { min: 0.5, max: 2, step: 0.1 },
 } as const
 
 /** Die Darstellungs-Einstellungen, die per Undo/Redo erfasst werden. */
@@ -103,6 +106,7 @@ export const DEFAULT_SETTINGS: EditorSettings = {
   wordWrap: true,
   pageFormat: 'none',
   pageOrientation: 'portrait',
+  pageZoom: 1,
   showPreview: false,
   showFormatBar: true,
   focusMode: false,
@@ -158,6 +162,7 @@ export function normalizeSettings(raw: Partial<EditorSettings>): EditorSettings 
     pageOrientation: isOrientation(s.pageOrientation)
       ? s.pageOrientation
       : DEFAULT_SETTINGS.pageOrientation,
+    pageZoom: clamp(s.pageZoom, LIMITS.zoom.min, LIMITS.zoom.max, DEFAULT_SETTINGS.pageZoom),
   }
 }
 
@@ -485,6 +490,20 @@ export const useEditorStore = defineStore('editor', () => {
   watch(activeId, (id) => localStorage.setItem(STORAGE_ACTIVE, id))
   watch(settings, (s) => localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(s)), { deep: true })
 
+  /**
+   * Schreibt den aktuellen Stand sofort in den localStorage. Wird gebraucht,
+   * bevor die Vorschau in einem neuen Tab geoeffnet wird: der neue Tab liest
+   * Dokumente und Einstellungen beim Start aus dem localStorage, deshalb muss
+   * der zuletzt getippte Stand dort schon liegen (die Watcher schreiben zwar
+   * ohnehin, aber erst nach dem naechsten Tick).
+   */
+  function persistNow(): void {
+    flushPending()
+    localStorage.setItem(STORAGE_DOCS, JSON.stringify(documents.value))
+    localStorage.setItem(STORAGE_ACTIVE, activeId.value)
+    localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings))
+  }
+
   return {
     documents,
     settings,
@@ -504,5 +523,6 @@ export const useEditorStore = defineStore('editor', () => {
     closeDocument,
     updateSettings,
     resetFormatting,
+    persistNow,
   }
 })

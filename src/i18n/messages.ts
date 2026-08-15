@@ -30,7 +30,7 @@ export const de = {
     find: 'Suchen',
     findTitle: 'Suchen & Ersetzen (Strg+F)',
     preview: 'Vorschau',
-    previewTitle: 'Markdown-Vorschau',
+    previewTitle: 'Exakte Vorschau in neuem Tab oeffnen',
     focus: 'Fokus',
     focusTitle: 'Fokus-Modus',
     format: 'Format',
@@ -106,6 +106,9 @@ export const de = {
     orientationPortrait: 'Hochformat',
     orientationLandscape: 'Querformat',
     pageDefaultHint: '(Standard)',
+    zoom: 'Zoom',
+    zoomTitle: 'Zoom der Seiten-Ansicht',
+    zoomReset: 'Zoom auf 100 % zuruecksetzen',
   },
   stepper: {
     decrease: (label: string): string => `${label} verkleinern`,
@@ -113,6 +116,13 @@ export const de = {
   },
   focusOverlay: {
     exit: 'Fokus beenden',
+  },
+  previewView: {
+    title: 'Vorschau',
+    subtitle: 'So wird die Datei gespeichert und gedruckt',
+    print: 'Drucken',
+    back: 'Zum Editor',
+    empty: 'Kein Dokument gefunden. Bitte im Editor-Tab schreiben.',
   },
   transformMenu: {
     hint: 'Wird auf Auswahl oder ganzen Text angewendet',
@@ -203,7 +213,7 @@ export const en: Messages = {
     find: 'Find',
     findTitle: 'Find & Replace (Ctrl+F)',
     preview: 'Preview',
-    previewTitle: 'Markdown preview',
+    previewTitle: 'Open exact preview in a new tab',
     focus: 'Focus',
     focusTitle: 'Focus mode',
     format: 'Format',
@@ -278,6 +288,9 @@ export const en: Messages = {
     orientationPortrait: 'Portrait',
     orientationLandscape: 'Landscape',
     pageDefaultHint: '(default)',
+    zoom: 'Zoom',
+    zoomTitle: 'Zoom of the page view',
+    zoomReset: 'Reset zoom to 100%',
   },
   stepper: {
     decrease: (label: string): string => `Decrease ${label.toLowerCase()}`,
@@ -285,6 +298,13 @@ export const en: Messages = {
   },
   focusOverlay: {
     exit: 'Exit focus',
+  },
+  previewView: {
+    title: 'Preview',
+    subtitle: 'This is how the file is saved and printed',
+    print: 'Print',
+    back: 'To editor',
+    empty: 'No document found. Please write in the editor tab.',
   },
   transformMenu: {
     hint: 'Applies to selection or whole text',

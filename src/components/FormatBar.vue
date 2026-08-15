@@ -338,6 +338,33 @@ function setColor(value: string): void {
       </div>
     </div>
 
+    <!-- Zoom der Seiten-Ansicht (nur bei gewaehltem Format) -->
+    <div v-if="pageChosen" class="fb-group">
+      <span class="fb-label">{{ t.format.zoom }}</span>
+      <input
+        type="range"
+        class="zoom-range"
+        :min="LIMITS.zoom.min"
+        :max="LIMITS.zoom.max"
+        :step="LIMITS.zoom.step"
+        :value="store.settings.pageZoom"
+        :title="t.format.zoomTitle"
+        :aria-label="t.format.zoomTitle"
+        @input="
+          store.updateSettings({ pageZoom: Number(($event.target as HTMLInputElement).value) })
+        "
+      />
+      <button
+        type="button"
+        class="fb-label tabular-nums hover:text-accent"
+        :title="t.format.zoomReset"
+        :aria-label="t.format.zoomReset"
+        @click="store.updateSettings({ pageZoom: 1 })"
+      >
+        {{ Math.round(store.settings.pageZoom * 100) }}%
+      </button>
+    </div>
+
     <span class="fb-divider" />
 
     <!-- Zeilenumbruch -->
@@ -380,5 +407,8 @@ function setColor(value: string): void {
 }
 .seg-active {
   @apply border-accent bg-accent-soft text-accent dark:bg-zinc-700;
+}
+.zoom-range {
+  @apply h-1 w-24 cursor-pointer accent-[rgb(var(--accent))];
 }
 </style>
