@@ -76,9 +76,55 @@ tests/                        Vitest-Specs
 
 - **Akzentfarbe** anpassen: in `src/style.css` die CSS-Variable `--accent` (RGB-Tripel ohne Kommas)
   auf deine Markenfarbe setzen, ggf. `--accent-soft` fuer hell/dunkel.
-- **Deployment**: `npm run build` -> `dist/` per SCP/FileZilla auf den VPS, von Nginx als statische
-  Dateien ausliefern. Kein Node-Prozess/PM2 noetig (reine Client-App).
 - Passt zum Privacy-First-Ansatz: keinerlei Netzwerkaufrufe zur Laufzeit.
+
+## Deployment auf kodinitools.com
+
+Ziel-URL: **https://kodinitools.com/texteditor/** – Webroot: `/var/www/kodinitools.com/texteditor/`.
+Reine Client-App: **kein Node-Prozess, kein PM2, kein Port, kein Proxy** noetig.
+
+Der Unterpfad ist im Build fest verdrahtet (`base: '/texteditor/'` in `vite.config.ts`); der Router
+uebernimmt ihn automatisch via `import.meta.env.BASE_URL`. Ein Build fuer einen anderen Pfad
+erfordert also eine Anpassung von `base`.
+
+**1. Build erzeugen**
+
+```bash
+npm ci
+npm run build       # -> dist/  (index.html + assets/ mit Content-Hash)
+```
+
+**2. Dateien auf den Server**
+
+```bash
+# Inhalt von dist/ (nicht den Ordner selbst) nach /var/www/kodinitools.com/texteditor/
+rsync -av --delete dist/ user@server:/var/www/kodinitools.com/texteditor/
+sudo chown -R www-data:www-data /var/www/kodinitools.com/texteditor
+```
+
+`--delete` raeumt alte Assets mit veraltetem Hash weg. Alternativ per SCP/FileZilla hochladen.
+
+**3. Nginx**
+
+Den Block aus [`deploy/nginx-texteditor.conf`](deploy/nginx-texteditor.conf) in den
+`server`-Block von `/etc/nginx/sites-enabled/kodinitools.com` einfuegen, dann:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Der Block enthaelt: Redirect `/texteditor` -> `/texteditor/`, 1 Jahr `immutable`-Cache fuer
+`/texteditor/assets/` (Dateinamen sind gehasht) und SPA-Fallback auf `index.html`, damit
+History-Routen nicht 404en. `index.html` selbst wird bewusst nur 60 s gecacht, sonst zeigt der
+Browser nach einem Deploy weiter die alte Version.
+
+**4. Pruefen**
+
+```bash
+curl -I https://kodinitools.com/texteditor          # 301 -> /texteditor/
+curl -I https://kodinitools.com/texteditor/         # 200, Cache-Control: max-age=60
+curl -I https://kodinitools.com/texteditor/assets/  # 403/404 (kein Directory-Listing)
+```
 
 ## Bekannte Grenzen / Follow-ups
 
