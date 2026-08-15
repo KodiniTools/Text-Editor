@@ -1,6 +1,6 @@
 import { watch } from 'vue'
 import type { EditorSettings } from '@/stores/editor'
-import { findFont, loadFont } from '@/config/fonts'
+import { findFont, fontList, loadFont } from '@/config/fonts'
 
 /**
  * Spiegelt Design und Textdarstellung auf das <html>-Element.
@@ -43,6 +43,9 @@ export function useTheme(settings: EditorSettings) {
       settings.letterSpacing,
       settings.textColor,
       settings.textAlign,
+      // Schriften vom Server kommen nachtraeglich dazu: sobald die gespeicherte
+      // Auswahl darunter ist, muss der Stack neu gesetzt werden.
+      fontList.value.length,
     ],
     applyTypography,
     { immediate: true },

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { LIMITS, useEditorStore, type TextAlign, type ThemeMode } from '@/stores/editor'
-import { ALL_FONTS, findFont } from '@/config/fonts'
+import { findFont, fontList, isKnownFont } from '@/config/fonts'
 import NumberStepper from './NumberStepper.vue'
 
 const store = useEditorStore()
@@ -77,6 +77,11 @@ const colorInputValue = computed(() => store.settings.textColor || '#111827')
 
 const activeFontStack = computed(() => findFont(store.settings.fontFamily).stack)
 
+// Eine noch nicht geladene Schrift-ID wuerde das Auswahlfeld leer zeigen.
+const selectedFontId = computed(() =>
+  isKnownFont(store.settings.fontFamily) ? store.settings.fontFamily : 'sans',
+)
+
 function setColor(value: string): void {
   store.updateSettings({ textColor: value })
 }
@@ -91,12 +96,12 @@ function setColor(value: string): void {
       <span class="fb-label">Schrift</span>
       <select
         class="fb-select min-w-[8rem]"
-        :value="store.settings.fontFamily"
+        :value="selectedFontId"
         :style="{ fontFamily: activeFontStack }"
         title="Schriftart"
         @change="store.updateSettings({ fontFamily: ($event.target as HTMLSelectElement).value })"
       >
-        <option v-for="f in ALL_FONTS" :key="f.id" :value="f.id" :style="{ fontFamily: f.stack }">
+        <option v-for="f in fontList" :key="f.id" :value="f.id" :style="{ fontFamily: f.stack }">
           {{ f.label }}
         </option>
       </select>
