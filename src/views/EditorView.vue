@@ -131,7 +131,7 @@ useKeyboardShortcuts({
         @print="printDocument"
         @export-pdf="exportPdfDocument"
       />
-      <FormatBar v-if="store.settings.showFormatBar" />
+      <FormatBar />
     </template>
 
     <FindReplace v-if="showFind" ref="findRef" :editor="editorApi" @close="toggleFind" />

@@ -167,17 +167,6 @@ defineExpose({ download, copyAll, triggerImport })
       {{ t.toolbar.focus }}
     </button>
 
-    <button
-      type="button"
-      class="tb-btn ml-auto"
-      :class="store.settings.showFormatBar ? 'text-accent' : ''"
-      :aria-pressed="store.settings.showFormatBar"
-      :title="t.toolbar.formatTitle"
-      @click="store.updateSettings({ showFormatBar: !store.settings.showFormatBar })"
-    >
-      {{ t.toolbar.format }} {{ store.settings.showFormatBar ? '▴' : '▾' }}
-    </button>
-
     <input
       ref="fileInput"
       type="file"
