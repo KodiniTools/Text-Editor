@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   dropRedundantVariableFaces,
   fontExtension,
+  faceOrder,
   groupFontFiles,
   parseFontFileName,
   prettifyFamily,
   sortByFormatPreference,
+  weightLabel,
 } from '@/utils/fontFiles'
 
 describe('fontExtension', () => {
@@ -226,5 +228,44 @@ describe('echter Ordnerinhalt (Fontshare)', () => {
   it('erkennt Hind-SemiBold trotz Binnenmajuskel', () => {
     const hind = groups.find((g) => g.label === 'Hind')!
     expect(hind.files.some((f) => f.weight === '600')).toBe(true)
+  })
+})
+
+describe('weightLabel', () => {
+  it('benennt Gewicht und Stil', () => {
+    expect(weightLabel('400', 'normal')).toBe('Regular')
+    expect(weightLabel('700', 'normal')).toBe('Bold')
+    expect(weightLabel('300', 'normal')).toBe('Light')
+    expect(weightLabel('600', 'normal')).toBe('Semibold')
+    expect(weightLabel('200', 'normal')).toBe('Extralight')
+    expect(weightLabel('800', 'normal')).toBe('Extrabold')
+  })
+
+  it('verkuerzt Regular Italic zu Italic', () => {
+    expect(weightLabel('400', 'italic')).toBe('Italic')
+    expect(weightLabel('700', 'italic')).toBe('Bold Italic')
+  })
+
+  it('nennt Variable Fonts Variable', () => {
+    expect(weightLabel('100 900', 'normal')).toBe('Variable')
+    expect(weightLabel('100 900', 'italic')).toBe('Variable Italic')
+  })
+})
+
+describe('faceOrder', () => {
+  it('sortiert nach Gewicht, normal vor kursiv', () => {
+    const faces = [
+      { w: '700', s: 'normal' },
+      { w: '400', s: 'italic' },
+      { w: '400', s: 'normal' },
+      { w: '700', s: 'italic' },
+    ]
+    const sorted = [...faces].sort((a, b) => faceOrder(a.w, a.s) - faceOrder(b.w, b.s))
+    expect(sorted.map((f) => `${f.w}/${f.s}`)).toEqual([
+      '400/normal',
+      '400/italic',
+      '700/normal',
+      '700/italic',
+    ])
   })
 })

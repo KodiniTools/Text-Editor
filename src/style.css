@@ -9,6 +9,8 @@
 
   /* Textdarstellung - wird von useTheme aus den Settings gesetzt */
   --editor-font: ui-sans-serif, system-ui, sans-serif;
+  --editor-weight: 400;
+  --editor-style: normal;
   --editor-size: 16px;
   --editor-line-height: 1.7;
   --editor-letter-spacing: 0px;

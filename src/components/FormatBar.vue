@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { LIMITS, useEditorStore, type TextAlign, type ThemeMode } from '@/stores/editor'
-import { findFont, fontList, isKnownFont } from '@/config/fonts'
+import { findFont, fontList, isKnownFont, loadAllFonts, type EditorFont } from '@/config/fonts'
 import NumberStepper from './NumberStepper.vue'
 
 const store = useEditorStore()
@@ -75,12 +75,39 @@ const THEMES: { value: ThemeMode; label: string }[] = [
 /** Farbe fuer <input type="color">, das keinen leeren Wert kennt. */
 const colorInputValue = computed(() => store.settings.textColor || '#111827')
 
-const activeFontStack = computed(() => findFont(store.settings.fontFamily).stack)
+const activeFont = computed(() => findFont(store.settings.fontFamily))
 
 // Eine noch nicht geladene Schrift-ID wuerde das Auswahlfeld leer zeigen.
 const selectedFontId = computed(() =>
   isKnownFont(store.settings.fontFamily) ? store.settings.fontFamily : 'sans',
 )
+
+/** Systemschriften (ohne Familie) stehen vor den eigenen Schriften. */
+const systemFonts = computed(() => fontList.value.filter((f) => !f.group))
+
+/** Eigene Schriften nach Familie gruppiert -- eine <optgroup> je Familie. */
+const fontGroups = computed(() => {
+  const groups = new Map<string, EditorFont[]>()
+  for (const f of fontList.value) {
+    if (!f.group) continue
+    const list = groups.get(f.group)
+    if (list) list.push(f)
+    else groups.set(f.group, [f])
+  }
+  return [...groups.entries()].map(([name, fonts]) => ({ name, fonts }))
+})
+
+// Damit jeder Eintrag im aufgeklappten Menue in seiner eigenen Schrift steht,
+// muessen die Dateien geladen sein. Das native <select> zeichnet ein bereits
+// offenes Menue nicht neu -- deshalb schon beim Hovern/Fokussieren laden, nicht
+// erst beim Klick. Erst hier, nicht beim Seitenstart, damit die Startseite
+// ohne Schrift-Downloads auskommt.
+let previewsRequested = false
+function loadFontPreviews(): void {
+  if (previewsRequested) return
+  previewsRequested = true
+  loadAllFonts()
+}
 
 function setColor(value: string): void {
   store.updateSettings({ textColor: value })
@@ -95,15 +122,33 @@ function setColor(value: string): void {
     <label class="fb-group">
       <span class="fb-label">Schrift</span>
       <select
-        class="fb-select min-w-[8rem]"
+        class="fb-select min-w-[10rem]"
         :value="selectedFontId"
-        :style="{ fontFamily: activeFontStack }"
+        :style="{
+          fontFamily: activeFont.stack,
+          fontWeight: activeFont.weight,
+          fontStyle: activeFont.style,
+        }"
         title="Schriftart"
+        @pointerenter="loadFontPreviews"
+        @focus="loadFontPreviews"
         @change="store.updateSettings({ fontFamily: ($event.target as HTMLSelectElement).value })"
       >
-        <option v-for="f in fontList" :key="f.id" :value="f.id" :style="{ fontFamily: f.stack }">
+        <option v-for="f in systemFonts" :key="f.id" :value="f.id" :style="{ fontFamily: f.stack }">
           {{ f.label }}
         </option>
+        <optgroup v-for="g in fontGroups" :key="g.name" :label="g.name">
+          <!-- Volle Beschriftung ('Switzer Bold'), damit das zugeklappte Feld
+               die Schrift eindeutig zeigt; die Gruppe hilft nur beim Blaettern. -->
+          <option
+            v-for="f in g.fonts"
+            :key="f.id"
+            :value="f.id"
+            :style="{ fontFamily: f.stack, fontWeight: f.weight, fontStyle: f.style }"
+          >
+            {{ f.label }}
+          </option>
+        </optgroup>
       </select>
     </label>
 
