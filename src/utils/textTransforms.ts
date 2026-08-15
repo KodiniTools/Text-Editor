@@ -35,8 +35,14 @@ export const toCamelCase: Transform = (s) => {
     .join('')
 }
 
-export const toSnakeCase: Transform = (s) => words(s).map((w) => w.toLowerCase()).join('_')
-export const toKebabCase: Transform = (s) => words(s).map((w) => w.toLowerCase()).join('-')
+export const toSnakeCase: Transform = (s) =>
+  words(s)
+    .map((w) => w.toLowerCase())
+    .join('_')
+export const toKebabCase: Transform = (s) =>
+  words(s)
+    .map((w) => w.toLowerCase())
+    .join('-')
 
 /* ---------- Whitespace ---------- */
 

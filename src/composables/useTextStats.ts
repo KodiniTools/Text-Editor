@@ -26,7 +26,10 @@ export function useTextStats(content: Ref<string>) {
       lines: text === '' ? 0 : text.split(/\r?\n/).length,
       sentences: (text.match(/[.!?\u2026]+(\s|$)/g) ?? []).length,
       paragraphs: text.split(/\n\s*\n/).filter((p) => p.trim() !== '').length,
-      readingMinutes: Math.max(wordCount === 0 ? 0 : 1, Math.ceil(wordCount / WORDS_PER_MINUTE_READ)),
+      readingMinutes: Math.max(
+        wordCount === 0 ? 0 : 1,
+        Math.ceil(wordCount / WORDS_PER_MINUTE_READ),
+      ),
       speakingMinutes: Math.max(
         wordCount === 0 ? 0 : 1,
         Math.ceil(wordCount / WORDS_PER_MINUTE_SPEAK),

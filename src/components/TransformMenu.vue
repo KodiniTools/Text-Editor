@@ -32,9 +32,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
       v-if="open"
       class="absolute left-0 z-20 mt-1 max-h-[70vh] w-64 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-2 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
     >
-      <p class="px-2 pb-1 text-xs text-zinc-400">
-        Wird auf Auswahl oder ganzen Text angewendet
-      </p>
+      <p class="px-2 pb-1 text-xs text-zinc-400">Wird auf Auswahl oder ganzen Text angewendet</p>
       <div v-for="group in transformGroups" :key="group.label" class="mb-2">
         <p class="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">
           {{ group.label }}

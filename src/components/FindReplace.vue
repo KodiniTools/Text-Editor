@@ -19,7 +19,11 @@ function refreshCount(): void {
 watch([query, opts], refreshCount, { deep: true })
 
 const status = computed(() =>
-  query.value === '' ? '' : matchCount.value === 0 ? 'Keine Treffer' : `${matchCount.value} Treffer`,
+  query.value === ''
+    ? ''
+    : matchCount.value === 0
+      ? 'Keine Treffer'
+      : `${matchCount.value} Treffer`,
 )
 
 function next(): void {
@@ -64,7 +68,9 @@ defineExpose({ focus })
       <button type="button" class="fr-btn" title="Vorheriger (Shift+Enter)" @click="prev">‹</button>
       <button type="button" class="fr-btn" title="Naechster (Enter)" @click="next">›</button>
       <span class="min-w-24 text-xs text-zinc-500 dark:text-zinc-400">{{ status }}</span>
-      <button type="button" class="fr-btn" title="Schliessen (Esc)" @click="emit('close')">✕</button>
+      <button type="button" class="fr-btn" title="Schliessen (Esc)" @click="emit('close')">
+        ✕
+      </button>
     </div>
 
     <div class="flex flex-wrap items-center gap-2">

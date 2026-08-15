@@ -17,16 +17,13 @@ const content = computed<string>({
   set: (v) => store.updateContent(v),
 })
 
+/**
+ * Schrift, Groesse, Zeilenhoehe, Laufweite, Ausrichtung und Farbe kommen als
+ * CSS-Variablen von useTheme -- hier bleibt nur der Zeilenumbruch, der kein
+ * sinnvolles Gegenstueck als Variable hat.
+ */
 const editorStyle = computed(() => ({
-  fontSize: `${store.settings.fontSize}px`,
-  lineHeight: String(store.settings.lineHeight),
   whiteSpace: store.settings.wordWrap ? ('pre-wrap' as const) : ('pre' as const),
-  fontFamily:
-    store.settings.fontFamily === 'mono'
-      ? 'ui-monospace, SFMono-Regular, Menlo, monospace'
-      : store.settings.fontFamily === 'serif'
-        ? 'ui-serif, Georgia, serif'
-        : 'ui-sans-serif, system-ui, sans-serif',
 }))
 
 /* ---------- Cursor-Position ---------- */
@@ -189,7 +186,7 @@ defineExpose({
   <textarea
     ref="textarea"
     v-model="content"
-    class="h-full w-full resize-none bg-transparent px-6 py-5 font-editor text-zinc-800 outline-none placeholder:text-zinc-400 dark:text-zinc-100"
+    class="editor-text h-full w-full resize-none bg-transparent px-6 py-5 outline-none placeholder:text-zinc-400"
     :style="editorStyle"
     spellcheck="true"
     placeholder="Hier schreiben ..."
@@ -199,3 +196,15 @@ defineExpose({
     @select="reportCursor"
   />
 </template>
+
+<style scoped>
+.editor-text {
+  font-family: var(--editor-font);
+  font-size: var(--editor-size);
+  line-height: var(--editor-line-height);
+  letter-spacing: var(--editor-letter-spacing);
+  text-align: var(--editor-align);
+  /* Ohne eigene Textfarbe greift der Wert aus den Tailwind-Klassen. */
+  color: var(--editor-color, inherit);
+}
+</style>
