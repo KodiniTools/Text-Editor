@@ -2,31 +2,36 @@
 import { computed } from 'vue'
 import { LIMITS, useEditorStore, type TextAlign, type ThemeMode } from '@/stores/editor'
 import { findFont, fontList, isKnownFont, loadAllFonts, type EditorFont } from '@/config/fonts'
+import { LOCALES, useI18n, type Locale } from '@/i18n'
+import type { Messages } from '@/i18n/messages'
 import NumberStepper from './NumberStepper.vue'
 
 const store = useEditorStore()
+const { t, locale, setLocale } = useI18n()
+
+type FormatKey = keyof Messages['format']
 
 /** Schnellzugriff-Farben; die volle Auswahl liegt im Farbwaehler daneben. */
-const SWATCHES = [
-  { value: '', label: 'Automatisch (Design)' },
-  { value: '#111827', label: 'Schwarz' },
-  { value: '#6b7280', label: 'Grau' },
-  { value: '#b91c1c', label: 'Rot' },
-  { value: '#c2410c', label: 'Orange' },
-  { value: '#15803d', label: 'Gruen' },
-  { value: '#1d4ed8', label: 'Blau' },
-  { value: '#7e22ce', label: 'Violett' },
-] as const
+const SWATCHES: { value: string; labelKey: FormatKey }[] = [
+  { value: '', labelKey: 'colorAuto' },
+  { value: '#111827', labelKey: 'colorBlack' },
+  { value: '#6b7280', labelKey: 'colorGray' },
+  { value: '#b91c1c', labelKey: 'colorRed' },
+  { value: '#c2410c', labelKey: 'colorOrange' },
+  { value: '#15803d', labelKey: 'colorGreen' },
+  { value: '#1d4ed8', labelKey: 'colorBlue' },
+  { value: '#7e22ce', labelKey: 'colorViolet' },
+]
 
 /**
  * Ausrichtungs-Icons als Linienpaare [x, breite] in einem 16x16-Raster.
  * Selbst gezeichnet, damit kein Icon-Paket noetig ist und die Linien die
  * jeweilige Ausrichtung wirklich zeigen.
  */
-const ALIGNMENTS: { value: TextAlign; label: string; lines: [number, number][] }[] = [
+const ALIGNMENTS: { value: TextAlign; labelKey: FormatKey; lines: [number, number][] }[] = [
   {
     value: 'left',
-    label: 'Linksbuendig',
+    labelKey: 'alignLeft',
     lines: [
       [1, 14],
       [1, 9],
@@ -36,7 +41,7 @@ const ALIGNMENTS: { value: TextAlign; label: string; lines: [number, number][] }
   },
   {
     value: 'center',
-    label: 'Zentriert',
+    labelKey: 'alignCenter',
     lines: [
       [1, 14],
       [4, 8],
@@ -46,7 +51,7 @@ const ALIGNMENTS: { value: TextAlign; label: string; lines: [number, number][] }
   },
   {
     value: 'right',
-    label: 'Rechtsbuendig',
+    labelKey: 'alignRight',
     lines: [
       [1, 14],
       [6, 9],
@@ -56,7 +61,7 @@ const ALIGNMENTS: { value: TextAlign; label: string; lines: [number, number][] }
   },
   {
     value: 'justify',
-    label: 'Blocksatz',
+    labelKey: 'alignJustify',
     lines: [
       [1, 14],
       [1, 14],
@@ -66,10 +71,10 @@ const ALIGNMENTS: { value: TextAlign; label: string; lines: [number, number][] }
   },
 ]
 
-const THEMES: { value: ThemeMode; label: string }[] = [
-  { value: 'light', label: 'Hell' },
-  { value: 'dark', label: 'Dunkel' },
-  { value: 'system', label: 'Auto' },
+const THEMES: { value: ThemeMode; labelKey: FormatKey }[] = [
+  { value: 'light', labelKey: 'themeLight' },
+  { value: 'dark', labelKey: 'themeDark' },
+  { value: 'system', labelKey: 'themeAuto' },
 ]
 
 /** Farbe fuer <input type="color">, das keinen leeren Wert kennt. */
@@ -120,7 +125,7 @@ function setColor(value: string): void {
   >
     <!-- Schriftart -->
     <label class="fb-group">
-      <span class="fb-label">Schrift</span>
+      <span class="fb-label">{{ t.format.font }}</span>
       <select
         class="fb-select min-w-[10rem]"
         :value="selectedFontId"
@@ -129,7 +134,7 @@ function setColor(value: string): void {
           fontWeight: activeFont.weight,
           fontStyle: activeFont.style,
         }"
-        title="Schriftart"
+        :title="t.format.fontTitle"
         @pointerenter="loadFontPreviews"
         @focus="loadFontPreviews"
         @change="store.updateSettings({ fontFamily: ($event.target as HTMLSelectElement).value })"
@@ -154,35 +159,35 @@ function setColor(value: string): void {
 
     <!-- Schriftgroesse -->
     <div class="fb-group">
-      <span class="fb-label">Groesse</span>
+      <span class="fb-label">{{ t.format.size }}</span>
       <NumberStepper
         :model-value="store.settings.fontSize"
         :min="LIMITS.fontSize.min"
         :max="LIMITS.fontSize.max"
         :step="LIMITS.fontSize.step"
         unit="px"
-        label="Schriftgroesse"
+        :label="t.format.sizeLabel"
         @update:model-value="store.updateSettings({ fontSize: $event })"
       />
     </div>
 
     <!-- Zeilenabstand -->
     <div class="fb-group">
-      <span class="fb-label">Zeilen</span>
+      <span class="fb-label">{{ t.format.lineHeight }}</span>
       <NumberStepper
         :model-value="store.settings.lineHeight"
         :min="LIMITS.lineHeight.min"
         :max="LIMITS.lineHeight.max"
         :step="LIMITS.lineHeight.step"
         :decimals="1"
-        label="Zeilenabstand"
+        :label="t.format.lineHeightLabel"
         @update:model-value="store.updateSettings({ lineHeight: $event })"
       />
     </div>
 
     <!-- Laufweite -->
     <div class="fb-group">
-      <span class="fb-label">Laufweite</span>
+      <span class="fb-label">{{ t.format.letterSpacing }}</span>
       <NumberStepper
         :model-value="store.settings.letterSpacing"
         :min="LIMITS.letterSpacing.min"
@@ -191,7 +196,7 @@ function setColor(value: string): void {
         :decimals="1"
         unit="px"
         width="3.75rem"
-        label="Laufweite"
+        :label="t.format.letterSpacingLabel"
         @update:model-value="store.updateSettings({ letterSpacing: $event })"
       />
     </div>
@@ -200,7 +205,7 @@ function setColor(value: string): void {
 
     <!-- Textfarbe -->
     <div class="fb-group">
-      <span class="fb-label">Farbe</span>
+      <span class="fb-label">{{ t.format.color }}</span>
       <div class="flex items-center gap-1">
         <button
           v-for="s in SWATCHES"
@@ -213,8 +218,8 @@ function setColor(value: string): void {
               : 'border-zinc-300 dark:border-zinc-600'
           "
           :style="s.value ? { backgroundColor: s.value } : undefined"
-          :title="s.label"
-          :aria-label="s.label"
+          :title="t.format[s.labelKey]"
+          :aria-label="t.format[s.labelKey]"
           :aria-pressed="store.settings.textColor === s.value"
           @click="setColor(s.value)"
         >
@@ -225,8 +230,8 @@ function setColor(value: string): void {
           type="color"
           class="h-6 w-7 cursor-pointer rounded border border-zinc-300 bg-transparent p-0.5 dark:border-zinc-600"
           :value="colorInputValue"
-          title="Eigene Textfarbe waehlen"
-          aria-label="Eigene Textfarbe waehlen"
+          :title="t.format.customColor"
+          :aria-label="t.format.customColor"
           @input="setColor(($event.target as HTMLInputElement).value)"
         />
       </div>
@@ -236,7 +241,7 @@ function setColor(value: string): void {
 
     <!-- Ausrichtung -->
     <div class="fb-group">
-      <span class="fb-label">Ausrichtung</span>
+      <span class="fb-label">{{ t.format.align }}</span>
       <div class="flex gap-1">
         <button
           v-for="a in ALIGNMENTS"
@@ -244,8 +249,8 @@ function setColor(value: string): void {
           type="button"
           class="seg-btn flex h-[26px] w-7 items-center justify-center"
           :class="store.settings.textAlign === a.value ? 'seg-active' : ''"
-          :title="a.label"
-          :aria-label="a.label"
+          :title="t.format[a.labelKey]"
+          :aria-label="t.format[a.labelKey]"
           :aria-pressed="store.settings.textAlign === a.value"
           @click="store.updateSettings({ textAlign: a.value })"
         >
@@ -270,40 +275,60 @@ function setColor(value: string): void {
 
     <!-- Design -->
     <div class="fb-group">
-      <span class="fb-label">Design</span>
+      <span class="fb-label">{{ t.format.theme }}</span>
       <div class="flex gap-1">
         <button
-          v-for="t in THEMES"
-          :key="t.value"
+          v-for="th in THEMES"
+          :key="th.value"
           type="button"
           class="seg-btn"
-          :class="store.settings.theme === t.value ? 'seg-active' : ''"
-          :aria-pressed="store.settings.theme === t.value"
-          @click="store.updateSettings({ theme: t.value })"
+          :class="store.settings.theme === th.value ? 'seg-active' : ''"
+          :aria-pressed="store.settings.theme === th.value"
+          @click="store.updateSettings({ theme: th.value })"
         >
-          {{ t.label }}
+          {{ t.format[th.labelKey] }}
         </button>
       </div>
     </div>
 
     <!-- Zeilenumbruch -->
-    <label class="flex cursor-pointer items-center gap-1.5" title="Lange Zeilen umbrechen">
+    <label class="flex cursor-pointer items-center gap-1.5" :title="t.format.wrapTitle">
       <input
         type="checkbox"
         class="accent-[rgb(var(--accent))]"
         :checked="store.settings.wordWrap"
         @change="store.updateSettings({ wordWrap: ($event.target as HTMLInputElement).checked })"
       />
-      <span class="fb-label">Umbruch</span>
+      <span class="fb-label">{{ t.format.wrap }}</span>
     </label>
+
+    <span class="fb-divider" />
+
+    <!-- Sprache -->
+    <div class="fb-group">
+      <span class="fb-label">{{ t.format.language }}</span>
+      <div class="flex gap-1">
+        <button
+          v-for="l in LOCALES"
+          :key="l"
+          type="button"
+          class="seg-btn uppercase"
+          :class="locale === l ? 'seg-active' : ''"
+          :aria-pressed="locale === l"
+          @click="setLocale(l as Locale)"
+        >
+          {{ l }}
+        </button>
+      </div>
+    </div>
 
     <button
       type="button"
       class="seg-btn ml-auto"
-      title="Schrift, Groesse, Abstaende und Farbe zuruecksetzen"
+      :title="t.format.resetTitle"
       @click="store.resetFormatting()"
     >
-      Zuruecksetzen
+      {{ t.format.reset }}
     </button>
   </div>
 </template>

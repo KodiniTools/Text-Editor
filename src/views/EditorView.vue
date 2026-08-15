@@ -2,6 +2,7 @@
 import { computed, nextTick, ref } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+import { useI18n } from '@/i18n'
 import type { EditorApi } from '@/types'
 import type { Transform } from '@/utils/textTransforms'
 
@@ -14,6 +15,7 @@ import MarkdownPreview from '@/components/MarkdownPreview.vue'
 import StatusBar from '@/components/StatusBar.vue'
 
 const store = useEditorStore()
+const { t } = useI18n()
 
 const editorAreaRef = ref<InstanceType<typeof EditorArea> | null>(null)
 const findRef = ref<InstanceType<typeof FindReplace> | null>(null)
@@ -91,7 +93,7 @@ useKeyboardShortcuts({
       class="fixed right-4 top-4 z-30 rounded-full bg-zinc-800/80 px-4 py-2 text-sm text-white shadow-lg backdrop-blur hover:bg-zinc-700"
       @click="store.updateSettings({ focusMode: false })"
     >
-      Fokus beenden
+      {{ t.focusOverlay.exit }}
     </button>
   </div>
 </template>

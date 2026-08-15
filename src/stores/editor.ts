@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { DEFAULT_FONT_ID } from '@/config/fonts'
+import { messages } from '@/i18n'
 
 export interface EditorDocument {
   id: string
@@ -116,7 +117,7 @@ function uid(): string {
   return `doc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
 }
 
-function createDocument(name = 'Unbenannt', content = ''): EditorDocument {
+function createDocument(name = messages().doc.untitled, content = ''): EditorDocument {
   const now = Date.now()
   return { id: uid(), name, content, createdAt: now, updatedAt: now }
 }
@@ -162,7 +163,7 @@ export const useEditorStore = defineStore('editor', () => {
 
   /* ---------- Init ---------- */
   if (documents.value.length === 0) {
-    documents.value.push(createDocument('Willkommen', WELCOME_TEXT))
+    documents.value.push(createDocument(messages().doc.welcomeName, messages().doc.welcomeBody))
   }
   const storedActive = localStorage.getItem(STORAGE_ACTIVE)
   activeId.value =
@@ -274,7 +275,7 @@ export const useEditorStore = defineStore('editor', () => {
 
   /* ---------- Actions: Dokumente ---------- */
 
-  function newDocument(name = 'Unbenannt'): string {
+  function newDocument(name = messages().doc.untitled): string {
     flushTyping()
     const doc = createDocument(uniqueName(name))
     documents.value.push(doc)
@@ -292,7 +293,7 @@ export const useEditorStore = defineStore('editor', () => {
 
   function openDocument(name: string, content: string): string {
     flushTyping()
-    const doc = createDocument(uniqueName(name || 'Import'), content)
+    const doc = createDocument(uniqueName(name || messages().doc.untitled), content)
     documents.value.push(doc)
     activeId.value = doc.id
     return doc.id
@@ -374,19 +375,3 @@ export const useEditorStore = defineStore('editor', () => {
     resetFormatting,
   }
 })
-
-const WELCOME_TEXT = `# Willkommen im Kodini Texteditor
-
-Ein datenschutzfreundlicher Texteditor - alles laeuft **lokal im Browser**.
-Keine Uploads, keine Server, keine Cookies.
-
-## Funktionen
-- Mehrere Dokumente (Tabs), automatisch lokal gespeichert
-- Suchen & Ersetzen (inkl. Regex)
-- Ueber 30 Text-Transformationen (Gross/Klein, Sortieren, Kodierung, ...)
-- Live Markdown-Vorschau
-- Statistik: Woerter, Zeichen, Lesezeit
-- Hell/Dunkel, Fokus-Modus, Export als .txt/.md
-
-Tipp: Strg+F zum Suchen, Strg+S zum Herunterladen.
-`

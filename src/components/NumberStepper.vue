@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '@/i18n'
+
+const { t } = useI18n()
 
 /**
  * Kompakter Zahlenregler fuer die Format-Leiste: [-] Wert [+].
@@ -27,6 +30,9 @@ const display = computed(() => props.modelValue.toFixed(props.decimals) + props.
 const canDecrease = computed(() => props.modelValue > props.min)
 const canIncrease = computed(() => props.modelValue < props.max)
 
+const decreaseLabel = computed(() => t.value.stepper.decrease(props.label))
+const increaseLabel = computed(() => t.value.stepper.increase(props.label))
+
 function nudge(direction: 1 | -1): void {
   const next = props.modelValue + direction * props.step
   // Schrittweiten wie 0.1 erzeugen sonst Werte wie 1.7000000000000002.
@@ -41,8 +47,8 @@ function nudge(direction: 1 | -1): void {
       type="button"
       class="step-btn"
       :disabled="!canDecrease"
-      :title="`${label} verkleinern`"
-      :aria-label="`${label} verkleinern`"
+      :title="decreaseLabel"
+      :aria-label="decreaseLabel"
       @click="nudge(-1)"
     >
       &minus;
@@ -57,8 +63,8 @@ function nudge(direction: 1 | -1): void {
       type="button"
       class="step-btn"
       :disabled="!canIncrease"
-      :title="`${label} vergroessern`"
-      :aria-label="`${label} vergroessern`"
+      :title="increaseLabel"
+      :aria-label="increaseLabel"
       @click="nudge(1)"
     >
       +

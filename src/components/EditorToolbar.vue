@@ -3,8 +3,10 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import TransformMenu from './TransformMenu.vue'
 import type { Transform } from '@/utils/textTransforms'
+import { useI18n } from '@/i18n'
 
 const store = useEditorStore()
+const { t } = useI18n()
 
 const emit = defineEmits<{
   transform: [fn: Transform]
@@ -40,7 +42,7 @@ function download(ext: 'txt' | 'md'): void {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `${doc.name || 'dokument'}.${ext}`
+  a.download = `${doc.name || t.value.doc.untitled}.${ext}`
   a.click()
   URL.revokeObjectURL(url)
   downloadOpen.value = false
@@ -69,32 +71,38 @@ defineExpose({ download, copyAll, triggerImport })
   <div
     class="flex flex-wrap items-center gap-1 border-b border-zinc-200 bg-white px-2 py-1.5 dark:border-zinc-800 dark:bg-zinc-900"
   >
-    <button type="button" class="tb-btn" title="Neu (Strg+M)" @click="store.newDocument()">
-      Neu
+    <button type="button" class="tb-btn" :title="t.toolbar.newTitle" @click="store.newDocument()">
+      {{ t.toolbar.new }}
     </button>
-    <button type="button" class="tb-btn" title="Datei oeffnen" @click="triggerImport">
-      Oeffnen
+    <button type="button" class="tb-btn" :title="t.toolbar.openTitle" @click="triggerImport">
+      {{ t.toolbar.open }}
     </button>
 
     <div ref="downloadRoot" class="relative">
       <button
         type="button"
         class="tb-btn"
-        title="Herunterladen (Strg+S)"
+        :title="t.toolbar.saveTitle"
         @click="downloadOpen = !downloadOpen"
       >
-        Speichern ▾
+        {{ t.toolbar.save }} ▾
       </button>
       <div
         v-if="downloadOpen"
         class="absolute left-0 z-20 mt-1 w-36 rounded-lg border border-zinc-200 bg-white p-1 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
       >
-        <button type="button" class="menu-item" @click="download('txt')">Als .txt</button>
-        <button type="button" class="menu-item" @click="download('md')">Als .md</button>
+        <button type="button" class="menu-item" @click="download('txt')">
+          {{ t.toolbar.asTxt }}
+        </button>
+        <button type="button" class="menu-item" @click="download('md')">
+          {{ t.toolbar.asMd }}
+        </button>
       </div>
     </div>
 
-    <button type="button" class="tb-btn" title="Alles kopieren" @click="copyAll">Kopieren</button>
+    <button type="button" class="tb-btn" :title="t.toolbar.copyTitle" @click="copyAll">
+      {{ t.toolbar.copy }}
+    </button>
 
     <span class="mx-1 h-5 w-px bg-zinc-200 dark:bg-zinc-700" />
 
@@ -102,7 +110,7 @@ defineExpose({ download, copyAll, triggerImport })
       type="button"
       class="tb-btn"
       :disabled="!store.canUndo"
-      title="Rueckgaengig (Strg+Z)"
+      :title="t.toolbar.undoTitle"
       @click="store.undo()"
     >
       ↶
@@ -111,7 +119,7 @@ defineExpose({ download, copyAll, triggerImport })
       type="button"
       class="tb-btn"
       :disabled="!store.canRedo"
-      title="Wiederholen (Strg+Y)"
+      :title="t.toolbar.redoTitle"
       @click="store.redo()"
     >
       ↷
@@ -120,13 +128,8 @@ defineExpose({ download, copyAll, triggerImport })
     <span class="mx-1 h-5 w-px bg-zinc-200 dark:bg-zinc-700" />
 
     <TransformMenu @apply="(fn: Transform) => emit('transform', fn)" />
-    <button
-      type="button"
-      class="tb-btn"
-      title="Suchen & Ersetzen (Strg+F)"
-      @click="emit('toggleFind')"
-    >
-      Suchen
+    <button type="button" class="tb-btn" :title="t.toolbar.findTitle" @click="emit('toggleFind')">
+      {{ t.toolbar.find }}
     </button>
 
     <span class="mx-1 h-5 w-px bg-zinc-200 dark:bg-zinc-700" />
@@ -135,19 +138,19 @@ defineExpose({ download, copyAll, triggerImport })
       type="button"
       class="tb-btn"
       :class="store.settings.showPreview ? 'text-accent' : ''"
-      title="Markdown-Vorschau"
+      :title="t.toolbar.previewTitle"
       @click="store.updateSettings({ showPreview: !store.settings.showPreview })"
     >
-      Vorschau
+      {{ t.toolbar.preview }}
     </button>
     <button
       type="button"
       class="tb-btn"
       :class="store.settings.focusMode ? 'text-accent' : ''"
-      title="Fokus-Modus"
+      :title="t.toolbar.focusTitle"
       @click="store.updateSettings({ focusMode: !store.settings.focusMode })"
     >
-      Fokus
+      {{ t.toolbar.focus }}
     </button>
 
     <button
@@ -155,10 +158,10 @@ defineExpose({ download, copyAll, triggerImport })
       class="tb-btn ml-auto"
       :class="store.settings.showFormatBar ? 'text-accent' : ''"
       :aria-pressed="store.settings.showFormatBar"
-      title="Format-Leiste ein-/ausblenden"
+      :title="t.toolbar.formatTitle"
       @click="store.updateSettings({ showFormatBar: !store.settings.showFormatBar })"
     >
-      Format {{ store.settings.showFormatBar ? '▴' : '▾' }}
+      {{ t.toolbar.format }} {{ store.settings.showFormatBar ? '▴' : '▾' }}
     </button>
 
     <input
