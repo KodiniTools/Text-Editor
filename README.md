@@ -26,6 +26,9 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   Zeilenabstand, Laufweite, Textfarbe (8 Schnellfarben + freier Farbwaehler), Ausrichtung,
   Zeilenumbruch, Zuruecksetzen – alles undo-/redo-faehig. Ein-/ausblendbar ueber `Format`.
   Design (Hell/Dunkel) und Sprache steuert die globale Navigation
+- **Seitenformat** (A3/A4/A5/Letter/Legal, Hoch- oder Querformat) – die Bearbeitung erfolgt auf
+  einem masstabsgetreuen Blatt; **Speichern als PDF** (`Speichern -> Als PDF` bzw. `Strg/Cmd + P`)
+  gibt exakt dieses Format aus (via Druck-Dialog „Als PDF speichern", inkl. der gewaehlten Schrift)
 - **Fokus-Modus** blendet alle Leisten aus
 - **Zweisprachig (DE/EN)** – die komplette Oberflaeche laesst sich ueber den Sprachumschalter der
   globalen Navigation wechseln; die Wahl wird gemerkt und beim ersten Besuch aus der Browsersprache abgeleitet
@@ -40,6 +43,7 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
 | `Strg/Cmd + Z` | Rueckgaengig |
 | `Strg/Cmd + Y` / `Strg/Cmd + Shift + Z` | Wiederholen |
 | `Strg/Cmd + S` | Als `.txt` herunterladen |
+| `Strg/Cmd + P` | Als PDF / drucken (im Seitenformat) |
 | `Esc` | Suche schliessen |
 | `Tab` | 2 Leerzeichen einfuegen |
 
@@ -50,7 +54,7 @@ npm install
 npm run dev        # Dev-Server (http://localhost:5173)
 npm run build      # Typecheck + Produktions-Build nach dist/
 npm run preview    # Build lokal ansehen
-npm run test       # Vitest (100 Tests)
+npm run test       # Vitest (106 Tests)
 npm run typecheck  # vue-tsc --noEmit
 npm run lint       # ESLint (Vue + TypeScript)
 npm run lint:fix   # ESLint mit Autofix
@@ -88,6 +92,7 @@ src/
     transformRegistry.ts      Gruppierte Liste fuers Menue
     find.ts                   Regex-Bau + Trefferzaehlung (getestet)
     fontFiles.ts              Dateiname -> Familie/Schnitt (getestet)
+    pageFormats.ts            Papierformate + @page-Groesse (getestet)
     markdown.ts               Markdown -> bereinigtes HTML
   components/
     DocumentTabs.vue  EditorToolbar.vue  TransformMenu.vue  FormatBar.vue

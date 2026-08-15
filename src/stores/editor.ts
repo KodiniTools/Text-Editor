@@ -2,6 +2,12 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { DEFAULT_FONT_ID } from '@/config/fonts'
 import { messages } from '@/i18n'
+import {
+  isOrientation,
+  isPageFormatId,
+  type PageFormatId,
+  type PageOrientation,
+} from '@/utils/pageFormats'
 
 export interface EditorDocument {
   id: string
@@ -26,6 +32,9 @@ export interface EditorSettings {
   textColor: string
   textAlign: TextAlign
   wordWrap: boolean
+  /** Papierformat der Seiten-Ansicht ('none' = bildschirmfuellend). */
+  pageFormat: PageFormatId
+  pageOrientation: PageOrientation
   showPreview: boolean
   showFormatBar: boolean
   focusMode: boolean
@@ -92,6 +101,8 @@ export const DEFAULT_SETTINGS: EditorSettings = {
   textColor: '',
   textAlign: 'left',
   wordWrap: true,
+  pageFormat: 'none',
+  pageOrientation: 'portrait',
   showPreview: false,
   showFormatBar: true,
   focusMode: false,
@@ -143,6 +154,10 @@ export function normalizeSettings(raw: Partial<EditorSettings>): EditorSettings 
     textAlign: (['left', 'center', 'right', 'justify'] as const).includes(s.textAlign)
       ? s.textAlign
       : DEFAULT_SETTINGS.textAlign,
+    pageFormat: isPageFormatId(s.pageFormat) ? s.pageFormat : DEFAULT_SETTINGS.pageFormat,
+    pageOrientation: isOrientation(s.pageOrientation)
+      ? s.pageOrientation
+      : DEFAULT_SETTINGS.pageOrientation,
   }
 }
 

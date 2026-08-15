@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { useI18n } from '@/i18n'
+import { pageSizeCss } from '@/utils/pageFormats'
 import type { EditorApi } from '@/types'
 import type { Transform } from '@/utils/textTransforms'
 
@@ -50,6 +51,38 @@ function toggleFind(): void {
   }
 }
 
+/* ---------- Drucken / Als PDF ---------- */
+// Hoch aufgeloester Text der aktiven Seite -- wird nur im Druck sichtbar.
+const printContent = computed(() => store.activeContent)
+
+/**
+ * Haelt die `@page`-Regel (Papiergroesse + Ausrichtung) im Kopf des Dokuments
+ * aktuell, damit sowohl "Als PDF" als auch Strg+P im gewaehlten Format drucken.
+ * Ohne gewaehltes Format faellt pageSizeCss auf A4 Hochformat zurueck.
+ */
+let pageStyleEl: HTMLStyleElement | null = null
+function syncPageStyle(): void {
+  if (typeof document === 'undefined') return
+  if (!pageStyleEl) {
+    pageStyleEl = document.createElement('style')
+    pageStyleEl.id = 'kodini-page-size'
+    document.head.appendChild(pageStyleEl)
+  }
+  const size = pageSizeCss(store.settings.pageFormat, store.settings.pageOrientation)
+  pageStyleEl.textContent = `@page { size: ${size}; margin: 18mm; }`
+}
+
+function printDocument(): void {
+  syncPageStyle()
+  // Warten, bis der Druckinhalt im DOM steht, dann den Druckdialog oeffnen
+  // (dort laesst sich "Als PDF speichern" waehlen).
+  nextTick(() => window.print())
+}
+
+onMounted(syncPageStyle)
+onBeforeUnmount(() => pageStyleEl?.remove())
+watch(() => [store.settings.pageFormat, store.settings.pageOrientation], syncPageStyle)
+
 useKeyboardShortcuts({
   'mod+f': openFind,
   esc: () => {
@@ -63,6 +96,7 @@ useKeyboardShortcuts({
   'mod+y': () => store.redo(),
   'mod+shift+z': () => store.redo(),
   'mod+s': () => toolbarRef.value?.download('txt'),
+  'mod+p': printDocument,
 })
 </script>
 
@@ -70,7 +104,12 @@ useKeyboardShortcuts({
   <div class="flex h-full flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
     <template v-if="!store.settings.focusMode">
       <DocumentTabs />
-      <EditorToolbar ref="toolbarRef" @transform="onTransform" @toggle-find="toggleFind" />
+      <EditorToolbar
+        ref="toolbarRef"
+        @transform="onTransform"
+        @toggle-find="toggleFind"
+        @print="printDocument"
+      />
       <FormatBar v-if="store.settings.showFormatBar" />
     </template>
 
@@ -95,5 +134,13 @@ useKeyboardShortcuts({
     >
       {{ t.focusOverlay.exit }}
     </button>
+
+    <!--
+      Druck-/PDF-Ausgabe: am Bildschirm ausgeblendet, beim Drucken das einzig
+      Sichtbare. Nutzt dieselben --editor-*-Variablen wie der Editor, damit
+      Schrift, Groesse, Zeilenabstand, Laufweite und Ausrichtung mitgedruckt
+      werden. Die Papiergroesse steuert die @page-Regel (siehe syncPageStyle).
+    -->
+    <div id="print-root" aria-hidden="true">{{ printContent }}</div>
   </div>
 </template>

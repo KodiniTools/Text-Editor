@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import type { Transform } from '@/utils/textTransforms'
 import { buildSearchRegex, countMatches as countInText, type FindOptions } from '@/utils/find'
+import { pageAspect } from '@/utils/pageFormats'
 import { useI18n } from '@/i18n'
 
 const store = useEditorStore()
@@ -27,6 +28,55 @@ const content = computed<string>({
 const editorStyle = computed(() => ({
   whiteSpace: store.settings.wordWrap ? ('pre-wrap' as const) : ('pre' as const),
 }))
+
+/* ---------- Seiten-Ansicht (A4/A3/...) ---------- */
+const host = ref<HTMLElement | null>(null)
+const sheetSize = ref<{ w: number; h: number } | null>(null)
+
+const pageActive = computed(() => store.settings.pageFormat !== 'none')
+const aspect = computed(() => pageAspect(store.settings.pageFormat, store.settings.pageOrientation))
+
+/**
+ * Blattgroesse in px, so dass die Seite mit korrektem Seitenverhaeltnis in den
+ * verfuegbaren Bereich passt (fuer Hoch- wie Querformat). Ueber einen
+ * ResizeObserver an die Fenstergroesse gekoppelt.
+ */
+function recomputeSheet(): void {
+  if (!pageActive.value || !host.value || !aspect.value) {
+    sheetSize.value = null
+    return
+  }
+  const pad = 32 // Rand des grauen Hintergrunds (1rem je Seite)
+  const availW = host.value.clientWidth - pad
+  const availH = host.value.clientHeight - pad
+  if (availW <= 0 || availH <= 0) return
+  const a = aspect.value
+  let w: number
+  let h: number
+  if (availW / availH > a) {
+    h = availH
+    w = h * a
+  } else {
+    w = availW
+    h = w / a
+  }
+  sheetSize.value = { w: Math.max(80, Math.floor(w)), h: Math.max(80, Math.floor(h)) }
+}
+
+const sheetStyle = computed(() =>
+  sheetSize.value ? { width: `${sheetSize.value.w}px`, height: `${sheetSize.value.h}px` } : {},
+)
+
+let resizeObserver: ResizeObserver | null = null
+onMounted(() => {
+  if (typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(recomputeSheet)
+    if (host.value) resizeObserver.observe(host.value)
+  }
+  recomputeSheet()
+})
+onBeforeUnmount(() => resizeObserver?.disconnect())
+watch([pageActive, aspect], () => nextTick(recomputeSheet))
 
 /* ---------- Cursor-Position ---------- */
 function reportCursor(): void {
@@ -185,18 +235,26 @@ defineExpose({
 </script>
 
 <template>
-  <textarea
-    ref="textarea"
-    v-model="content"
-    class="editor-text h-full w-full resize-none bg-transparent px-6 py-5 outline-none placeholder:text-zinc-400"
-    :style="editorStyle"
-    spellcheck="true"
-    :placeholder="t.editor.placeholder"
-    @keydown.tab="onTab"
-    @keyup="reportCursor"
-    @click="reportCursor"
-    @select="reportCursor"
-  />
+  <div ref="host" class="flex h-full min-h-0 w-full" :class="pageActive ? 'page-backdrop' : ''">
+    <div
+      class="flex min-h-0"
+      :class="pageActive ? 'page-sheet' : 'h-full w-full'"
+      :style="pageActive ? sheetStyle : undefined"
+    >
+      <textarea
+        ref="textarea"
+        v-model="content"
+        class="editor-text min-h-0 w-full flex-1 resize-none bg-transparent px-6 py-5 outline-none placeholder:text-zinc-400"
+        :style="editorStyle"
+        spellcheck="true"
+        :placeholder="t.editor.placeholder"
+        @keydown.tab="onTab"
+        @keyup="reportCursor"
+        @click="reportCursor"
+        @select="reportCursor"
+      />
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -210,5 +268,29 @@ defineExpose({
   text-align: var(--editor-align);
   /* Ohne eigene Textfarbe greift der Wert aus den Tailwind-Klassen. */
   color: var(--editor-color, inherit);
+}
+
+/* Grauer Hintergrund, auf dem das Blatt zentriert schwebt. */
+.page-backdrop {
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 1rem;
+  background: rgb(228 228 231); /* zinc-200 */
+}
+:global(.dark) .page-backdrop {
+  background: rgb(9 9 11); /* zinc-950 */
+}
+
+/* Das "Blatt": weiss/dunkel je Theme, mit Schatten. Groesse kommt aus dem Style. */
+.page-sheet {
+  flex: 0 0 auto;
+  background: #ffffff;
+  box-shadow: 0 4px 24px rgb(0 0 0 / 0.18);
+  border-radius: 2px;
+  overflow: hidden;
+}
+:global(.dark) .page-sheet {
+  background: rgb(24 24 27); /* zinc-900 */
 }
 </style>

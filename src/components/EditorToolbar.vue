@@ -11,6 +11,7 @@ const { t } = useI18n()
 const emit = defineEmits<{
   transform: [fn: Transform]
   toggleFind: []
+  print: []
 }>()
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -46,6 +47,11 @@ function download(ext: 'txt' | 'md'): void {
   a.click()
   URL.revokeObjectURL(url)
   downloadOpen.value = false
+}
+
+function printPdf(): void {
+  downloadOpen.value = false
+  emit('print')
 }
 
 async function copyAll(): Promise<void> {
@@ -96,6 +102,9 @@ defineExpose({ download, copyAll, triggerImport })
         </button>
         <button type="button" class="menu-item" @click="download('md')">
           {{ t.toolbar.asMd }}
+        </button>
+        <button type="button" class="menu-item" @click="printPdf">
+          {{ t.toolbar.asPdf }}
         </button>
       </div>
     </div>
