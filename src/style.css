@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Akzentfarbe (Smaragd) - fuer KodiniTools-Branding hier anpassen */
+  --accent: 16 185 129;
+  --accent-soft: 209 250 229;
+  --editor-font: ui-sans-serif, system-ui, sans-serif;
+  color-scheme: light;
+}
+
+.dark {
+  --accent-soft: 6 78 59;
+  color-scheme: dark;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+/* Bildlaufleiste dezent */
+textarea::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+textarea::-webkit-scrollbar-thumb,
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgb(161 161 170 / 0.4);
+  border-radius: 9999px;
+}
