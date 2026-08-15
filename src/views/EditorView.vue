@@ -4,6 +4,9 @@ import { useEditorStore } from '@/stores/editor'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { useI18n } from '@/i18n'
 import { pageSizeCss } from '@/utils/pageFormats'
+import { pageRenderOptions } from '@/utils/pageRenderOptions'
+import { exportPdf } from '@/utils/exportPdf'
+import { loadFont, findFont } from '@/config/fonts'
 import type { EditorApi } from '@/types'
 import type { Transform } from '@/utils/textTransforms'
 
@@ -12,7 +15,7 @@ import EditorToolbar from '@/components/EditorToolbar.vue'
 import FormatBar from '@/components/FormatBar.vue'
 import EditorArea from '@/components/EditorArea.vue'
 import FindReplace from '@/components/FindReplace.vue'
-import MarkdownPreview from '@/components/MarkdownPreview.vue'
+import PagePreview from '@/components/PagePreview.vue'
 import StatusBar from '@/components/StatusBar.vue'
 
 const store = useEditorStore()
@@ -74,9 +77,26 @@ function syncPageStyle(): void {
 
 function printDocument(): void {
   syncPageStyle()
-  // Warten, bis der Druckinhalt im DOM steht, dann den Druckdialog oeffnen
-  // (dort laesst sich "Als PDF speichern" waehlen).
+  // Warten, bis der Druckinhalt im DOM steht, dann den Druckdialog oeffnen.
   nextTick(() => window.print())
+}
+
+/* ---------- Ein-Klick-PDF ---------- */
+const exporting = ref(false)
+async function exportPdfDocument(): Promise<void> {
+  if (exporting.value) return
+  exporting.value = true
+  try {
+    // Schrift vor dem Rastern sicher laden, sonst faellt der Export auf eine
+    // Ersatzschrift zurueck.
+    await loadFont(findFont(store.settings.fontFamily))
+    await exportPdf({
+      ...pageRenderOptions(store.settings, store.activeContent),
+      fileName: store.activeDoc?.name || 'dokument',
+    })
+  } finally {
+    exporting.value = false
+  }
 }
 
 onMounted(syncPageStyle)
@@ -109,6 +129,7 @@ useKeyboardShortcuts({
         @transform="onTransform"
         @toggle-find="toggleFind"
         @print="printDocument"
+        @export-pdf="exportPdfDocument"
       />
       <FormatBar v-if="store.settings.showFormatBar" />
     </template>
@@ -120,7 +141,7 @@ useKeyboardShortcuts({
         <EditorArea ref="editorAreaRef" class="h-full" @cursor="onCursor" />
       </div>
       <div v-if="store.settings.showPreview && !store.settings.focusMode" class="min-w-0 flex-1">
-        <MarkdownPreview />
+        <PagePreview />
       </div>
     </div>
 

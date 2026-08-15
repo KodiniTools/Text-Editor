@@ -19,7 +19,6 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   - Zeilen: A-Z / Z-A / numerisch sortieren, umkehren, mischen, Duplikate entfernen, nummerieren
   - Umkehren: Zeichen / Woerter
   - Kodierung: Base64, URL, HTML (je encode/decode, Unicode-sicher)
-- **Live Markdown-Vorschau** (sicher via `marked` + `DOMPurify`)
 - **Statistik**: Woerter, Zeichen (mit/ohne Leerz.), Zeilen, Saetze, Absaetze, Lesezeit; Cursor Zeile/Spalte
 - **Format-Leiste** direkt unter der Werkzeugleiste – Schriftart mit allen Schnitten der
   eigenen Schriften (nach Familie gruppiert, Vorschau in eigener Schrift), Schriftgroesse,
@@ -27,8 +26,13 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   Zeilenumbruch, Zuruecksetzen – alles undo-/redo-faehig. Ein-/ausblendbar ueber `Format`.
   Design (Hell/Dunkel) und Sprache steuert die globale Navigation
 - **Seitenformat** (A3/A4/A5/Letter/Legal, Hoch- oder Querformat) – die Bearbeitung erfolgt auf
-  einem masstabsgetreuen Blatt; **Speichern als PDF** (`Speichern -> Als PDF` bzw. `Strg/Cmd + P`)
-  gibt exakt dieses Format aus (via Druck-Dialog „Als PDF speichern", inkl. der gewaehlten Schrift)
+  einem masstabsgetreuen Blatt
+- **Vorschau = exportierte Datei**: Die Vorschau zeigt das Dokument als paginierte Seiten genau
+  so, wie das PDF aussieht (gleicher Umbruch, gleiche Schrift)
+- **PDF-Export mit einem Klick** (`Speichern -> Als PDF`): erzeugt direkt eine `.pdf` im gewaehlten
+  Seitenformat. Vorschau und Export nutzen dieselbe Render-Funktion, die Seiten werden gerastert
+  (`html2canvas` + `jsPDF`) – dadurch wird **jede** eigene Schrift pixelgenau uebernommen
+- **Drucken** (Knopf in der Werkzeugleiste bzw. `Strg/Cmd + P`) im gewaehlten Seitenformat
 - **Fokus-Modus** blendet alle Leisten aus
 - **Zweisprachig (DE/EN)** – die komplette Oberflaeche laesst sich ueber den Sprachumschalter der
   globalen Navigation wechseln; die Wahl wird gemerkt und beim ersten Besuch aus der Browsersprache abgeleitet
@@ -54,7 +58,7 @@ npm install
 npm run dev        # Dev-Server (http://localhost:5173)
 npm run build      # Typecheck + Produktions-Build nach dist/
 npm run preview    # Build lokal ansehen
-npm run test       # Vitest (106 Tests)
+npm run test       # Vitest (112 Tests)
 npm run typecheck  # vue-tsc --noEmit
 npm run lint       # ESLint (Vue + TypeScript)
 npm run lint:fix   # ESLint mit Autofix
@@ -93,10 +97,13 @@ src/
     find.ts                   Regex-Bau + Trefferzaehlung (getestet)
     fontFiles.ts              Dateiname -> Familie/Schnitt (getestet)
     pageFormats.ts            Papierformate + @page-Groesse (getestet)
+    renderPages.ts            Seiten-DOM fuer Vorschau + PDF (getestet)
+    pageRenderOptions.ts      Settings -> Render-Optionen (gemeinsame Quelle)
+    exportPdf.ts              Ein-Klick-PDF (html2canvas + jsPDF, dyn. geladen)
     markdown.ts               Markdown -> bereinigtes HTML
   components/
     DocumentTabs.vue  EditorToolbar.vue  TransformMenu.vue  FormatBar.vue
-    FindReplace.vue   EditorArea.vue     MarkdownPreview.vue  StatusBar.vue
+    FindReplace.vue   EditorArea.vue     PagePreview.vue      StatusBar.vue
     NumberStepper.vue
   views/EditorView.vue        Layout + Verdrahtung
 tests/                        Vitest-Specs
