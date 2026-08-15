@@ -143,10 +143,37 @@ export function parseFontFileName(file: string): ParsedFontFile | null {
   return { familyKey: base, label: prettifyFamily(base), weight: '400', style: 'normal', file }
 }
 
+export interface FontFileFace {
+  file: string
+  weight: string
+  style: string
+}
+
 export interface FontFileGroup {
   familyKey: string
   label: string
-  files: { file: string; weight: string; style: string }[]
+  files: FontFileFace[]
+}
+
+/** Der Schnitt, den das Textfeld tatsaechlich darstellt. */
+const RENDERED_WEIGHT = '400'
+
+/**
+ * Entfernt Variable Fonts, deren Bereich schon von einer statischen Datei
+ * abgedeckt ist.
+ *
+ * Familien wie Switzer liefern sowohl 'Switzer-Variable' (100-900) als auch
+ * 'Switzer-Regular' (400). Beide passen auf 400/normal, und welche der Browser
+ * dann nimmt, ist nicht festgelegt. Die statische Datei ist kleiner, also
+ * gewinnt sie. Fehlt sie -- Ranade hat kein Regular -- bleibt der Variable
+ * Font, sonst gaebe es fuer 400 gar nichts Passendes.
+ */
+export function dropRedundantVariableFaces(files: FontFileFace[]): FontFileFace[] {
+  const isRange = (w: string): boolean => w.includes(' ')
+  const coveredStyles = new Set(
+    files.filter((f) => !isRange(f.weight) && f.weight === RENDERED_WEIGHT).map((f) => f.style),
+  )
+  return files.filter((f) => !(isRange(f.weight) && coveredStyles.has(f.style)))
 }
 
 /**
@@ -169,6 +196,10 @@ export function groupFontFiles(files: string[]): FontFileGroup[] {
     // und das ist dank der Sortierung unten das modernere Format.
     const exists = group.files.some((f) => f.weight === parsed.weight && f.style === parsed.style)
     if (!exists) group.files.push({ file, weight: parsed.weight, style: parsed.style })
+  }
+
+  for (const group of groups.values()) {
+    group.files = dropRedundantVariableFaces(group.files)
   }
 
   return [...groups.values()].sort((a, b) => a.label.localeCompare(b.label, 'de'))

@@ -193,21 +193,27 @@ export function loadFont(font: EditorFont): Promise<boolean> {
   if (cached) return cached
 
   const family = font.family
-  const task = Promise.all(
-    font.sources.map(async (src) => {
+  const sources = font.sources
+  const task = (async () => {
+    for (const src of sources) {
       const face = new FontFace(family, `url("${src.url}") format("${formatFromUrl(src.url)}")`, {
         weight: src.weight ?? '400',
         style: src.style ?? 'normal',
         display: 'swap',
       })
-      document.fonts.add(await face.load())
-    }),
-  )
-    .then(() => true)
-    .catch(() => {
-      // Nicht erneut versuchen, aber auch nicht die App stoeren.
-      return false
-    })
+      // Nur registrieren, nicht laden. Familien wie Switzer haben 20 Schnitte;
+      // das Textfeld stellt aber nur einen davon dar. Der Browser holt eine
+      // Datei erst, wenn ihr Schnitt wirklich gebraucht wird.
+      document.fonts.add(face)
+    }
+    // Den einen dargestellten Schnitt vorladen, damit der Text nicht erst in
+    // der Ersatzschrift erscheint -- und damit wir wissen, ob es geklappt hat.
+    await document.fonts.load(`400 1em "${family}"`)
+    return document.fonts.check(`400 1em "${family}"`)
+  })().catch(() => {
+    // Nicht erneut versuchen, aber auch nicht die App stoeren.
+    return false
+  })
 
   loading.set(font.id, task)
   return task
