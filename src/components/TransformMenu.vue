@@ -2,8 +2,11 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { transformGroups } from '@/utils/transformRegistry'
 import type { Transform } from '@/utils/textTransforms'
+import { useI18n } from '@/i18n'
 
 const emit = defineEmits<{ apply: [fn: Transform] }>()
+
+const { t } = useI18n()
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
@@ -24,7 +27,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 <template>
   <div ref="root" class="relative">
     <button type="button" class="tb-btn" @click="open = !open">
-      Werkzeuge
+      {{ t.toolbar.tools }}
       <span class="text-xs">▾</span>
     </button>
 
@@ -32,10 +35,10 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
       v-if="open"
       class="absolute left-0 z-20 mt-1 max-h-[70vh] w-64 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-2 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
     >
-      <p class="px-2 pb-1 text-xs text-zinc-400">Wird auf Auswahl oder ganzen Text angewendet</p>
-      <div v-for="group in transformGroups" :key="group.label" class="mb-2">
+      <p class="px-2 pb-1 text-xs text-zinc-400">{{ t.transformMenu.hint }}</p>
+      <div v-for="group in transformGroups" :key="group.id" class="mb-2">
         <p class="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-          {{ group.label }}
+          {{ t.transformGroups[group.id] }}
         </p>
         <button
           v-for="item in group.items"
@@ -44,7 +47,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
           class="block w-full rounded-md px-2 py-1.5 text-left text-sm text-zinc-700 hover:bg-accent-soft hover:text-accent dark:text-zinc-200 dark:hover:bg-zinc-700"
           @click="choose(item.fn)"
         >
-          {{ item.label }}
+          {{ t.transforms[item.id] }}
         </button>
       </div>
     </div>

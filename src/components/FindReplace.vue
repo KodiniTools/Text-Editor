@@ -2,9 +2,12 @@
 import { computed, ref, watch } from 'vue'
 import type { EditorApi } from '@/types'
 import type { FindOptions } from '@/utils/find'
+import { useI18n } from '@/i18n'
 
 const props = defineProps<{ editor: EditorApi | null }>()
 const emit = defineEmits<{ close: [] }>()
+
+const { t } = useI18n()
 
 const query = ref('')
 const replacement = ref('')
@@ -18,13 +21,7 @@ function refreshCount(): void {
 
 watch([query, opts], refreshCount, { deep: true })
 
-const status = computed(() =>
-  query.value === ''
-    ? ''
-    : matchCount.value === 0
-      ? 'Keine Treffer'
-      : `${matchCount.value} Treffer`,
-)
+const status = computed(() => (query.value === '' ? '' : t.value.find.matches(matchCount.value)))
 
 function next(): void {
   props.editor?.findNext(query.value, opts.value)
@@ -59,16 +56,16 @@ defineExpose({ focus })
         ref="queryInput"
         v-model="query"
         type="text"
-        placeholder="Suchen"
+        :placeholder="t.find.searchPlaceholder"
         class="min-w-40 flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm outline-none focus:border-accent dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
         @keydown.enter.exact.prevent="next"
         @keydown.shift.enter.prevent="prev"
         @keydown.esc.prevent="emit('close')"
       />
-      <button type="button" class="fr-btn" title="Vorheriger (Shift+Enter)" @click="prev">‹</button>
-      <button type="button" class="fr-btn" title="Naechster (Enter)" @click="next">›</button>
+      <button type="button" class="fr-btn" :title="t.find.prevTitle" @click="prev">‹</button>
+      <button type="button" class="fr-btn" :title="t.find.nextTitle" @click="next">›</button>
       <span class="min-w-24 text-xs text-zinc-500 dark:text-zinc-400">{{ status }}</span>
-      <button type="button" class="fr-btn" title="Schliessen (Esc)" @click="emit('close')">
+      <button type="button" class="fr-btn" :title="t.find.closeTitle" @click="emit('close')">
         ✕
       </button>
     </div>
@@ -77,22 +74,22 @@ defineExpose({ focus })
       <input
         v-model="replacement"
         type="text"
-        placeholder="Ersetzen durch"
+        :placeholder="t.find.replacePlaceholder"
         class="min-w-40 flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm outline-none focus:border-accent dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
       />
-      <button type="button" class="fr-btn px-3" @click="replaceOne">Ersetzen</button>
-      <button type="button" class="fr-btn px-3" @click="replaceAll">Alle</button>
+      <button type="button" class="fr-btn px-3" @click="replaceOne">{{ t.find.replace }}</button>
+      <button type="button" class="fr-btn px-3" @click="replaceAll">{{ t.find.replaceAll }}</button>
     </div>
 
     <div class="flex flex-wrap gap-3 text-xs text-zinc-600 dark:text-zinc-300">
       <label class="flex cursor-pointer items-center gap-1">
-        <input v-model="opts.caseSensitive" type="checkbox" /> Gross/Klein
+        <input v-model="opts.caseSensitive" type="checkbox" /> {{ t.find.caseSensitive }}
       </label>
       <label class="flex cursor-pointer items-center gap-1">
-        <input v-model="opts.wholeWord" type="checkbox" /> Ganzes Wort
+        <input v-model="opts.wholeWord" type="checkbox" /> {{ t.find.wholeWord }}
       </label>
       <label class="flex cursor-pointer items-center gap-1">
-        <input v-model="opts.regex" type="checkbox" /> Regex
+        <input v-model="opts.regex" type="checkbox" /> {{ t.find.regex }}
       </label>
     </div>
   </div>

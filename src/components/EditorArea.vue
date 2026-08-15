@@ -3,8 +3,10 @@ import { computed, nextTick, ref } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import type { Transform } from '@/utils/textTransforms'
 import { buildSearchRegex, countMatches as countInText, type FindOptions } from '@/utils/find'
+import { useI18n } from '@/i18n'
 
 const store = useEditorStore()
+const { t } = useI18n()
 
 const emit = defineEmits<{
   cursor: [line: number, col: number]
@@ -189,7 +191,7 @@ defineExpose({
     class="editor-text h-full w-full resize-none bg-transparent px-6 py-5 outline-none placeholder:text-zinc-400"
     :style="editorStyle"
     spellcheck="true"
-    placeholder="Hier schreiben ..."
+    :placeholder="t.editor.placeholder"
     @keydown.tab="onTab"
     @keyup="reportCursor"
     @click="reportCursor"

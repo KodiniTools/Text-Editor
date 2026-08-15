@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
 import { useEditorStore } from '@/stores/editor'
+import { useI18n } from '@/i18n'
 
 const store = useEditorStore()
+const { t } = useI18n()
 const editingId = ref<string | null>(null)
 const editValue = ref('')
 const editInput = ref<HTMLInputElement | null>(null)
@@ -51,7 +53,7 @@ function commitEdit(): void {
         v-if="store.documents.length > 1"
         class="rounded px-1 text-xs text-zinc-400 opacity-0 hover:bg-zinc-300 hover:text-zinc-700 group-hover:opacity-100 dark:hover:bg-zinc-700"
         role="button"
-        title="Schliessen"
+        :title="t.tabs.closeTitle"
         @click.stop="store.closeDocument(doc.id)"
         >✕</span
       >
@@ -60,7 +62,7 @@ function commitEdit(): void {
     <button
       type="button"
       class="shrink-0 px-3 py-2 text-lg text-zinc-500 hover:text-accent"
-      title="Neues Dokument (Strg+M)"
+      :title="t.tabs.newDocTitle"
       @click="store.newDocument()"
     >
       +

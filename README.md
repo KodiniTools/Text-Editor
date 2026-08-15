@@ -24,6 +24,8 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   Zeilenabstand, Laufweite, Textfarbe (8 Schnellfarben + freier Farbwaehler), Ausrichtung,
   Hell/Dunkel/Auto, Zeilenumbruch, Zuruecksetzen. Ein-/ausblendbar ueber `Format`
 - **Fokus-Modus** blendet alle Leisten aus
+- **Zweisprachig (DE/EN)** – die komplette Oberflaeche laesst sich in der Format-Leiste unter
+  `Sprache` umschalten; die Wahl wird gemerkt und beim ersten Besuch aus der Browsersprache abgeleitet
 - **Import/Export**: Datei oeffnen, als `.txt`/`.md` herunterladen, alles kopieren
 
 ## Tastenkuerzel
@@ -45,7 +47,7 @@ npm install
 npm run dev        # Dev-Server (http://localhost:5173)
 npm run build      # Typecheck + Produktions-Build nach dist/
 npm run preview    # Build lokal ansehen
-npm run test       # Vitest (81 Tests)
+npm run test       # Vitest (93 Tests)
 npm run typecheck  # vue-tsc --noEmit
 npm run lint       # ESLint (Vue + TypeScript)
 npm run lint:fix   # ESLint mit Autofix
@@ -69,6 +71,9 @@ src/
   style.css                   Tailwind + CSS-Variablen (Akzentfarbe)
   types.ts                    EditorApi-Interface
   router/index.ts             Vue Router (eine Route)
+  i18n/
+    messages.ts               Uebersetzungstabelle DE/EN (getippt)
+    index.ts                  Spracherkennung, Umschalten, Persistenz, useI18n()
   stores/editor.ts            Pinia: Dokumente, Settings, Undo/Redo, Persistenz
   config/fonts.ts             Schriftenliste + Erkennen/Laden eigener Webfonts
   composables/
@@ -141,6 +146,25 @@ Weitere Eigenschaften:
 
 Wer eine Schrift lieber von Hand benennen oder aus einer anderen Quelle laden will, traegt sie
 weiterhin in `CUSTOM_FONTS` in [`src/config/fonts.ts`](src/config/fonts.ts) ein – das hat Vorrang.
+
+## Sprachen (i18n)
+
+Die Oberflaeche ist zweisprachig (Deutsch/Englisch). Umgeschaltet wird in der Format-Leiste unter
+`Sprache` / `Language`; die Wahl landet im `localStorage`, beim ersten Besuch entscheidet die
+Browsersprache. Die aktive Sprache steht auch in `<html lang>`.
+
+Umgesetzt ohne zusaetzliche Abhaengigkeit (kein `vue-i18n`): eine getippte Nachrichtentabelle in
+[`src/i18n/messages.ts`](src/i18n/messages.ts). `de` ist die Referenz, `en` hat den Typ
+`typeof de` – **eine fehlende oder zu viel uebersetzte Zeichenkette ist ein Compilerfehler**, kein
+stiller Fehltext. Das haelt beide Sprachen automatisch synchron und kommt ohne Laufzeit-Compiler
+aus (relevant unter strenger CSP).
+
+Eine dritte Sprache ergaenzen: in `messages.ts` ein weiteres Objekt vom Typ `Messages` anlegen,
+in `MESSAGES` und `LOCALES` (in [`src/i18n/index.ts`](src/i18n/index.ts)) eintragen – die
+Format-Leiste zeigt dann automatisch einen weiteren Knopf.
+
+Bereits vorhandene Dokumente werden beim Sprachwechsel **nicht** umgeschrieben (es sind
+Nutzerdaten); nur das erste Willkommensdokument wird in der Startsprache angelegt.
 
 ## KodiniTools-Integration
 
