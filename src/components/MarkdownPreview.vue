@@ -8,7 +8,9 @@ const html = computed(() => renderMarkdown(store.activeContent))
 </script>
 
 <template>
-  <div class="h-full overflow-y-auto border-l border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+  <div
+    class="h-full overflow-y-auto border-l border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
+  >
     <!-- eslint-disable-next-line vue/no-v-html -->
     <article class="md-preview px-6 py-5" v-html="html" />
   </div>

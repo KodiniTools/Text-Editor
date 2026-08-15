@@ -13,11 +13,7 @@ export function escapeRegExp(s: string): string {
  * Baut ein RegExp aus Suchbegriff + Optionen.
  * Gibt null zurueck bei leerem Begriff oder ungueltigem Regex.
  */
-export function buildSearchRegex(
-  query: string,
-  opts: FindOptions,
-  global = false,
-): RegExp | null {
+export function buildSearchRegex(query: string, opts: FindOptions, global = false): RegExp | null {
   if (query === '') return null
   let pattern = opts.regex ? query : escapeRegExp(query)
   if (opts.wholeWord) pattern = `\\b${pattern}\\b`

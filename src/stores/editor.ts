@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
+import { DEFAULT_FONT_ID, isKnownFont } from '@/config/fonts'
 
 export interface EditorDocument {
   id: string
@@ -10,18 +11,32 @@ export interface EditorDocument {
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system'
-export type FontFamily = 'sans' | 'serif' | 'mono'
+export type TextAlign = 'left' | 'center' | 'right' | 'justify'
 
 export interface EditorSettings {
   theme: ThemeMode
-  fontFamily: FontFamily
+  /** ID aus @/config/fonts (z. B. 'sans' oder eine eigene Schrift). */
+  fontFamily: string
   fontSize: number
   lineHeight: number
+  /** Laufweite in px. 0 = normal. */
+  letterSpacing: number
+  /** Textfarbe als Hex ('#1f2937'). Leer = Farbe des Designs. */
+  textColor: string
+  textAlign: TextAlign
   wordWrap: boolean
   showPreview: boolean
+  showFormatBar: boolean
   focusMode: boolean
   autoSave: boolean
 }
+
+/** Grenzen der Format-Einstellungen -- auch von der Format-Leiste genutzt. */
+export const LIMITS = {
+  fontSize: { min: 10, max: 42, step: 1 },
+  lineHeight: { min: 1, max: 3, step: 0.1 },
+  letterSpacing: { min: -1, max: 8, step: 0.1 },
+} as const
 
 interface HistoryEntry {
   past: string[]
@@ -34,15 +49,63 @@ const STORAGE_SETTINGS = 'kodini-editor-settings-v1'
 const HISTORY_LIMIT = 200
 const TYPING_DEBOUNCE = 500
 
-const DEFAULT_SETTINGS: EditorSettings = {
+export const DEFAULT_SETTINGS: EditorSettings = {
   theme: 'system',
-  fontFamily: 'sans',
+  fontFamily: DEFAULT_FONT_ID,
   fontSize: 16,
   lineHeight: 1.7,
+  letterSpacing: 0,
+  textColor: '',
+  textAlign: 'left',
   wordWrap: true,
   showPreview: false,
+  showFormatBar: true,
   focusMode: false,
   autoSave: true,
+}
+
+const HEX_COLOR = /^#[0-9a-f]{6}$/i
+
+function clamp(value: number, min: number, max: number, fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback
+  return Math.min(max, Math.max(min, value))
+}
+
+/**
+ * Bringt geladene Settings auf gueltige Werte.
+ *
+ * Noetig, weil im localStorage Staende aus aelteren Versionen liegen koennen
+ * (fehlende Felder, entfernte Schrift-IDs) und weil textColor als Inline-Style
+ * verwendet wird -- dort landet nur validiertes Hex.
+ */
+export function normalizeSettings(raw: Partial<EditorSettings>): EditorSettings {
+  const s: EditorSettings = { ...DEFAULT_SETTINGS, ...raw }
+  return {
+    ...s,
+    fontFamily: isKnownFont(s.fontFamily) ? s.fontFamily : DEFAULT_SETTINGS.fontFamily,
+    fontSize: clamp(
+      s.fontSize,
+      LIMITS.fontSize.min,
+      LIMITS.fontSize.max,
+      DEFAULT_SETTINGS.fontSize,
+    ),
+    lineHeight: clamp(
+      s.lineHeight,
+      LIMITS.lineHeight.min,
+      LIMITS.lineHeight.max,
+      DEFAULT_SETTINGS.lineHeight,
+    ),
+    letterSpacing: clamp(
+      s.letterSpacing,
+      LIMITS.letterSpacing.min,
+      LIMITS.letterSpacing.max,
+      DEFAULT_SETTINGS.letterSpacing,
+    ),
+    textColor: HEX_COLOR.test(String(s.textColor)) ? s.textColor : '',
+    textAlign: (['left', 'center', 'right', 'justify'] as const).includes(s.textAlign)
+      ? s.textAlign
+      : DEFAULT_SETTINGS.textAlign,
+  }
 }
 
 function uid(): string {
@@ -69,7 +132,7 @@ function loadDocs(): EditorDocument[] {
 function loadSettings(): EditorSettings {
   try {
     const raw = localStorage.getItem(STORAGE_SETTINGS)
-    if (raw) return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<EditorSettings>) }
+    if (raw) return normalizeSettings(JSON.parse(raw) as Partial<EditorSettings>)
   } catch {
     /* ignore */
   }
@@ -260,7 +323,19 @@ export const useEditorStore = defineStore('editor', () => {
 
   /* ---------- Settings ---------- */
   function updateSettings(patch: Partial<EditorSettings>): void {
-    Object.assign(settings, patch)
+    Object.assign(settings, normalizeSettings({ ...settings, ...patch }))
+  }
+
+  /** Setzt nur die Darstellung zurueck -- Design und Dokumente bleiben. */
+  function resetFormatting(): void {
+    updateSettings({
+      fontFamily: DEFAULT_SETTINGS.fontFamily,
+      fontSize: DEFAULT_SETTINGS.fontSize,
+      lineHeight: DEFAULT_SETTINGS.lineHeight,
+      letterSpacing: DEFAULT_SETTINGS.letterSpacing,
+      textColor: DEFAULT_SETTINGS.textColor,
+      textAlign: DEFAULT_SETTINGS.textAlign,
+    })
   }
 
   /* ---------- Persistenz ---------- */
@@ -272,11 +347,7 @@ export const useEditorStore = defineStore('editor', () => {
     { deep: true },
   )
   watch(activeId, (id) => localStorage.setItem(STORAGE_ACTIVE, id))
-  watch(
-    settings,
-    (s) => localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(s)),
-    { deep: true },
-  )
+  watch(settings, (s) => localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(s)), { deep: true })
 
   return {
     documents,
@@ -296,6 +367,7 @@ export const useEditorStore = defineStore('editor', () => {
     renameDocument,
     closeDocument,
     updateSettings,
+    resetFormatting,
   }
 })
 

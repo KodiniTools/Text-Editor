@@ -1,27 +1,52 @@
 import { watch } from 'vue'
 import type { EditorSettings } from '@/stores/editor'
-
-const FONT_MAP: Record<EditorSettings['fontFamily'], string> = {
-  sans: 'ui-sans-serif, system-ui, sans-serif',
-  serif: 'ui-serif, Georgia, Cambria, serif',
-  mono: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-}
+import { findFont, loadFont } from '@/config/fonts'
 
 /**
- * Wendet Theme (hell/dunkel/system) und Editor-Schriftart auf das <html>-Element an.
- * Reagiert auf System-Aenderungen wenn Modus 'system'.
+ * Spiegelt Design und Textdarstellung auf das <html>-Element.
+ *
+ * Die Darstellung laeuft ueber CSS-Variablen, damit Editor und Vorschau
+ * dieselbe Quelle nutzen und kein Bauteil die Werte doppelt kennt.
+ * Reagiert auf System-Aenderungen, wenn der Modus 'system' ist.
  */
 export function useTheme(settings: EditorSettings) {
   const media = window.matchMedia('(prefers-color-scheme: dark)')
+  const root = document.documentElement
 
-  function apply(): void {
+  function applyTheme(): void {
     const dark = settings.theme === 'dark' || (settings.theme === 'system' && media.matches)
-    document.documentElement.classList.toggle('dark', dark)
-    document.documentElement.style.setProperty('--editor-font', FONT_MAP[settings.fontFamily])
+    root.classList.toggle('dark', dark)
   }
 
-  media.addEventListener('change', apply)
-  watch(() => [settings.theme, settings.fontFamily], apply, { immediate: true })
+  function applyTypography(): void {
+    const font = findFont(settings.fontFamily)
+    root.style.setProperty('--editor-font', font.stack)
+    root.style.setProperty('--editor-size', `${settings.fontSize}px`)
+    root.style.setProperty('--editor-line-height', String(settings.lineHeight))
+    root.style.setProperty('--editor-letter-spacing', `${settings.letterSpacing}px`)
+    root.style.setProperty('--editor-align', settings.textAlign)
+    // Leere Farbe -> die Variable wird entfernt, dann greift der Theme-Wert.
+    if (settings.textColor) root.style.setProperty('--editor-color', settings.textColor)
+    else root.style.removeProperty('--editor-color')
 
-  return { apply }
+    // Eigene Schriften liegen als Datei vor und werden erst bei Auswahl geladen.
+    void loadFont(font)
+  }
+
+  media.addEventListener('change', applyTheme)
+  watch(() => settings.theme, applyTheme, { immediate: true })
+  watch(
+    () => [
+      settings.fontFamily,
+      settings.fontSize,
+      settings.lineHeight,
+      settings.letterSpacing,
+      settings.textColor,
+      settings.textAlign,
+    ],
+    applyTypography,
+    { immediate: true },
+  )
+
+  return { applyTheme, applyTypography }
 }

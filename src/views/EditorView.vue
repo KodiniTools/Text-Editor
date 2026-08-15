@@ -7,6 +7,7 @@ import type { Transform } from '@/utils/textTransforms'
 
 import DocumentTabs from '@/components/DocumentTabs.vue'
 import EditorToolbar from '@/components/EditorToolbar.vue'
+import FormatBar from '@/components/FormatBar.vue'
 import EditorArea from '@/components/EditorArea.vue'
 import FindReplace from '@/components/FindReplace.vue'
 import MarkdownPreview from '@/components/MarkdownPreview.vue'
@@ -68,6 +69,7 @@ useKeyboardShortcuts({
     <template v-if="!store.settings.focusMode">
       <DocumentTabs />
       <EditorToolbar ref="toolbarRef" @transform="onTransform" @toggle-find="toggleFind" />
+      <FormatBar v-if="store.settings.showFormatBar" />
     </template>
 
     <FindReplace v-if="showFind" ref="findRef" :editor="editorApi" @close="toggleFind" />
