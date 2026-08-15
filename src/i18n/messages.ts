@@ -105,6 +105,7 @@ export const de = {
     pageScreen: 'Bildschirm',
     orientationPortrait: 'Hochformat',
     orientationLandscape: 'Querformat',
+    pageDefaultHint: '(Standard)',
   },
   stepper: {
     decrease: (label: string): string => `${label} verkleinern`,
@@ -276,6 +277,7 @@ export const en: Messages = {
     pageScreen: 'Screen',
     orientationPortrait: 'Portrait',
     orientationLandscape: 'Landscape',
+    pageDefaultHint: '(default)',
   },
   stepper: {
     decrease: (label: string): string => `Decrease ${label.toLowerCase()}`,
