@@ -4,7 +4,7 @@ import { useEditorStore } from '@/stores/editor'
 import type { Transform } from '@/utils/textTransforms'
 import { buildSearchRegex, countMatches as countInText, type FindOptions } from '@/utils/find'
 import { pageDimensions } from '@/utils/pageFormats'
-import { DEFAULT_MARGIN_MM, mmToPx, pageCount } from '@/utils/renderPages'
+import { DEFAULT_MARGIN_MM, mmToPx, lineStepPx, paginateByLines } from '@/utils/renderPages'
 import { useI18n } from '@/i18n'
 
 const store = useEditorStore()
@@ -87,13 +87,19 @@ const textStyle = computed(() =>
   pageActive.value ? { height: `${textHeight.value}px` } : undefined,
 )
 
-/** Fuehrungslinien dort, wo im Export eine neue Seite beginnt. */
+/** Fuehrungslinien dort, wo im Export eine neue Seite beginnt (an Zeilengrenzen,
+ *  genau wie die Vorschau/der Export -- siehe paginateByLines). */
 const pageBreaks = computed<number[]>(() => {
   const m = metrics.value
   if (!m || !pageActive.value) return []
-  const n = pageCount(Math.max(m.contentH, textHeight.value), m.contentH)
+  const step = lineStepPx(store.settings.fontSize, store.settings.lineHeight)
+  const { pageStepPx, count } = paginateByLines(
+    Math.max(m.contentH, textHeight.value),
+    m.contentH,
+    step,
+  )
   const lines: number[] = []
-  for (let k = 1; k < n; k++) lines.push(m.margin + k * m.contentH)
+  for (let k = 1; k < count; k++) lines.push(m.margin + k * pageStepPx)
   return lines
 })
 
