@@ -15,7 +15,6 @@ import EditorToolbar from '@/components/EditorToolbar.vue'
 import FormatBar from '@/components/FormatBar.vue'
 import EditorArea from '@/components/EditorArea.vue'
 import FindReplace from '@/components/FindReplace.vue'
-import PagePreview from '@/components/PagePreview.vue'
 import StatusBar from '@/components/StatusBar.vue'
 
 const store = useEditorStore()
@@ -52,6 +51,17 @@ function toggleFind(): void {
   } else {
     openFind()
   }
+}
+
+/* ---------- Vorschau in neuem Tab ---------- */
+/**
+ * Oeffnet die exakte Vorschau in einem eigenen Tab. Vorher den aktuellen Stand
+ * in den localStorage schreiben, damit der neue Tab (eigene App-Instanz) ihn
+ * beim Start liest.
+ */
+function openPreview(): void {
+  store.persistNow()
+  window.open(`${import.meta.env.BASE_URL}preview`, '_blank', 'noopener')
 }
 
 /* ---------- Drucken / Als PDF ---------- */
@@ -130,6 +140,7 @@ useKeyboardShortcuts({
         @toggle-find="toggleFind"
         @print="printDocument"
         @export-pdf="exportPdfDocument"
+        @preview="openPreview"
       />
       <FormatBar />
     </template>
@@ -139,9 +150,6 @@ useKeyboardShortcuts({
     <div class="flex min-h-0 flex-1">
       <div class="min-w-0 flex-1">
         <EditorArea ref="editorAreaRef" class="h-full" @cursor="onCursor" />
-      </div>
-      <div v-if="store.settings.showPreview && !store.settings.focusMode" class="min-w-0 flex-1">
-        <PagePreview />
       </div>
     </div>
 
