@@ -200,6 +200,8 @@ defineExpose({
 <style scoped>
 .editor-text {
   font-family: var(--editor-font);
+  font-weight: var(--editor-weight, 400);
+  font-style: var(--editor-style, normal);
   font-size: var(--editor-size);
   line-height: var(--editor-line-height);
   letter-spacing: var(--editor-letter-spacing);

@@ -19,10 +19,10 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   - Kodierung: Base64, URL, HTML (je encode/decode, Unicode-sicher)
 - **Live Markdown-Vorschau** (sicher via `marked` + `DOMPurify`)
 - **Statistik**: Woerter, Zeichen (mit/ohne Leerz.), Zeilen, Saetze, Absaetze, Lesezeit; Cursor Zeile/Spalte
-- **Format-Leiste** direkt unter der Werkzeugleiste – Schriftart (inkl. eigener Schriften vom
-  Server), Schriftgroesse, Zeilenabstand, Laufweite, Textfarbe (8 Schnellfarben + freier
-  Farbwaehler), Ausrichtung, Hell/Dunkel/Auto, Zeilenumbruch, Zuruecksetzen. Ein-/ausblendbar
-  ueber `Format` in der Werkzeugleiste
+- **Format-Leiste** direkt unter der Werkzeugleiste – Schriftart mit allen Schnitten der
+  eigenen Schriften (nach Familie gruppiert, Vorschau in eigener Schrift), Schriftgroesse,
+  Zeilenabstand, Laufweite, Textfarbe (8 Schnellfarben + freier Farbwaehler), Ausrichtung,
+  Hell/Dunkel/Auto, Zeilenumbruch, Zuruecksetzen. Ein-/ausblendbar ueber `Format`
 - **Fokus-Modus** blendet alle Leisten aus
 - **Import/Export**: Datei oeffnen, als `.txt`/`.md` herunterladen, alles kopieren
 
@@ -45,7 +45,7 @@ npm install
 npm run dev        # Dev-Server (http://localhost:5173)
 npm run build      # Typecheck + Produktions-Build nach dist/
 npm run preview    # Build lokal ansehen
-npm run test       # Vitest (70 Tests)
+npm run test       # Vitest (81 Tests)
 npm run typecheck  # vue-tsc --noEmit
 npm run format     # Prettier
 ```
@@ -92,17 +92,18 @@ scp KodiniSans-Regular.woff2 root@server:/var/www/kodinitools.com/public/fonts/
 `deploy.sh` schreibt beim Bauen eine `fonts.json` mit den gefundenen Dateinamen neben die
 `index.html`; die App liest sie und baut daraus die Auswahl.
 
-**Dateinamen bestimmen Familie und Schnitt.** Zusammengehoerige Schnitte landen in einem Eintrag:
+**Jeder Schnitt wird ein eigener Auswahleintrag**, gruppiert unter dem Familiennamen. Aus
+`Switzer-Thin.woff2 … Switzer-Bold.woff2` werden also die Eintraege `Switzer Thin`, `Switzer
+Light`, … `Switzer Bold` in der Gruppe „Switzer". Der Dateiname bestimmt Familie und Schnitt:
 
-| Datei | Ergebnis |
+| Datei | Eintrag |
 |---|---|
-| `Switzer-Regular.woff2` | Switzer, 400 normal |
-| `Switzer-Bold.woff2` | Switzer, 700 normal |
-| `Switzer-BoldItalic.woff2` | Switzer, 700 kursiv |
-| `ClashDisplay-Regular.woff2` | Clash Display, 400 normal |
-| `Hind-SemiBold.woff2` | Hind, 600 normal |
-| `Ranade-Variable.woff2` | Ranade, 100–900 |
-| `Tanker-Regular.woff2` | Tanker, 400 normal |
+| `Switzer-Regular.woff2` | Switzer › Regular (400 normal) |
+| `Switzer-Bold.woff2` | Switzer › Bold (700 normal) |
+| `Switzer-BoldItalic.woff2` | Switzer › Bold Italic (700 kursiv) |
+| `Hind-SemiBold.woff2` | Hind › Semibold (600) |
+| `Ranade-Variable.woff2` | Ranade › Variable (100–900) |
+| `Tanker-Regular.woff2` | Tanker › Regular |
 
 Erkannt werden `thin`, `extralight`, `light`, `regular`, `medium`, `semibold`, `bold`,
 `extrabold`, `black` (auch numerisch: `-300`), dazu `italic`/`oblique` und `VariableFont`.
@@ -113,13 +114,14 @@ Weitere Eigenschaften:
 
 - **Formate**: `woff2` (empfohlen), `woff`, `ttf`, `otf`. Liegt derselbe Schnitt mehrfach vor,
   gewinnt das modernste Format – der Browser laedt nur eine Datei.
-- **Geladen wird erst bei Auswahl, und dann nur eine Datei.** Alle Schnitte werden beim
-  Browser angemeldet, geholt wird aber nur der eine, den das Textfeld darstellt (400 normal).
-  Switzer bringt 20 Schnitte mit -- der Browser laedt genau `Switzer-Regular.woff2`.
-  Solange niemand eine eigene Schrift waehlt, macht der Editor **null Netzwerkaufrufe**.
-- **Variable Fonts**: Liegt neben `X-Variable.woff2` auch ein `X-Regular.woff2`, gewinnt die
-  statische Datei (kleiner, und sonst waere nicht definiert, welche greift). Fehlt das Regular
-  -- wie bei Ranade --, uebernimmt der Variable Font.
+- **Vorschau**: Beim Aufklappen der Schrift-Auswahl steht jeder Eintrag in seiner eigenen
+  Schrift. Dafuer werden die Dateien geladen, sobald der Mauszeiger die Auswahl beruehrt (oder
+  sie den Fokus bekommt) – nicht beim Seitenstart.
+- **Geladen wird sonst erst bei Auswahl, und dann nur die eine Datei des Schnitts.** Wer nur
+  tippt und nie eine eigene Schrift oeffnet, loest **null Netzwerkaufrufe** aus.
+- **Variable Fonts**: Liegt neben `X-Variable.woff2` auch ein `X-Regular.woff2`, wird der
+  Variable Font weggelassen (die statische Datei ist kleiner, und sonst waere nicht definiert,
+  welche greift). Fehlt das Regular – wie bei Ranade –, bleibt der Variable Font.
 - **Faellt das Laden aus**, greift der Fallback-Stack – der Text bleibt lesbar.
 - **Dateinamen** duerfen Buchstaben, Ziffern und `. _ - ,` enthalten. Alles andere (Umlaute,
   Leerzeichen, Anfuehrungszeichen) wird uebersprungen und beim Deploy als Warnung genannt.

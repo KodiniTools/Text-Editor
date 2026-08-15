@@ -40,6 +40,42 @@ const WEIGHTS: [string, string][] = [
 
 const STYLES = ['italic', 'oblique']
 
+/** CSS-Gewicht -> lesbarer Schnittname fuer die Auswahl. */
+const WEIGHT_NAMES: Record<string, string> = {
+  '100': 'Thin',
+  '200': 'Extralight',
+  '300': 'Light',
+  '350': 'Semilight',
+  '400': 'Regular',
+  '500': 'Medium',
+  '600': 'Semibold',
+  '700': 'Bold',
+  '800': 'Extrabold',
+  '900': 'Black',
+  '950': 'Extrablack',
+}
+
+/**
+ * Beschriftung eines einzelnen Schnitts, z. B. 'Bold' oder 'Bold Italic'.
+ * Variable Fonts (Gewicht als Bereich) heissen 'Variable'.
+ * 'Regular Italic' wird zu 'Italic' verkuerzt.
+ */
+export function weightLabel(weight: string, style: string): string {
+  const italic = style === 'italic' || style === 'oblique'
+  if (weight.includes(' ')) return italic ? 'Variable Italic' : 'Variable'
+  const name = WEIGHT_NAMES[weight] ?? weight
+  if (italic) return name === 'Regular' ? 'Italic' : `${name} Italic`
+  return name
+}
+
+/** Sortierschluessel: nach Gewicht, normal vor kursiv. */
+export function faceOrder(weight: string, style: string): number {
+  const numeric = parseInt(weight, 10)
+  const w = Number.isFinite(numeric) ? numeric : 400
+  const italic = style === 'italic' || style === 'oblique'
+  return w * 10 + (italic ? 1 : 0)
+}
+
 export interface ParsedFontFile {
   /** Technischer Familienname aus dem Dateinamen, z. B. 'KodiniSans'. */
   familyKey: string

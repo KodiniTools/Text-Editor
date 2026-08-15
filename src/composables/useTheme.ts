@@ -21,6 +21,10 @@ export function useTheme(settings: EditorSettings) {
   function applyTypography(): void {
     const font = findFont(settings.fontFamily)
     root.style.setProperty('--editor-font', font.stack)
+    // Schnitt der gewaehlten Schrift (Bold, Light, ...). Systemschriften ohne
+    // Angabe bleiben bei normalem Gewicht.
+    root.style.setProperty('--editor-weight', font.weight ?? '400')
+    root.style.setProperty('--editor-style', font.style ?? 'normal')
     root.style.setProperty('--editor-size', `${settings.fontSize}px`)
     root.style.setProperty('--editor-line-height', String(settings.lineHeight))
     root.style.setProperty('--editor-letter-spacing', `${settings.letterSpacing}px`)

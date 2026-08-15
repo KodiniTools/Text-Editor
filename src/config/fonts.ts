@@ -8,7 +8,7 @@
  */
 
 import { readonly, shallowRef, type Ref } from 'vue'
-import { groupFontFiles, sortByFormatPreference } from '@/utils/fontFiles'
+import { faceOrder, groupFontFiles, sortByFormatPreference, weightLabel } from '@/utils/fontFiles'
 
 export interface FontSource {
   /** Dateiname relativ zu CUSTOM_FONT_BASE oder absolute URL. */
@@ -22,10 +22,18 @@ export interface FontSource {
 export interface EditorFont {
   /** Stabile ID -- wird in den Settings gespeichert, nicht mehr aendern. */
   id: string
-  /** Beschriftung in der Format-Leiste. */
+  /** Vollstaendige Beschriftung, z. B. 'Supreme Bold'. */
   label: string
+  /** Familienname fuer die Gruppierung in der Auswahl, z. B. 'Supreme'. Fehlt bei Systemschriften. */
+  group?: string
+  /** Kurzform je Schnitt fuer die gruppierte Auswahl, z. B. 'Bold'. */
+  faceLabel?: string
   /** Vollstaendiger CSS-Stack inkl. Fallbacks. */
   stack: string
+  /** Gewicht, mit dem der Text dargestellt wird (CSS font-weight). */
+  weight?: string
+  /** Stil, mit dem der Text dargestellt wird (CSS font-style). */
+  style?: string
   /** Nur bei Webfonts: font-family-Name, unter dem die Dateien registriert werden. */
   family?: string
   /** Nur bei Webfonts: die zu ladenden Dateien. */
@@ -119,13 +127,55 @@ export function isKnownFont(id: string): boolean {
 }
 
 /**
+ * Macht aus einer Dateiliste einen Auswahleintrag pro Schnitt.
+ *
+ * Frueher war jede Familie ein Eintrag, der nur den Regular-Schnitt zeigte --
+ * dadurch fehlten Bold, Light usw. in der Auswahl. Jetzt wird jeder Schnitt zu
+ * einem eigenen Eintrag ('Supreme Bold', 'Supreme Light', ...), gruppiert unter
+ * dem Familiennamen. Jeder Eintrag laedt genau seine eine Datei.
+ */
+export function buildFontsFromFiles(files: string[]): EditorFont[] {
+  const groups = groupFontFiles(sortByFormatPreference(files))
+  const fonts: EditorFont[] = []
+
+  for (const group of groups) {
+    const faces = [...group.files].sort(
+      (a, b) => faceOrder(a.weight, a.style) - faceOrder(b.weight, b.style),
+    )
+    for (const face of faces) {
+      const faceLabel = weightLabel(face.weight, face.style)
+      fonts.push({
+        // ID enthaelt Familie + Schnitt, damit sie eindeutig und stabil ist.
+        id: `datei:${group.familyKey.toLowerCase()}:${face.weight.replace(/\s+/g, '-')}:${face.style}`,
+        label: `${group.label} ${faceLabel}`,
+        faceLabel,
+        group: group.label,
+        family: group.familyKey,
+        weight: face.weight,
+        style: face.style,
+        stack: `"${group.familyKey}", ui-sans-serif, system-ui, sans-serif`,
+        sources: [
+          {
+            url: `${CUSTOM_FONT_BASE}${encodeURIComponent(face.file)}`,
+            weight: face.weight,
+            style: face.style,
+          },
+        ],
+      })
+    }
+  }
+
+  return fonts
+}
+
+/**
  * Liest die vom Deploy erzeugte Datei fonts.json und macht aus den
  * Dateinamen fertige Eintraege fuer die Auswahl.
  *
  * Die Datei liegt neben der index.html. Fehlt sie (Dev-Server, Ordner leer),
  * passiert nichts -- die Systemschriften bleiben.
  *
- * @returns Anzahl der neu gefundenen Schriften.
+ * @returns Anzahl der neu gefundenen Schnitte.
  */
 export async function discoverFonts(baseUrl = '/'): Promise<number> {
   if (typeof fetch !== 'function') return 0
@@ -136,25 +186,18 @@ export async function discoverFonts(baseUrl = '/'): Promise<number> {
     const files = Array.isArray(data) ? data.filter((f): f is string => typeof f === 'string') : []
     if (!files.length) return 0
 
-    const fonts = groupFontFiles(sortByFormatPreference(files)).map((group) =>
-      customFont(
-        `datei:${group.familyKey.toLowerCase()}`,
-        group.label,
-        group.familyKey,
-        group.files.map((f) => ({
-          url: encodeURIComponent(f.file),
-          weight: f.weight,
-          style: f.style,
-        })),
-      ),
-    )
     const before = registry.value.length
-    registerFonts(fonts)
+    registerFonts(buildFontsFromFiles(files))
     return registry.value.length - before
   } catch {
     // Kein Netz, kaputtes JSON, alter Server -- kein Grund, die App zu stoeren.
     return 0
   }
+}
+
+/** Laedt alle bekannten Webfonts -- fuer die Vorschau in der Schrift-Auswahl. */
+export function loadAllFonts(): void {
+  for (const font of registry.value) void loadFont(font)
 }
 
 function formatFromUrl(url: string): string {
@@ -194,26 +237,23 @@ export function loadFont(font: EditorFont): Promise<boolean> {
 
   const family = font.family
   const sources = font.sources
-  const task = (async () => {
-    for (const src of sources) {
+  // Jeder Eintrag ist genau ein Schnitt (eine Datei) -- es wird also nur das
+  // geladen, was der Eintrag darstellt, nicht die ganze Familie.
+  const task = Promise.all(
+    sources.map(async (src) => {
       const face = new FontFace(family, `url("${src.url}") format("${formatFromUrl(src.url)}")`, {
         weight: src.weight ?? '400',
         style: src.style ?? 'normal',
         display: 'swap',
       })
-      // Nur registrieren, nicht laden. Familien wie Switzer haben 20 Schnitte;
-      // das Textfeld stellt aber nur einen davon dar. Der Browser holt eine
-      // Datei erst, wenn ihr Schnitt wirklich gebraucht wird.
-      document.fonts.add(face)
-    }
-    // Den einen dargestellten Schnitt vorladen, damit der Text nicht erst in
-    // der Ersatzschrift erscheint -- und damit wir wissen, ob es geklappt hat.
-    await document.fonts.load(`400 1em "${family}"`)
-    return document.fonts.check(`400 1em "${family}"`)
-  })().catch(() => {
-    // Nicht erneut versuchen, aber auch nicht die App stoeren.
-    return false
-  })
+      document.fonts.add(await face.load())
+    }),
+  )
+    .then(() => true)
+    .catch(() => {
+      // Nicht erneut versuchen, aber auch nicht die App stoeren.
+      return false
+    })
 
   loading.set(font.id, task)
   return task
