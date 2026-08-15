@@ -3,7 +3,7 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import { buildPages } from '@/utils/renderPages'
 import { pageRenderOptions } from '@/utils/pageRenderOptions'
-import { findFont, loadFont } from '@/config/fonts'
+import { findFont, fontList, loadFont } from '@/config/fonts'
 
 /**
  * Zeigt das Dokument exakt so, wie es als PDF exportiert wird: als Seiten im
@@ -20,14 +20,31 @@ const scaledHeight = ref(0)
 
 let currentRoot: HTMLElement | null = null
 let rebuildTimer: ReturnType<typeof setTimeout> | null = null
+// Neuere Rebuild-Anfragen gewinnen: nach dem await darf ein alter Lauf nicht
+// mehr in den DOM schreiben.
+let rebuildToken = 0
 
-function rebuild(): void {
+async function rebuild(): Promise<void> {
   const stageEl = stage.value
   const viewportEl = viewport.value
   if (!stageEl || !viewportEl) return
 
-  // Sicherstellen, dass die gewaehlte Schrift geladen ist, bevor gemessen wird.
-  void loadFont(findFont(store.settings.fontFamily))
+  const token = ++rebuildToken
+
+  // Die gewaehlte Schrift VOR dem Messen laden -- sonst misst buildPages mit der
+  // Ersatzschrift (falsche Zeilenhoehe/Umbruch) und die Vorschau zeigt die
+  // falsche Schrift. In einem frisch geoeffneten Vorschau-Tab ist die eigene
+  // Schrift beim ersten Rebuild evtl. noch nicht registriert; dann greift der
+  // watch(fontList) unten und baut neu, sobald sie da ist.
+  await loadFont(findFont(store.settings.fontFamily))
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    try {
+      await document.fonts.ready
+    } catch {
+      /* egal -- notfalls mit Fallback rendern */
+    }
+  }
+  if (token !== rebuildToken || !stage.value || !viewport.value) return
 
   const opts = pageRenderOptions(store.settings, store.activeContent)
   const { root, widthPx } = buildPages(opts)
@@ -79,6 +96,10 @@ watch(
   ],
   rebuild,
 )
+// Eigene Schriften werden erst nach dem Start entdeckt (discoverFonts). Sobald
+// die Liste waechst, neu aufbauen -- damit greift die gewaehlte Schrift auch,
+// wenn sie beim ersten Rebuild noch nicht registriert war.
+watch(fontList, rebuild)
 </script>
 
 <template>

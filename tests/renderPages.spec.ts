@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PX_PER_MM, mmToPx, pageCount } from '@/utils/renderPages'
+import { PX_PER_MM, lineStepPx, mmToPx, pageCount, paginateByLines } from '@/utils/renderPages'
 import { safeFileName } from '@/utils/exportPdf'
 
 describe('renderPages Masse', () => {
@@ -25,6 +25,43 @@ describe('renderPages Masse', () => {
   it('ignoriert winzige Messfehler an der Seitengrenze', () => {
     // 1000.00005 soll nicht faelschlich eine zweite Seite ausloesen.
     expect(pageCount(1000.00005, 1000)).toBe(1)
+  })
+})
+
+describe('lineStepPx', () => {
+  it('multipliziert Schriftgroesse mit Zeilenhoehe', () => {
+    expect(lineStepPx(16, 1.7)).toBeCloseTo(27.2, 5)
+    expect(lineStepPx(20, 1.5)).toBe(30)
+  })
+
+  it('faengt unsinnige Werte ab', () => {
+    expect(lineStepPx(16, 0)).toBe(16)
+    expect(lineStepPx(0, 1.7)).toBe(1)
+  })
+})
+
+describe('paginateByLines', () => {
+  it('rundet die Seitenhoehe auf ganze Zeilen ab (keine Zeile wird geteilt)', () => {
+    // A4-Inhaltshoehe 986 px, Zeilenschritt 27.2 -> 36 ganze Zeilen je Seite.
+    const p = paginateByLines(2000, 986, 27.2)
+    expect(p.linesPerPage).toBe(36)
+    expect(p.pageStepPx).toBeCloseTo(979.2, 3)
+    expect(p.pageStepPx).toBeLessThanOrEqual(986)
+  })
+
+  it('teilt den Inhalt an Zeilengrenzen in Seiten', () => {
+    // 36 Zeilen je Seite: 36 Zeilen -> 1 Seite, 37 -> 2 Seiten.
+    expect(paginateByLines(36 * 27.2, 986, 27.2).count).toBe(1)
+    expect(paginateByLines(37 * 27.2, 986, 27.2).count).toBe(2)
+    expect(paginateByLines(72 * 27.2, 986, 27.2).count).toBe(2)
+    expect(paginateByLines(73 * 27.2, 986, 27.2).count).toBe(3)
+  })
+
+  it('mindestens eine Zeile je Seite und eine Seite gesamt', () => {
+    // Riesige Schrift: Zeile hoeher als die Seite -> trotzdem 1 Zeile/Seite.
+    const p = paginateByLines(0, 500, 800)
+    expect(p.linesPerPage).toBe(1)
+    expect(p.count).toBe(1)
   })
 })
 

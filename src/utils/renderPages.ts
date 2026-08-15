@@ -24,6 +24,48 @@ export function pageCount(totalContentPx: number, pageContentPx: number): number
   return Math.max(1, Math.ceil(totalContentPx / pageContentPx - 1e-4))
 }
 
+/**
+ * Hoehe einer Textzeile in px. Im Dokument gilt genau eine Schriftgroesse und
+ * eine (einheitenlose) Zeilenhoehe, also ist jede sichtbare Zeile gleich hoch:
+ * fontSize * lineHeight.
+ */
+export function lineStepPx(fontSizePx: number, lineHeight: number): number {
+  const step = fontSizePx * lineHeight
+  return step > 0 ? step : Math.max(1, fontSizePx)
+}
+
+export interface LinePagination {
+  /** Hoehe je Seite, auf ganze Zeilen abgerundet (<= Inhaltshoehe der Seite). */
+  pageStepPx: number
+  /** Anzahl Seiten. */
+  count: number
+  /** Ganze Zeilen, die auf eine Seite passen. */
+  linesPerPage: number
+}
+
+/**
+ * Teilt eine Inhaltshoehe in Seiten, ohne eine Zeile zu zerschneiden.
+ *
+ * Da jede Zeile gleich hoch ist (stepPx), passen pro Seite
+ * floor(Seiteninhalt / stepPx) ganze Zeilen. Die Seitenhoehe wird dadurch auf
+ * ein Vielfaches der Zeilenhoehe abgerundet; der Rest bleibt unten als
+ * Weissraum -- genau wie bei einem echten Seitenumbruch.
+ */
+export function paginateByLines(
+  totalContentPx: number,
+  pageContentPx: number,
+  stepPx: number,
+): LinePagination {
+  if (stepPx <= 0 || pageContentPx <= 0) {
+    return { pageStepPx: pageContentPx, count: 1, linesPerPage: 1 }
+  }
+  const linesPerPage = Math.max(1, Math.floor(pageContentPx / stepPx + 1e-4))
+  const pageStepPx = linesPerPage * stepPx
+  const totalLines = Math.max(1, Math.round(totalContentPx / stepPx))
+  const count = Math.max(1, Math.ceil(totalLines / linesPerPage - 1e-4))
+  return { pageStepPx, count, linesPerPage }
+}
+
 export interface PageTypography {
   fontStack: string
   fontWeight: string
@@ -97,7 +139,10 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
   const totalH = meter.scrollHeight
   document.body.removeChild(meter)
 
-  const n = pageCount(totalH, contentH)
+  // An Zeilengrenzen umbrechen, damit keine Zeile zwischen zwei Seiten
+  // zerschnitten wird.
+  const stepPx = lineStepPx(opts.typography.fontSizePx, opts.typography.lineHeight)
+  const { pageStepPx, count: n } = paginateByLines(totalH, contentH, stepPx)
 
   // --- Seiten bauen ---
   const root = document.createElement('div')
@@ -118,19 +163,20 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
     page.style.overflow = 'hidden'
     page.style.flex = '0 0 auto'
 
-    // Fenster = Inhaltsbereich (Seite minus Rand); zeigt den Ausschnitt der
-    // Seite i durch einen negativen Versatz des Textblocks.
+    // Fenster = Inhaltsbereich (Seite minus Rand). Die Hoehe ist auf ganze
+    // Zeilen begrenzt (pageStepPx), damit die unterste Zeile vollstaendig zu
+    // sehen ist; der Textblock wird um ganze Seiten nach oben geschoben.
     const windowEl = document.createElement('div')
     windowEl.style.position = 'absolute'
     windowEl.style.left = `${marginPx}px`
     windowEl.style.top = `${marginPx}px`
     windowEl.style.width = `${contentW}px`
-    windowEl.style.height = `${contentH}px`
+    windowEl.style.height = `${Math.min(contentH, pageStepPx)}px`
     windowEl.style.overflow = 'hidden'
 
     const inner = document.createElement('div')
     inner.style.width = `${contentW}px`
-    inner.style.marginTop = `${-i * contentH}px`
+    inner.style.marginTop = `${-i * pageStepPx}px`
     applyTypography(inner, opts.typography)
     inner.textContent = text
 
