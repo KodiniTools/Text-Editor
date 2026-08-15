@@ -56,6 +56,53 @@ body {
   flex: 0 0 auto;
 }
 
+/*
+ * Druck-/PDF-Ausgabe. Am Bildschirm ist #print-root unsichtbar; beim Drucken
+ * wird alles andere ausgeblendet und nur der Dokumenttext im gewaehlten
+ * Papierformat (via @page, gesetzt in EditorView) ausgegeben -- mit derselben
+ * Typografie wie im Editor.
+ */
+#print-root {
+  display: none;
+}
+
+@media print {
+  /* visibility statt display: erhaelt das Layout, verbirgt aber alles ausser
+     dem Druckinhalt -- robust auch fuer Navigation/Footer ausserhalb von #app. */
+  body * {
+    visibility: hidden !important;
+  }
+  #print-root,
+  #print-root * {
+    visibility: visible !important;
+  }
+  .global-nav,
+  .site-footer,
+  .cookie-banner,
+  .cookie-modal-overlay {
+    display: none !important;
+  }
+  #print-root {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    font-family: var(--editor-font);
+    font-weight: var(--editor-weight, 400);
+    font-style: var(--editor-style, normal);
+    font-size: var(--editor-size);
+    line-height: var(--editor-line-height);
+    letter-spacing: var(--editor-letter-spacing);
+    text-align: var(--editor-align);
+    /* Auf Papier immer lesbar: eigene Textfarbe oder Schwarz. */
+    color: var(--editor-color, #000);
+    background: #ffffff;
+  }
+}
+
 /* Bildlaufleiste dezent */
 textarea::-webkit-scrollbar,
 .overflow-y-auto::-webkit-scrollbar {

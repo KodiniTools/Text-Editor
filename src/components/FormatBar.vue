@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { LIMITS, useEditorStore, type TextAlign } from '@/stores/editor'
 import { findFont, fontList, isKnownFont, loadAllFonts, type EditorFont } from '@/config/fonts'
+import { PAGE_FORMATS, type PageFormatId, type PageOrientation } from '@/utils/pageFormats'
 import { useI18n } from '@/i18n'
 import type { Messages } from '@/i18n/messages'
 import NumberStepper from './NumberStepper.vue'
@@ -72,6 +73,13 @@ const ALIGNMENTS: { value: TextAlign; labelKey: FormatKey; lines: [number, numbe
     ],
   },
 ]
+
+/** Ausrichtung der Seite; deaktiviert, solange kein Papierformat gewaehlt ist. */
+const ORIENTATIONS: { value: PageOrientation; labelKey: FormatKey }[] = [
+  { value: 'portrait', labelKey: 'orientationPortrait' },
+  { value: 'landscape', labelKey: 'orientationLandscape' },
+]
+const pageChosen = computed(() => store.settings.pageFormat !== 'none')
 
 /** Farbe fuer <input type="color">, das keinen leeren Wert kennt. */
 const colorInputValue = computed(() => store.settings.textColor || '#111827')
@@ -261,6 +269,69 @@ function setColor(value: string): void {
               stroke="currentColor"
               stroke-width="1.6"
               stroke-linecap="round"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <span class="fb-divider" />
+
+    <!-- Seitenformat -->
+    <label class="fb-group">
+      <span class="fb-label">{{ t.format.page }}</span>
+      <select
+        class="fb-select"
+        :value="store.settings.pageFormat"
+        :title="t.format.page"
+        @change="
+          store.updateSettings({
+            pageFormat: ($event.target as HTMLSelectElement).value as PageFormatId,
+          })
+        "
+      >
+        <option value="none">{{ t.format.pageScreen }}</option>
+        <option v-for="f in PAGE_FORMATS" :key="f.id" :value="f.id">{{ f.label }}</option>
+      </select>
+    </label>
+
+    <!-- Ausrichtung der Seite (nur bei gewaehltem Format) -->
+    <div v-if="pageChosen" class="fb-group">
+      <div class="flex gap-1">
+        <button
+          v-for="o in ORIENTATIONS"
+          :key="o.value"
+          type="button"
+          class="seg-btn flex h-[26px] w-7 items-center justify-center"
+          :class="store.settings.pageOrientation === o.value ? 'seg-active' : ''"
+          :title="t.format[o.labelKey]"
+          :aria-label="t.format[o.labelKey]"
+          :aria-pressed="store.settings.pageOrientation === o.value"
+          @click="store.updateSettings({ pageOrientation: o.value })"
+        >
+          <!-- Rechteck hoch bzw. quer -->
+          <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" aria-hidden="true">
+            <rect
+              v-if="o.value === 'portrait'"
+              x="4.5"
+              y="2"
+              width="7"
+              height="12"
+              rx="1"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.4"
+            />
+            <rect
+              v-else
+              x="2"
+              y="4.5"
+              width="12"
+              height="7"
+              rx="1"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.4"
             />
           </svg>
         </button>

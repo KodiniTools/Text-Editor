@@ -58,6 +58,15 @@ describe('normalizeSettings', () => {
     expect(normalizeSettings({ textAlign: 'schraeg' as never }).textAlign).toBe('left')
     expect(normalizeSettings({ textAlign: 'justify' }).textAlign).toBe('justify')
   })
+
+  it('validiert Papierformat und Seitenausrichtung', () => {
+    expect(normalizeSettings({ pageFormat: 'a4' }).pageFormat).toBe('a4')
+    expect(normalizeSettings({ pageFormat: 'a7' as never }).pageFormat).toBe('none')
+    expect(normalizeSettings({ pageOrientation: 'landscape' }).pageOrientation).toBe('landscape')
+    expect(normalizeSettings({ pageOrientation: 'schraeg' as never }).pageOrientation).toBe(
+      'portrait',
+    )
+  })
 })
 
 describe('editor store - Darstellung', () => {
