@@ -4,9 +4,11 @@ import { useEditorStore } from '@/stores/editor'
 import TransformMenu from './TransformMenu.vue'
 import type { Transform } from '@/utils/textTransforms'
 import { useI18n } from '@/i18n'
+import { usePageFormatLabel } from '@/composables/usePageFormatLabel'
 
 const store = useEditorStore()
 const { t } = useI18n()
+const pageFormatLabel = usePageFormatLabel()
 
 const emit = defineEmits<{
   transform: [fn: Transform]
@@ -104,8 +106,9 @@ defineExpose({ download, copyAll, triggerImport })
         <button type="button" class="menu-item" @click="download('md')">
           {{ t.toolbar.asMd }}
         </button>
-        <button type="button" class="menu-item" @click="exportPdf">
+        <button type="button" class="menu-item leading-tight" @click="exportPdf">
           {{ t.toolbar.asPdf }}
+          <span class="block text-xs text-zinc-400">{{ pageFormatLabel }}</span>
         </button>
       </div>
     </div>
@@ -114,7 +117,12 @@ defineExpose({ download, copyAll, triggerImport })
       {{ t.toolbar.copy }}
     </button>
 
-    <button type="button" class="tb-btn" :title="t.toolbar.printTitle" @click="emit('print')">
+    <button
+      type="button"
+      class="tb-btn"
+      :title="`${t.toolbar.print} · ${pageFormatLabel}`"
+      @click="emit('print')"
+    >
       {{ t.toolbar.print }}
     </button>
 
