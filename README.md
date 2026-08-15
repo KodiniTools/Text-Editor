@@ -87,24 +87,7 @@ Der Unterpfad ist im Build fest verdrahtet (`base: '/texteditor/'` in `vite.conf
 uebernimmt ihn automatisch via `import.meta.env.BASE_URL`. Ein Build fuer einen anderen Pfad
 erfordert also eine Anpassung von `base`.
 
-**1. Build erzeugen**
-
-```bash
-npm ci
-npm run build       # -> dist/  (index.html + assets/ mit Content-Hash)
-```
-
-**2. Dateien auf den Server**
-
-```bash
-# Inhalt von dist/ (nicht den Ordner selbst) nach /var/www/kodinitools.com/texteditor/
-rsync -av --delete dist/ user@server:/var/www/kodinitools.com/texteditor/
-sudo chown -R www-data:www-data /var/www/kodinitools.com/texteditor
-```
-
-`--delete` raeumt alte Assets mit veraltetem Hash weg. Alternativ per SCP/FileZilla hochladen.
-
-**3. Nginx**
+**1. Nginx** (einmalig)
 
 Den Block aus [`deploy/nginx-texteditor.conf`](deploy/nginx-texteditor.conf) in den
 `server`-Block von `/etc/nginx/sites-enabled/kodinitools.com` einfuegen, dann:
@@ -118,7 +101,47 @@ Der Block enthaelt: Redirect `/texteditor` -> `/texteditor/`, 1 Jahr `immutable`
 History-Routen nicht 404en. `index.html` selbst wird bewusst nur 60 s gecacht, sonst zeigt der
 Browser nach einem Deploy weiter die alte Version.
 
-**4. Pruefen**
+**2. Build-Checkout anlegen** (einmalig, auf dem Server)
+
+```bash
+git clone https://github.com/KodiniTools/Text-Editor.git /opt/kodini-build/texteditor
+chmod +x /opt/kodini-build/texteditor/deploy/deploy.sh
+```
+
+Voraussetzung: Node >= 18 auf dem Server (`node -v`).
+
+**3. Deployen** – ab jetzt der einzige noetige Befehl
+
+```bash
+/opt/kodini-build/texteditor/deploy/deploy.sh
+```
+
+[`deploy/deploy.sh`](deploy/deploy.sh) holt `main` von origin, baut (Typecheck + Vite) und legt das
+Ergebnis nach `/var/www/kodinitools.com/texteditor/`. Kein Nginx-Reload noetig, da sich nur
+statische Dateien aendern.
+
+| Option | Wirkung |
+|---|---|
+| `-n`, `--dry-run` | Baut und zeigt, was ausgeliefert wuerde – schreibt nichts ins Live-Verzeichnis |
+| `--help` | Kurzhilfe |
+| `BRANCH=... deploy.sh` | Anderen Branch statt `main` deployen |
+| `TARGET=... deploy.sh` | Anderes Zielverzeichnis (muss `/var/www/<site>/<tool>` sein) |
+
+Zwei eingebaute Sicherungen:
+
+- **Build-Pruefung vor dem Ausliefern**: Enthaelt `dist/index.html` nicht den Praefix
+  `/texteditor/assets/`, bricht das Script ab und laesst das Live-Verzeichnis unberuehrt. Das
+  faengt genau den Fall ab, in dem `base` in `vite.config.ts` fehlt (Ergebnis waere eine weisse
+  Seite mit lauter 404s).
+- **Atomarer Schwenk**: Die neue Version wird komplett in `.texteditor.new` daneben aufgebaut und
+  erst per `mv` aktiv geschaltet. Es gibt damit keinen Moment, in dem die neue `index.html`
+  bereits ausgeliefert wird, die passenden Assets aber noch fehlen. Alte Assets mit veraltetem
+  Hash verschwinden automatisch mit der alten Version.
+
+Zum Schluss prueft das Script selbst per `curl`, ob `https://kodinitools.com/texteditor/` mit
+200 antwortet, und liefert bei Abweichung einen Exit-Code != 0 (brauchbar fuer Cron/CI).
+
+**Manuell pruefen**
 
 ```bash
 curl -I https://kodinitools.com/texteditor          # 301 -> /texteditor/
