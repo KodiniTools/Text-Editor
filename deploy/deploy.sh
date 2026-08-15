@@ -46,7 +46,9 @@ main() {
   esac
 
   local script_dir repo_dir
-  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  # readlink -f loest Symlinks auf, damit der Aufruf ueber einen Kurzbefehl in
+  # /usr/local/bin trotzdem im echten Checkout landet.
+  script_dir="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
   repo_dir="$(dirname "$script_dir")"
 
   # --- Sicherheitsnetz: rsync --delete raeumt das Ziel leer. Ein Tippfehler
