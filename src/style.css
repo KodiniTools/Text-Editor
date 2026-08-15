@@ -26,10 +26,34 @@
 }
 
 html,
-body,
-#app {
+body {
   height: 100%;
   margin: 0;
+}
+
+/*
+ * App-Shell: Navigation oben, Editor in der Mitte, Footer unten -- alles in
+ * einer Flex-Spalte ueber die volle Hoehe. Die Seite selbst scrollt nicht;
+ * gescrollt wird innerhalb des Editors (Textarea/Vorschau).
+ */
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#app {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Der Footer soll nicht schrumpfen; die Navigation nimmt ihre Eigenhoehe. */
+.site-footer {
+  flex: 0 0 auto;
+}
+.global-nav {
+  flex: 0 0 auto;
 }
 
 /* Bildlaufleiste dezent */

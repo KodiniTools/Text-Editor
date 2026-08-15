@@ -4,10 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kodini Texteditor</title>
-    <meta name="description" content="Datenschutzfreundlicher Browser-Texteditor. Alle Verarbeitung passiert lokal im Browser." />
+    <meta
+      name="description"
+      content="Datenschutzfreundlicher Browser-Texteditor. Alle Verarbeitung passiert lokal im Browser."
+    />
+    <!-- Google Consent Mode v2 (vor evtl. GTM) -->
+    <!--INJECT:consent-mode-->
   </head>
   <body>
+    <!-- Globale Navigation (vendored aus dem KodiniTools-Partial) -->
+    <!--INJECT:nav-->
+
     <div id="app"></div>
+
+    <!-- Globaler Footer + Cookie-Banner -->
+    <!--INJECT:footer-->
+    <!--INJECT:cookie-banner-->
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

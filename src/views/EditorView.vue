@@ -67,7 +67,7 @@ useKeyboardShortcuts({
 </script>
 
 <template>
-  <div class="flex h-screen flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+  <div class="flex h-full flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
     <template v-if="!store.settings.focusMode">
       <DocumentTabs />
       <EditorToolbar ref="toolbarRef" @transform="onTransform" @toggle-find="toggleFind" />

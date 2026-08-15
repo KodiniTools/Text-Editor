@@ -102,9 +102,28 @@ describe('Sprachwechsel', () => {
     expect(t.value.toolbar.find).toBe('Find')
   })
 
-  it('merkt sich die Sprache im localStorage', () => {
+  it('merkt sich die Sprache im gemeinsamen localStorage-Schluessel', () => {
     setLocale('en')
-    expect(localStorage.getItem('kodini-editor-locale-v1')).toBe('en')
+    // Gleicher Schluessel wie Navigation/Footer/Cookie-Banner.
+    expect(localStorage.getItem('locale')).toBe('en')
+  })
+
+  it('loest das globale locale-changed-Event aus', () => {
+    let received: string | null = null
+    const handler = (e: Event): void => {
+      received = ((e as CustomEvent).detail as { locale: string }).locale
+    }
+    window.addEventListener('locale-changed', handler)
+    setLocale('en')
+    window.removeEventListener('locale-changed', handler)
+    expect(received).toBe('en')
+  })
+
+  it('uebernimmt einen Wechsel aus der globalen Navigation', () => {
+    // Navigation setzt locale und feuert das Event -- der Editor zieht nach.
+    localStorage.setItem('locale', 'en')
+    window.dispatchEvent(new CustomEvent('locale-changed', { detail: { locale: 'en' } }))
+    expect(messages().toolbar.new).toBe('New')
   })
 
   it('setzt <html lang>', () => {
