@@ -47,8 +47,18 @@ npm run build      # Typecheck + Produktions-Build nach dist/
 npm run preview    # Build lokal ansehen
 npm run test       # Vitest (81 Tests)
 npm run typecheck  # vue-tsc --noEmit
-npm run format     # Prettier
+npm run lint       # ESLint (Vue + TypeScript)
+npm run lint:fix   # ESLint mit Autofix
+npm run format     # Prettier (schreibt)
+npm run format:check  # Prettier (nur pruefen)
+npm run check      # lint + format:check + typecheck + test in einem
 ```
+
+**Code-Qualitaet**: ESLint (`eslint.config.js`, Flat-Config) mit den empfohlenen Regeln von
+`typescript-eslint` und `eslint-plugin-vue`. Die Formatierung bleibt bei Prettier
+(`.prettierrc.json`); `@vue/eslint-config-prettier` schaltet alle Regeln ab, die sich mit
+Prettier ueberschneiden, sodass sich beide nicht widersprechen. `npm run check` fasst Lint,
+Format-Pruefung, Typecheck und Tests zusammen – gut fuer CI oder vor einem Commit.
 
 ## Projektstruktur
 
@@ -213,7 +223,5 @@ curl -I https://kodinitools.com/texteditor/assets/  # 403/404 (kein Directory-Li
 ## Bekannte Grenzen / Follow-ups
 
 - Kein Syntax-Highlighting im Editor (bewusst `<textarea>` fuer Robustheit statt contenteditable).
-- ESLint ist nicht enthalten (nur Prettier). Empfohlen zum Ergaenzen:
-  `npm i -D eslint @vue/eslint-config-typescript eslint-plugin-vue` + passende Flat-Config.
 - Undo-History ist pro Session (nicht persistiert) und auf 200 Stufen begrenzt.
 - Regex im Suchfeld nutzt Nutzereingaben; ungueltige Muster werden abgefangen (kein Absturz).
