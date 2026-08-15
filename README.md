@@ -147,6 +147,32 @@ Weitere Eigenschaften:
 Wer eine Schrift lieber von Hand benennen oder aus einer anderen Quelle laden will, traegt sie
 weiterhin in `CUSTOM_FONTS` in [`src/config/fonts.ts`](src/config/fonts.ts) ein – das hat Vorrang.
 
+## Globale Seiten-Bausteine (Navigation, Footer, Cookies)
+
+Die Seite laeuft unter der globalen KodiniTools-Navigation (Eintrag unter **Tools**), mit dem
+gemeinsamen Footer und dem DSGVO-Cookie-Banner samt Google Consent Mode v2.
+
+- Die Bausteine liegen als eigene Dateien unter [`partials/`](partials/) (`nav.html`,
+  `footer.html`, `cookie-banner.html`, `consent-mode.html`).
+- Ein kleiner Vite-Schritt (`injectPartials` in `vite.config.ts`) bindet sie beim Build ueber
+  Platzhalter `<!--INJECT:name-->` direkt in `index.html` ein. `dist/` bleibt damit
+  **selbsttragend** – kein SSI, kein zusaetzlicher Request. Zum Aktualisieren die Datei unter
+  `partials/` ersetzen und neu bauen.
+- **Layout**: `index.html` ist eine App-Shell (Flex-Spalte) – Navigation oben, Editor in der
+  Mitte (fuellt den Platz), Footer unten. Die Seite selbst scrollt nicht; gescrollt wird im
+  Editor.
+- **Sprache synchron**: Navigation, Footer, Cookie-Banner und Editor teilen sich
+  `localStorage['locale']` und das Fenster-Event `locale-changed`. Ein Wechsel an einer Stelle
+  zieht ueberall nach – egal ob im Nav-Umschalter oder in der Format-Leiste.
+- **Design synchron**: Die Navigation stylt sich ueber `[data-theme]` und speichert in
+  `localStorage['theme']`. Der Editor setzt zusaetzlich zum Tailwind-`.dark` auch `data-theme`
+  und uebernimmt einen Wechsel aus dem Nav-Theme-Toggle (MutationObserver). Beide Richtungen
+  greifen.
+
+Hinweis: Sprach- und Theme-Umschalter gibt es dadurch doppelt (global in der Navigation und in
+der Format-Leiste); beide sind synchronisiert. Die Format-Leisten-Varianten lassen sich bei
+Bedarf leicht entfernen.
+
 ## Sprachen (i18n)
 
 Die Oberflaeche ist zweisprachig (Deutsch/Englisch). Umgeschaltet wird in der Format-Leiste unter
