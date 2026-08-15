@@ -39,9 +39,41 @@ export const LIMITS = {
   letterSpacing: { min: -1, max: 8, step: 0.1 },
 } as const
 
+/** Die Darstellungs-Einstellungen, die per Undo/Redo erfasst werden. */
+export type FormatState = Pick<
+  EditorSettings,
+  | 'fontFamily'
+  | 'fontSize'
+  | 'lineHeight'
+  | 'letterSpacing'
+  | 'textColor'
+  | 'textAlign'
+  | 'wordWrap'
+>
+
+export const FORMAT_KEYS: (keyof FormatState)[] = [
+  'fontFamily',
+  'fontSize',
+  'lineHeight',
+  'letterSpacing',
+  'textColor',
+  'textAlign',
+  'wordWrap',
+]
+
+/**
+ * Ein Zustand fuer die History: Inhalt UND Darstellung. Beide teilen sich eine
+ * Zeitachse, damit sowohl Tippen als auch Aenderungen in der Format-Leiste mit
+ * demselben Undo/Redo zurueckgenommen werden koennen.
+ */
+interface Snapshot {
+  content: string
+  format: FormatState
+}
+
 interface HistoryEntry {
-  past: string[]
-  future: string[]
+  past: Snapshot[]
+  future: Snapshot[]
 }
 
 const STORAGE_DOCS = 'kodini-editor-docs-v1'
@@ -49,6 +81,7 @@ const STORAGE_ACTIVE = 'kodini-editor-active-v1'
 const STORAGE_SETTINGS = 'kodini-editor-settings-v1'
 const HISTORY_LIMIT = 200
 const TYPING_DEBOUNCE = 500
+const FORMAT_DEBOUNCE = 400
 
 export const DEFAULT_SETTINGS: EditorSettings = {
   theme: 'system',
@@ -160,6 +193,15 @@ export const useEditorStore = defineStore('editor', () => {
   }
   let typingTimer: ReturnType<typeof setTimeout> | null = null
   let typingBase: string | null = null
+  // Ausstehende Format-Aenderung: der Zustand VOR der ersten Aenderung eines
+  // Schubs. Schnell aufeinanderfolgende Aenderungen (Stepper-Klicks,
+  // Farbwaehler-Ziehen) werden so zu einer Undo-Stufe zusammengefasst.
+  let formatTimer: ReturnType<typeof setTimeout> | null = null
+  let formatBase: FormatState | null = null
+  // Welche Felder der offene Format-Schub betrifft. Nur gleiche Felder werden
+  // zusammengefasst (viele Stepper-Klicks, Farbwaehler-Ziehen = eine Stufe);
+  // ein Wechsel auf ein anderes Feld schliesst die offene Stufe ab.
+  let formatKeys: string | null = null
 
   /* ---------- Init ---------- */
   if (documents.value.length === 0) {
@@ -196,13 +238,29 @@ export const useEditorStore = defineStore('editor', () => {
   })
 
   /* ---------- History-Helfer ---------- */
-  function pushPast(id: string, value: string): void {
+  function captureFormat(): FormatState {
+    const f = {} as FormatState
+    for (const key of FORMAT_KEYS) (f[key] as EditorSettings[typeof key]) = settings[key]
+    return f
+  }
+
+  function applyFormat(format: FormatState): void {
+    Object.assign(settings, normalizeSettings({ ...settings, ...format }))
+  }
+
+  function sameFormat(a: FormatState, b: FormatState): boolean {
+    return FORMAT_KEYS.every((k) => a[k] === b[k])
+  }
+
+  function pushPast(id: string, snap: Snapshot): void {
     const h = ensureHistory(id)
-    h.past.push(value)
+    h.past.push(snap)
     if (h.past.length > HISTORY_LIMIT) h.past.shift()
+    h.future = []
     touch()
   }
 
+  /** Committet eine offene Tipp-Sequenz als eine History-Stufe. */
   function flushTyping(): void {
     if (typingTimer) {
       clearTimeout(typingTimer)
@@ -210,10 +268,29 @@ export const useEditorStore = defineStore('editor', () => {
     }
     const doc = activeDoc.value
     if (doc && typingBase !== null && typingBase !== doc.content) {
-      pushPast(doc.id, typingBase)
-      ensureHistory(doc.id).future = []
+      pushPast(doc.id, { content: typingBase, format: captureFormat() })
     }
     typingBase = null
+  }
+
+  /** Committet eine offene Format-Sequenz als eine History-Stufe. */
+  function flushFormat(): void {
+    if (formatTimer) {
+      clearTimeout(formatTimer)
+      formatTimer = null
+    }
+    const doc = activeDoc.value
+    if (doc && formatBase !== null && !sameFormat(formatBase, captureFormat())) {
+      pushPast(doc.id, { content: doc.content, format: formatBase })
+    }
+    formatBase = null
+    formatKeys = null
+  }
+
+  /** Committet alles Offene (vor Undo/Redo, Dokumentwechsel, ...). */
+  function flushPending(): void {
+    flushTyping()
+    flushFormat()
   }
 
   /* ---------- Actions: Inhalt ---------- */
@@ -222,61 +299,80 @@ export const useEditorStore = defineStore('editor', () => {
   function updateContent(content: string): void {
     const doc = activeDoc.value
     if (!doc || doc.content === content) return
+    // Eine offene Format-Aenderung zuerst festschreiben, damit die Zeitachse
+    // linear bleibt (erst formatieren, dann tippen = zwei getrennte Stufen).
+    flushFormat()
     if (typingBase === null) typingBase = doc.content
     doc.content = content
     doc.updatedAt = Date.now()
     if (typingTimer) clearTimeout(typingTimer)
-    typingTimer = setTimeout(() => {
-      if (typingBase !== null && typingBase !== doc.content) {
-        pushPast(doc.id, typingBase)
-        ensureHistory(doc.id).future = []
-      }
-      typingBase = null
-      typingTimer = null
-    }, TYPING_DEBOUNCE)
+    typingTimer = setTimeout(flushTyping, TYPING_DEBOUNCE)
   }
 
   /** Ersetzt den Inhalt in einem Schritt (Transform / Paste / Import) -> eine History-Stufe. */
   function replaceContent(content: string): void {
     const doc = activeDoc.value
     if (!doc || doc.content === content) return
-    flushTyping()
-    pushPast(doc.id, doc.content)
-    ensureHistory(doc.id).future = []
+    flushPending()
+    pushPast(doc.id, { content: doc.content, format: captureFormat() })
     doc.content = content
     doc.updatedAt = Date.now()
   }
 
-  function undo(): void {
+  /** Aenderung der Darstellung (Format-Leiste) -> debounced eine History-Stufe. */
+  function recordFormatChange(patch: Partial<FormatState>): void {
+    const doc = activeDoc.value
+    if (!doc) {
+      Object.assign(settings, normalizeSettings({ ...settings, ...patch }))
+      return
+    }
+    // Offene Tipp-Sequenz zuerst festschreiben (siehe updateContent).
     flushTyping()
+    const keys = Object.keys(patch).sort().join(',')
+    // Betrifft die Aenderung andere Felder als der offene Schub, diesen zuerst
+    // als eigene Stufe abschliessen.
+    if (formatBase !== null && keys !== formatKeys) flushFormat()
+    if (formatBase === null) {
+      formatBase = captureFormat()
+      formatKeys = keys
+    }
+    Object.assign(settings, normalizeSettings({ ...settings, ...patch }))
+    if (formatTimer) clearTimeout(formatTimer)
+    formatTimer = setTimeout(flushFormat, FORMAT_DEBOUNCE)
+  }
+
+  function undo(): void {
+    flushPending()
     const doc = activeDoc.value
     if (!doc) return
     const h = ensureHistory(doc.id)
     const prev = h.past.pop()
     if (prev === undefined) return
-    h.future.push(doc.content)
-    doc.content = prev
+    h.future.push({ content: doc.content, format: captureFormat() })
+    doc.content = prev.content
     doc.updatedAt = Date.now()
+    applyFormat(prev.format)
     touch()
   }
 
   function redo(): void {
-    flushTyping()
+    flushPending()
     const doc = activeDoc.value
     if (!doc) return
     const h = ensureHistory(doc.id)
     const next = h.future.pop()
     if (next === undefined) return
-    h.past.push(doc.content)
-    doc.content = next
+    h.past.push({ content: doc.content, format: captureFormat() })
+    doc.content = next.content
     doc.updatedAt = Date.now()
+    applyFormat(next.format)
     touch()
   }
 
   /* ---------- Actions: Dokumente ---------- */
 
   function newDocument(name = messages().doc.untitled): string {
-    flushTyping()
+    flushPending()
     const doc = createDocument(uniqueName(name))
     documents.value.push(doc)
     activeId.value = doc.id
@@ -292,7 +388,7 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   function openDocument(name: string, content: string): string {
-    flushTyping()
+    flushPending()
     const doc = createDocument(uniqueName(name || messages().doc.untitled), content)
     documents.value.push(doc)
     activeId.value = doc.id
@@ -301,7 +397,7 @@ export const useEditorStore = defineStore('editor', () => {
 
   function switchDocument(id: string): void {
     if (documents.value.some((d) => d.id === id)) {
-      flushTyping()
+      flushPending()
       activeId.value = id
     }
   }
@@ -327,19 +423,39 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   /* ---------- Settings ---------- */
+  /**
+   * Aendert Einstellungen. Aenderungen an der Textdarstellung (FORMAT_KEYS)
+   * landen in der Undo/Redo-Historie; App-Zustand wie Theme, Vorschau oder
+   * Fokus-Modus wird direkt und ohne History uebernommen.
+   */
   function updateSettings(patch: Partial<EditorSettings>): void {
-    Object.assign(settings, normalizeSettings({ ...settings, ...patch }))
+    const formatPatch: Partial<FormatState> = {}
+    const otherPatch: Partial<EditorSettings> = {}
+    let hasFormat = false
+    let hasOther = false
+    for (const key of Object.keys(patch) as (keyof EditorSettings)[]) {
+      if ((FORMAT_KEYS as string[]).includes(key)) {
+        ;(formatPatch as Record<string, unknown>)[key] = patch[key]
+        hasFormat = true
+      } else {
+        ;(otherPatch as Record<string, unknown>)[key] = patch[key]
+        hasOther = true
+      }
+    }
+    if (hasOther) Object.assign(settings, normalizeSettings({ ...settings, ...otherPatch }))
+    if (hasFormat) recordFormatChange(formatPatch)
   }
 
-  /** Setzt nur die Darstellung zurueck -- Design und Dokumente bleiben. */
+  /** Setzt nur die Textdarstellung zurueck -- eine Undo-Stufe; Rest bleibt. */
   function resetFormatting(): void {
-    updateSettings({
+    recordFormatChange({
       fontFamily: DEFAULT_SETTINGS.fontFamily,
       fontSize: DEFAULT_SETTINGS.fontSize,
       lineHeight: DEFAULT_SETTINGS.lineHeight,
       letterSpacing: DEFAULT_SETTINGS.letterSpacing,
       textColor: DEFAULT_SETTINGS.textColor,
       textAlign: DEFAULT_SETTINGS.textAlign,
+      wordWrap: DEFAULT_SETTINGS.wordWrap,
     })
   }
 
