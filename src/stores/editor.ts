@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
-import { DEFAULT_FONT_ID, isKnownFont } from '@/config/fonts'
+import { DEFAULT_FONT_ID } from '@/config/fonts'
 
 export interface EditorDocument {
   id: string
@@ -82,7 +82,11 @@ export function normalizeSettings(raw: Partial<EditorSettings>): EditorSettings 
   const s: EditorSettings = { ...DEFAULT_SETTINGS, ...raw }
   return {
     ...s,
-    fontFamily: isKnownFont(s.fontFamily) ? s.fontFamily : DEFAULT_SETTINGS.fontFamily,
+    // Bewusst nicht gegen die Schriftenliste geprueft: die Schriften vom Server
+    // kommen erst nach dem Laden der Settings dazu. Eine unbekannte ID faellt
+    // beim Anzeigen ueber findFont auf die Standardschrift zurueck.
+    fontFamily:
+      typeof s.fontFamily === 'string' && s.fontFamily ? s.fontFamily : DEFAULT_SETTINGS.fontFamily,
     fontSize: clamp(
       s.fontSize,
       LIMITS.fontSize.min,

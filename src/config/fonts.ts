@@ -7,6 +7,9 @@
  * auskommt.
  */
 
+import { readonly, shallowRef, type Ref } from 'vue'
+import { groupFontFiles, sortByFormatPreference } from '@/utils/fontFiles'
+
 export interface FontSource {
   /** Dateiname relativ zu CUSTOM_FONT_BASE oder absolute URL. */
   url: string
@@ -72,9 +75,11 @@ export function customFont(
 }
 
 /**
- * Eigene Schriften aus /var/www/kodinitools.com/public/fonts.
+ * Von Hand eingetragene Schriften.
  *
- * Zum Ergaenzen genuegt eine Zeile pro Schrift -- Dateinamen anpassen:
+ * Normalerweise leer: die Schriften aus /var/www/kodinitools.com/public/fonts
+ * findet discoverFonts() von allein. Hier eintragen, wenn eine Schrift eine
+ * eigene Beschriftung braucht oder aus einer anderen Quelle kommt:
  *
  *   customFont('kodini', 'Kodini Sans', 'KodiniSans', [
  *     { url: 'KodiniSans-Regular.woff2' },
@@ -83,16 +88,73 @@ export function customFont(
  */
 export const CUSTOM_FONTS: EditorFont[] = []
 
-export const ALL_FONTS: EditorFont[] = [...BUILTIN_FONTS, ...CUSTOM_FONTS]
-
 export const DEFAULT_FONT_ID = 'sans'
 
+/**
+ * Die Liste waechst zur Laufzeit um die Schriften, die auf dem Server im
+ * Ordner /public/fonts liegen -- deshalb reaktiv statt konstant.
+ */
+const registry = shallowRef<EditorFont[]>([...BUILTIN_FONTS, ...CUSTOM_FONTS])
+
+/** Alle derzeit waehlbaren Schriften. */
+export const fontList = readonly(registry) as Readonly<Ref<readonly EditorFont[]>>
+
+export function allFonts(): readonly EditorFont[] {
+  return registry.value
+}
+
+/** Fuegt Schriften hinzu; bereits bekannte IDs bleiben unveraendert. */
+export function registerFonts(fonts: EditorFont[]): void {
+  const known = new Set(registry.value.map((f) => f.id))
+  const added = fonts.filter((f) => !known.has(f.id))
+  if (added.length) registry.value = [...registry.value, ...added]
+}
+
 export function findFont(id: string): EditorFont {
-  return ALL_FONTS.find((f) => f.id === id) ?? BUILTIN_FONTS[0]!
+  return registry.value.find((f) => f.id === id) ?? BUILTIN_FONTS[0]!
 }
 
 export function isKnownFont(id: string): boolean {
-  return ALL_FONTS.some((f) => f.id === id)
+  return registry.value.some((f) => f.id === id)
+}
+
+/**
+ * Liest die vom Deploy erzeugte Datei fonts.json und macht aus den
+ * Dateinamen fertige Eintraege fuer die Auswahl.
+ *
+ * Die Datei liegt neben der index.html. Fehlt sie (Dev-Server, Ordner leer),
+ * passiert nichts -- die Systemschriften bleiben.
+ *
+ * @returns Anzahl der neu gefundenen Schriften.
+ */
+export async function discoverFonts(baseUrl = '/'): Promise<number> {
+  if (typeof fetch !== 'function') return 0
+  try {
+    const res = await fetch(`${baseUrl}fonts.json`, { cache: 'no-cache' })
+    if (!res.ok) return 0
+    const data: unknown = await res.json()
+    const files = Array.isArray(data) ? data.filter((f): f is string => typeof f === 'string') : []
+    if (!files.length) return 0
+
+    const fonts = groupFontFiles(sortByFormatPreference(files)).map((group) =>
+      customFont(
+        `datei:${group.familyKey.toLowerCase()}`,
+        group.label,
+        group.familyKey,
+        group.files.map((f) => ({
+          url: encodeURIComponent(f.file),
+          weight: f.weight,
+          style: f.style,
+        })),
+      ),
+    )
+    const before = registry.value.length
+    registerFonts(fonts)
+    return registry.value.length - before
+  } catch {
+    // Kein Netz, kaputtes JSON, alter Server -- kein Grund, die App zu stoeren.
+    return 0
+  }
 }
 
 function formatFromUrl(url: string): string {

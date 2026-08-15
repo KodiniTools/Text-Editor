@@ -28,6 +28,8 @@ main() {
   local TARGET="${TARGET:-/var/www/kodinitools.com/texteditor}"
   local OWNER="${OWNER:-www-data:www-data}"
   local URL="${URL:-https://kodinitools.com/texteditor/}"
+  # Ordner mit den eigenen Schriften; sein Inhalt landet in fonts.json.
+  local FONTS_DIR="${FONTS_DIR:-/var/www/kodinitools.com/public/fonts}"
   # Muss zu 'base' in vite.config.ts passen -- wird nach dem Build geprueft.
   local BASE_PATH='/texteditor/'
 
@@ -112,6 +114,12 @@ main() {
   fi
   log "Build ok: $(find dist -type f | wc -l) Dateien, Asset-Praefix ${BASE_PATH} stimmt."
 
+  # --- 3b. Schriftenliste erzeugen -----------------------------------------
+  # Die App liest fonts.json und baut daraus die Schrift-Auswahl. Damit muss
+  # niemand Dateinamen im Quelltext pflegen: Datei in den Ordner legen, neu
+  # deployen, fertig.
+  write_font_manifest "$FONTS_DIR" dist/fonts.json
+
   # --- 4. Ausliefern -------------------------------------------------------
   # Erst vollstaendig in ein Staging-Verzeichnis daneben kopieren, dann per mv
   # umschwenken. Dadurch gibt es keinen Moment, in dem die neue index.html schon
@@ -167,6 +175,57 @@ main() {
 
 log() { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 err() { printf '\033[1;31m!!!\033[0m %s\n' "$*" >&2; }
+
+# Schreibt die Dateinamen aus $1 als JSON-Array nach $2.
+#
+# Bewusst ohne jq (nicht ueberall installiert). Dateinamen mit Zeichen, die in
+# JSON oder URLs maskiert werden muessten, werden uebersprungen statt kaputt
+# geschrieben -- und dann auch benannt, damit niemand raetselt, warum eine
+# Schrift fehlt.
+write_font_manifest() {
+  local dir="$1" out="$2"
+  local -a names=() skipped=()
+
+  if [[ -d "$dir" ]]; then
+    local path base
+    for path in "$dir"/*; do
+      [[ -f "$path" ]] || continue
+      base="$(basename "$path")"
+      case "${base,,}" in
+        *.woff2 | *.woff | *.ttf | *.otf) ;;
+        *) continue ;;
+      esac
+      if [[ "$base" =~ ^[A-Za-z0-9._,-]+$ ]]; then
+        names+=("$base")
+      else
+        skipped+=("$base")
+      fi
+    done
+  fi
+
+  {
+    printf '['
+    local i
+    for i in "${!names[@]}"; do
+      [[ $i -gt 0 ]] && printf ','
+      printf '"%s"' "${names[$i]}"
+    done
+    printf ']\n'
+  } >"$out"
+
+  if [[ ${#names[@]} -gt 0 ]]; then
+    log "Schriften gefunden (${#names[@]}): ${names[*]}"
+  elif [[ -d "$dir" ]]; then
+    log "Keine Schriftdateien in $dir -- nur Systemschriften in der Auswahl."
+  else
+    log "$dir existiert nicht -- nur Systemschriften in der Auswahl."
+  fi
+
+  if [[ ${#skipped[@]} -gt 0 ]]; then
+    err "Uebersprungen wegen Sonderzeichen im Namen: ${skipped[*]}"
+    err "Bitte umbenennen (nur Buchstaben, Ziffern, . _ - ,)."
+  fi
+}
 
 require_cmd() {
   command -v "$1" >/dev/null 2>&1 || {

@@ -19,9 +19,10 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   - Kodierung: Base64, URL, HTML (je encode/decode, Unicode-sicher)
 - **Live Markdown-Vorschau** (sicher via `marked` + `DOMPurify`)
 - **Statistik**: Woerter, Zeichen (mit/ohne Leerz.), Zeilen, Saetze, Absaetze, Lesezeit; Cursor Zeile/Spalte
-- **Format-Leiste** direkt unter der Werkzeugleiste – Schriftart, Schriftgroesse, Zeilenabstand,
-  Laufweite, Textfarbe (8 Schnellfarben + freier Farbwaehler), Ausrichtung, Hell/Dunkel/Auto,
-  Zeilenumbruch, Zuruecksetzen. Ein-/ausblendbar ueber `Format` in der Werkzeugleiste
+- **Format-Leiste** direkt unter der Werkzeugleiste – Schriftart (inkl. eigener Schriften vom
+  Server), Schriftgroesse, Zeilenabstand, Laufweite, Textfarbe (8 Schnellfarben + freier
+  Farbwaehler), Ausrichtung, Hell/Dunkel/Auto, Zeilenumbruch, Zuruecksetzen. Ein-/ausblendbar
+  ueber `Format` in der Werkzeugleiste
 - **Fokus-Modus** blendet alle Leisten aus
 - **Import/Export**: Datei oeffnen, als `.txt`/`.md` herunterladen, alles kopieren
 
@@ -44,7 +45,7 @@ npm install
 npm run dev        # Dev-Server (http://localhost:5173)
 npm run build      # Typecheck + Produktions-Build nach dist/
 npm run preview    # Build lokal ansehen
-npm run test       # Vitest (49 Tests)
+npm run test       # Vitest (63 Tests)
 npm run typecheck  # vue-tsc --noEmit
 npm run format     # Prettier
 ```
@@ -59,7 +60,7 @@ src/
   types.ts                    EditorApi-Interface
   router/index.ts             Vue Router (eine Route)
   stores/editor.ts            Pinia: Dokumente, Settings, Undo/Redo, Persistenz
-  config/fonts.ts             Schriftenliste + Laden eigener Webfonts
+  config/fonts.ts             Schriftenliste + Erkennen/Laden eigener Webfonts
   composables/
     useTextStats.ts           Reaktive Textstatistik
     useTheme.ts               Design + Textdarstellung als CSS-Variablen
@@ -68,6 +69,7 @@ src/
     textTransforms.ts         Reine Transform-Funktionen (getestet)
     transformRegistry.ts      Gruppierte Liste fuers Menue
     find.ts                   Regex-Bau + Trefferzaehlung (getestet)
+    fontFiles.ts              Dateiname -> Familie/Schnitt (getestet)
     markdown.ts               Markdown -> bereinigtes HTML
   components/
     DocumentTabs.vue  EditorToolbar.vue  TransformMenu.vue  FormatBar.vue
@@ -77,40 +79,57 @@ src/
 tests/                        Vitest-Specs
 ```
 
-## Eigene Schriften einbinden
+## Eigene Schriften
 
-Die Schriftenliste der Format-Leiste steht in [`src/config/fonts.ts`](src/config/fonts.ts).
-Systemschriften (Sans/Serif/Mono) sind fest eingebaut, eigene Webfonts kommen nach `CUSTOM_FONTS`.
+Schriften werden **automatisch gefunden**. Datei nach
+`/var/www/kodinitools.com/public/fonts/` legen, neu deployen – fertig. Kein Eintrag im Quelltext.
 
-Dateien liegen auf dem Server unter `/var/www/kodinitools.com/public/fonts/` und sind damit unter
-`https://kodinitools.com/public/fonts/<datei>` erreichbar. Pro Schrift genuegt ein Eintrag:
-
-```ts
-export const CUSTOM_FONTS: EditorFont[] = [
-  customFont('kodini', 'Kodini Sans', 'KodiniSans', [
-    { url: 'KodiniSans-Regular.woff2' },
-    { url: 'KodiniSans-Bold.woff2', weight: '700' },
-    { url: 'KodiniSans-Italic.woff2', style: 'italic' },
-  ]),
-]
+```bash
+scp KodiniSans-Regular.woff2 root@server:/var/www/kodinitools.com/public/fonts/
+/opt/kodini-build/texteditor/deploy/deploy.sh
 ```
 
-- `'kodini'` ist die ID, die in den Settings landet – nachtraeglich nicht mehr aendern, sonst
-  faellt die gespeicherte Auswahl der Nutzer auf Sans zurueck.
-- `'Kodini Sans'` ist die Beschriftung in der Auswahl, `'KodiniSans'` der interne `font-family`-Name.
-- Geladen wird erst bei Auswahl (FontFace-API). Ohne eigene Schrift macht der Editor weiterhin
-  **null Netzwerkaufrufe**.
-- Schlaegt das Laden fehl, greift automatisch der Fallback-Stack – der Text bleibt lesbar.
-- `woff2` bevorzugen; `woff`, `ttf` und `otf` werden ebenfalls erkannt.
+`deploy.sh` schreibt beim Bauen eine `fonts.json` mit den gefundenen Dateinamen neben die
+`index.html`; die App liest sie und baut daraus die Auswahl.
 
-Der nginx-Block in [`deploy/nginx-texteditor.conf`](deploy/nginx-texteditor.conf) cacht
-`/public/fonts/` ein Jahr lang.
+**Dateinamen bestimmen Familie und Schnitt.** Zusammengehoerige Schnitte landen in einem Eintrag:
+
+| Datei | Ergebnis |
+|---|---|
+| `KodiniSans-Regular.woff2` | Kodini Sans, 400 normal |
+| `KodiniSans-Bold.woff2` | Kodini Sans, 700 normal |
+| `KodiniSans-BoldItalic.woff2` | Kodini Sans, 700 kursiv |
+| `Open_Sans-600.woff2` | Open Sans, 600 normal |
+| `Roboto-VariableFont_wght.ttf` | Roboto, 100–900 |
+| `KodiniBrand.woff2` | Kodini Brand, 400 normal |
+
+Erkannt werden `thin`, `extralight`, `light`, `regular`, `medium`, `semibold`, `bold`,
+`extrabold`, `black` (auch numerisch: `-300`), dazu `italic`/`oblique` und `VariableFont`.
+Ohne erkennbaren Schnitt wird der ganze Dateiname zur Familie – ein Name wie
+`Playfair-Display.woff2` wird also nicht faelschlich zerschnitten.
+
+Weitere Eigenschaften:
+
+- **Formate**: `woff2` (empfohlen), `woff`, `ttf`, `otf`. Liegt derselbe Schnitt mehrfach vor,
+  gewinnt das modernste Format – der Browser laedt nur eine Datei.
+- **Geladen wird erst bei Auswahl.** Solange niemand eine eigene Schrift waehlt, macht der
+  Editor weiterhin **null Netzwerkaufrufe**.
+- **Faellt das Laden aus**, greift der Fallback-Stack – der Text bleibt lesbar.
+- **Dateinamen** duerfen Buchstaben, Ziffern und `. _ - ,` enthalten. Alles andere (Umlaute,
+  Leerzeichen, Anfuehrungszeichen) wird uebersprungen und beim Deploy als Warnung genannt.
+- Der nginx-Block in [`deploy/nginx-texteditor.conf`](deploy/nginx-texteditor.conf) cacht
+  `/public/fonts/` ein Jahr lang.
+- Anderer Ordner: `FONTS_DIR=/pfad/zu/fonts deploy.sh`
+
+Wer eine Schrift lieber von Hand benennen oder aus einer anderen Quelle laden will, traegt sie
+weiterhin in `CUSTOM_FONTS` in [`src/config/fonts.ts`](src/config/fonts.ts) ein – das hat Vorrang.
 
 ## KodiniTools-Integration
 
 - **Akzentfarbe** anpassen: in `src/style.css` die CSS-Variable `--accent` (RGB-Tripel ohne Kommas)
   auf deine Markenfarbe setzen, ggf. `--accent-soft` fuer hell/dunkel.
-- Passt zum Privacy-First-Ansatz: keinerlei Netzwerkaufrufe zur Laufzeit.
+- Passt zum Privacy-First-Ansatz: keine Netzwerkaufrufe zur Laufzeit, solange keine eigene
+  Schrift ausgewaehlt ist (dann wird genau deren Datei geladen).
 
 ## Deployment auf kodinitools.com
 

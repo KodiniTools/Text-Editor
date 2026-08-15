@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { DEFAULT_SETTINGS, normalizeSettings, useEditorStore } from '@/stores/editor'
-import { ALL_FONTS, customFont, findFont, isKnownFont, loadFont } from '@/config/fonts'
+import { allFonts, customFont, findFont, isKnownFont, loadFont } from '@/config/fonts'
 
 beforeEach(() => {
   localStorage.clear()
@@ -22,10 +22,13 @@ describe('normalizeSettings', () => {
     expect(s.textAlign).toBe('left')
   })
 
-  it('faellt bei unbekannter Schrift auf die Standardschrift zurueck', () => {
-    expect(normalizeSettings({ fontFamily: 'entfernte-schrift' }).fontFamily).toBe(
-      DEFAULT_SETTINGS.fontFamily,
+  it('behaelt eine noch unbekannte Schrift-ID', () => {
+    // Schriften vom Server kommen erst nach dem Laden der Settings dazu --
+    // wuerde hier zurueckgesetzt, waere die Auswahl nach jedem Neuladen weg.
+    expect(normalizeSettings({ fontFamily: 'datei:kodinisans' }).fontFamily).toBe(
+      'datei:kodinisans',
     )
+    expect(normalizeSettings({ fontFamily: '' }).fontFamily).toBe(DEFAULT_SETTINGS.fontFamily)
   })
 
   it('begrenzt Zahlen auf den gueltigen Bereich', () => {
@@ -98,11 +101,10 @@ describe('editor store - Darstellung', () => {
   it('repariert einen manipulierten localStorage-Stand', () => {
     localStorage.setItem(
       'kodini-editor-settings-v1',
-      JSON.stringify({ fontSize: 900, fontFamily: 'gibtsnicht', textColor: 'rot' }),
+      JSON.stringify({ fontSize: 900, textColor: 'rot' }),
     )
     const store = useEditorStore()
     expect(store.settings.fontSize).toBe(42)
-    expect(store.settings.fontFamily).toBe(DEFAULT_SETTINGS.fontFamily)
     expect(store.settings.textColor).toBe('')
   })
 })
@@ -119,7 +121,7 @@ describe('Schriften-Registry', () => {
   })
 
   it('jede Schrift hat eine eindeutige ID', () => {
-    const ids = ALL_FONTS.map((f) => f.id)
+    const ids = allFonts().map((f) => f.id)
     expect(new Set(ids).size).toBe(ids.length)
   })
 
