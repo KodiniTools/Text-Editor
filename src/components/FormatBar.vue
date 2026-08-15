@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { LIMITS, useEditorStore, type TextAlign, type ThemeMode } from '@/stores/editor'
+import { LIMITS, useEditorStore, type TextAlign } from '@/stores/editor'
 import { findFont, fontList, isKnownFont, loadAllFonts, type EditorFont } from '@/config/fonts'
-import { LOCALES, useI18n, type Locale } from '@/i18n'
+import { useI18n } from '@/i18n'
 import type { Messages } from '@/i18n/messages'
 import NumberStepper from './NumberStepper.vue'
 
+// Design (Hell/Dunkel/Auto) und Sprache steuert die globale Navigation --
+// deshalb liegen sie nicht mehr in der Format-Leiste.
 const store = useEditorStore()
-const { t, locale, setLocale } = useI18n()
+const { t } = useI18n()
 
 type FormatKey = keyof Messages['format']
 
@@ -69,12 +71,6 @@ const ALIGNMENTS: { value: TextAlign; labelKey: FormatKey; lines: [number, numbe
       [1, 14],
     ],
   },
-]
-
-const THEMES: { value: ThemeMode; labelKey: FormatKey }[] = [
-  { value: 'light', labelKey: 'themeLight' },
-  { value: 'dark', labelKey: 'themeDark' },
-  { value: 'system', labelKey: 'themeAuto' },
 ]
 
 /** Farbe fuer <input type="color">, das keinen leeren Wert kennt. */
@@ -273,24 +269,6 @@ function setColor(value: string): void {
 
     <span class="fb-divider" />
 
-    <!-- Design -->
-    <div class="fb-group">
-      <span class="fb-label">{{ t.format.theme }}</span>
-      <div class="flex gap-1">
-        <button
-          v-for="th in THEMES"
-          :key="th.value"
-          type="button"
-          class="seg-btn"
-          :class="store.settings.theme === th.value ? 'seg-active' : ''"
-          :aria-pressed="store.settings.theme === th.value"
-          @click="store.updateSettings({ theme: th.value })"
-        >
-          {{ t.format[th.labelKey] }}
-        </button>
-      </div>
-    </div>
-
     <!-- Zeilenumbruch -->
     <label class="flex cursor-pointer items-center gap-1.5" :title="t.format.wrapTitle">
       <input
@@ -301,26 +279,6 @@ function setColor(value: string): void {
       />
       <span class="fb-label">{{ t.format.wrap }}</span>
     </label>
-
-    <span class="fb-divider" />
-
-    <!-- Sprache -->
-    <div class="fb-group">
-      <span class="fb-label">{{ t.format.language }}</span>
-      <div class="flex gap-1">
-        <button
-          v-for="l in LOCALES"
-          :key="l"
-          type="button"
-          class="seg-btn uppercase"
-          :class="locale === l ? 'seg-active' : ''"
-          :aria-pressed="locale === l"
-          @click="setLocale(l as Locale)"
-        >
-          {{ l }}
-        </button>
-      </div>
-    </div>
 
     <button
       type="button"

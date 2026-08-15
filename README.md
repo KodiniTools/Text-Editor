@@ -9,7 +9,9 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
 ## Funktionen
 
 - **Mehrere Dokumente** als Tabs (anlegen, umbenennen per Doppelklick, schliessen), Auto-Save im `localStorage`
-- **Undo/Redo** – eigenes History-System (Tippen wird gebuendelt, Transformationen = je eine Stufe)
+- **Undo/Redo** – eine gemeinsame Zeitachse fuer Inhalt UND Darstellung: Tippen wird gebuendelt,
+  Transformationen sind je eine Stufe, und Aenderungen in der Format-Leiste (Schrift, Groesse,
+  Zeilenabstand, Laufweite, Farbe, Ausrichtung, Umbruch) lassen sich genauso zuruecknehmen
 - **Suchen & Ersetzen** – Gross/Klein, ganzes Wort, Regex; Weiter/Zurueck, Einzeln/Alle ersetzen, Trefferzahl
 - **Ueber 30 Transformationen** (auf Auswahl ODER Gesamttext):
   - Schreibweise: GROSS, klein, Titel, Satz, tOGGLE, camelCase, snake_case, kebab-case
@@ -22,10 +24,11 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
 - **Format-Leiste** direkt unter der Werkzeugleiste – Schriftart mit allen Schnitten der
   eigenen Schriften (nach Familie gruppiert, Vorschau in eigener Schrift), Schriftgroesse,
   Zeilenabstand, Laufweite, Textfarbe (8 Schnellfarben + freier Farbwaehler), Ausrichtung,
-  Hell/Dunkel/Auto, Zeilenumbruch, Zuruecksetzen. Ein-/ausblendbar ueber `Format`
+  Zeilenumbruch, Zuruecksetzen – alles undo-/redo-faehig. Ein-/ausblendbar ueber `Format`.
+  Design (Hell/Dunkel) und Sprache steuert die globale Navigation
 - **Fokus-Modus** blendet alle Leisten aus
-- **Zweisprachig (DE/EN)** – die komplette Oberflaeche laesst sich in der Format-Leiste unter
-  `Sprache` umschalten; die Wahl wird gemerkt und beim ersten Besuch aus der Browsersprache abgeleitet
+- **Zweisprachig (DE/EN)** – die komplette Oberflaeche laesst sich ueber den Sprachumschalter der
+  globalen Navigation wechseln; die Wahl wird gemerkt und beim ersten Besuch aus der Browsersprache abgeleitet
 - **Import/Export**: Datei oeffnen, als `.txt`/`.md` herunterladen, alles kopieren
 
 ## Tastenkuerzel
@@ -47,7 +50,7 @@ npm install
 npm run dev        # Dev-Server (http://localhost:5173)
 npm run build      # Typecheck + Produktions-Build nach dist/
 npm run preview    # Build lokal ansehen
-npm run test       # Vitest (93 Tests)
+npm run test       # Vitest (100 Tests)
 npm run typecheck  # vue-tsc --noEmit
 npm run lint       # ESLint (Vue + TypeScript)
 npm run lint:fix   # ESLint mit Autofix
@@ -167,11 +170,8 @@ gemeinsamen Footer und dem DSGVO-Cookie-Banner samt Google Consent Mode v2.
 - **Design synchron**: Die Navigation stylt sich ueber `[data-theme]` und speichert in
   `localStorage['theme']`. Der Editor setzt zusaetzlich zum Tailwind-`.dark` auch `data-theme`
   und uebernimmt einen Wechsel aus dem Nav-Theme-Toggle (MutationObserver). Beide Richtungen
-  greifen.
-
-Hinweis: Sprach- und Theme-Umschalter gibt es dadurch doppelt (global in der Navigation und in
-der Format-Leiste); beide sind synchronisiert. Die Format-Leisten-Varianten lassen sich bei
-Bedarf leicht entfernen.
+  greifen. Theme und Sprache haben deshalb genau einen Ort: die globale Navigation (die
+  Format-Leiste enthaelt sie nicht mehr).
 
 ## Sprachen (i18n)
 
