@@ -12,6 +12,7 @@ const emit = defineEmits<{
   transform: [fn: Transform]
   toggleFind: []
   print: []
+  exportPdf: []
 }>()
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -49,9 +50,9 @@ function download(ext: 'txt' | 'md'): void {
   downloadOpen.value = false
 }
 
-function printPdf(): void {
+function exportPdf(): void {
   downloadOpen.value = false
-  emit('print')
+  emit('exportPdf')
 }
 
 async function copyAll(): Promise<void> {
@@ -103,7 +104,7 @@ defineExpose({ download, copyAll, triggerImport })
         <button type="button" class="menu-item" @click="download('md')">
           {{ t.toolbar.asMd }}
         </button>
-        <button type="button" class="menu-item" @click="printPdf">
+        <button type="button" class="menu-item" @click="exportPdf">
           {{ t.toolbar.asPdf }}
         </button>
       </div>
@@ -111,6 +112,10 @@ defineExpose({ download, copyAll, triggerImport })
 
     <button type="button" class="tb-btn" :title="t.toolbar.copyTitle" @click="copyAll">
       {{ t.toolbar.copy }}
+    </button>
+
+    <button type="button" class="tb-btn" :title="t.toolbar.printTitle" @click="emit('print')">
+      {{ t.toolbar.print }}
     </button>
 
     <span class="mx-1 h-5 w-px bg-zinc-200 dark:bg-zinc-700" />
