@@ -43,7 +43,8 @@ function onFileChosen(e: Event): void {
 function download(ext: 'txt' | 'md'): void {
   const doc = store.activeDoc
   if (!doc) return
-  const blob = new Blob([doc.content], { type: 'text/plain;charset=utf-8' })
+  // Reiner Text -- Inline-Formatierung (Fett/Kursiv/Farbe) gibt es nur in PDF/Druck.
+  const blob = new Blob([store.activePlain], { type: 'text/plain;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -60,7 +61,7 @@ function exportPdf(): void {
 
 async function copyAll(): Promise<void> {
   try {
-    await navigator.clipboard.writeText(store.activeContent)
+    await navigator.clipboard.writeText(store.activePlain)
   } catch {
     /* Clipboard evtl. blockiert */
   }

@@ -8,7 +8,7 @@ import { usePageFormatLabel } from '@/composables/usePageFormatLabel'
 const props = defineProps<{ cursorLine: number; cursorCol: number }>()
 const store = useEditorStore()
 const { t } = useI18n()
-const { stats } = useTextStats(toRef(store, 'activeContent'))
+const { stats } = useTextStats(toRef(store, 'activePlain'))
 
 const readTime = computed(() => t.value.status.readingTime(stats.value.readingMinutes))
 // Immer sichtbar: in welchem Format Speichern/Drucken erfolgt.

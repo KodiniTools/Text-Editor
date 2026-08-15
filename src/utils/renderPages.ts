@@ -79,7 +79,8 @@ export interface PageTypography {
 }
 
 export interface PageRenderOptions {
-  content: string
+  /** Bereinigtes HTML des Dokuments (inkl. Inline-Fett/Kursiv/Farbe). */
+  html: string
   widthMm: number
   heightMm: number
   marginMm?: number
@@ -110,6 +111,20 @@ function applyTypography(el: HTMLElement, t: PageTypography): void {
 }
 
 /**
+ * Setzt den HTML-Inhalt und entfernt Aussenabstaende der Block-Elemente
+ * (Absaetze/Zeilen des Editors). So bleibt jede Zeile gleich hoch -- Bedingung
+ * fuer den zeilengenauen Seitenumbruch (paginateByLines) und fuer die
+ * Deckungsgleichheit mit dem Editor.
+ */
+function fillHtml(el: HTMLElement, html: string): void {
+  el.innerHTML = html.length > 0 ? html : '<br>'
+  el.querySelectorAll<HTMLElement>('div, p').forEach((block) => {
+    block.style.margin = '0'
+    block.style.padding = '0'
+  })
+}
+
+/**
  * Erzeugt die Seiten als (zunaechst losgeloestes) DOM. Zum Messen der
  * Inhaltshoehe wird kurz ein unsichtbarer Knoten an <body> gehaengt und wieder
  * entfernt. Der Aufrufer haengt `root` dort ein, wo er es braucht (Vorschau
@@ -123,9 +138,6 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
   const contentW = widthPx - 2 * marginPx
   const contentH = heightPx - 2 * marginPx
 
-  // Leerer Text bekommt trotzdem eine Zeile, damit eine Seite entsteht.
-  const text = opts.content.length > 0 ? opts.content : ' '
-
   // --- Inhaltshoehe messen ---
   const meter = document.createElement('div')
   meter.style.position = 'absolute'
@@ -134,7 +146,7 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
   meter.style.width = `${contentW}px`
   meter.style.visibility = 'hidden'
   applyTypography(meter, opts.typography)
-  meter.textContent = text
+  fillHtml(meter, opts.html)
   document.body.appendChild(meter)
   const totalH = meter.scrollHeight
   document.body.removeChild(meter)
@@ -178,7 +190,7 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
     inner.style.width = `${contentW}px`
     inner.style.marginTop = `${-i * pageStepPx}px`
     applyTypography(inner, opts.typography)
-    inner.textContent = text
+    fillHtml(inner, opts.html)
 
     windowEl.appendChild(inner)
     page.appendChild(windowEl)

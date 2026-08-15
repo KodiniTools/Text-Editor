@@ -7,15 +7,20 @@ import type { EditorSettings } from '@/stores/editor'
 import { findFont } from '@/config/fonts'
 import { pageDimensions } from '@/utils/pageFormats'
 import type { PageRenderOptions } from '@/utils/renderPages'
+import { contentToHtml } from '@/utils/richText'
 
 /** Ohne gewaehltes Format wird A4 Hochformat verwendet (wie beim Drucken). */
 const FALLBACK = { widthMm: 210, heightMm: 297 }
 
+/**
+ * @param content Roh gespeicherter Inhalt (HTML oder aelterer reiner Text) --
+ *   wird hier zu bereinigtem HTML fuer Vorschau/PDF gemacht.
+ */
 export function pageRenderOptions(settings: EditorSettings, content: string): PageRenderOptions {
   const font = findFont(settings.fontFamily)
   const dims = pageDimensions(settings.pageFormat, settings.pageOrientation) ?? FALLBACK
   return {
-    content,
+    html: contentToHtml(content),
     widthMm: dims.widthMm,
     heightMm: dims.heightMm,
     typography: {
