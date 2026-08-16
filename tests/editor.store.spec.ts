@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { documentTitle, useEditorStore } from '@/stores/editor'
+import { messages } from '@/i18n'
 
 function doc(name: string, content: string) {
   return { id: 'x', name, content, createdAt: 0, updatedAt: 0 }
@@ -16,7 +17,7 @@ describe('documentTitle', () => {
 
   it('behaelt einen bewusst vergebenen Namen', () => {
     expect(documentTitle(doc('Vertrag', '<div>Text</div>'))).toBe('Vertrag')
-    expect(documentTitle(doc('Willkommen', '# Willkommen\nText'))).toBe('Willkommen')
+    expect(documentTitle(doc('Brief an Anna', '# Ueberschrift\nText'))).toBe('Brief an Anna')
   })
 
   it('faellt bei leerem Inhalt auf "Unbenannt" zurueck', () => {
@@ -36,10 +37,12 @@ beforeEach(() => {
 })
 
 describe('editor store - Dokumente', () => {
-  it('startet mit einem Willkommensdokument', () => {
+  it('startet mit einem leeren, unbenannten Dokument', () => {
     const store = useEditorStore()
     expect(store.documents.length).toBe(1)
     expect(store.activeDoc).toBeDefined()
+    expect(store.activeContent).toBe('')
+    expect(store.activeDoc?.name).toBe(messages().doc.untitled)
   })
 
   it('legt neues Dokument an und aktiviert es', () => {

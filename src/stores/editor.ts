@@ -192,7 +192,7 @@ function firstContentLine(content: string): string {
  * Anzeigename eines Dokuments. Solange es "Unbenannt" heisst (nie umbenannt),
  * wird der Titel aus der ersten Textzeile abgeleitet -- so unterscheiden sich
  * die Tabs von allein, ohne dass der Nutzer etwas tun muss. Ein bewusst
- * vergebener Name (Umbenennen, Import, "Willkommen") bleibt unveraendert.
+ * vergebener Name (Umbenennen, Import) bleibt unveraendert.
  */
 export function documentTitle(doc: EditorDocument): string {
   if (!isUntitledName(doc.name)) return doc.name
@@ -257,8 +257,9 @@ export const useEditorStore = defineStore('editor', () => {
   let formatKeys: string | null = null
 
   /* ---------- Init ---------- */
+  // Ohne gespeicherte Dokumente mit einem leeren, unbenannten Blatt starten.
   if (documents.value.length === 0) {
-    documents.value.push(createDocument(messages().doc.welcomeName, messages().doc.welcomeBody))
+    documents.value.push(createDocument())
   }
   const storedActive = localStorage.getItem(STORAGE_ACTIVE)
   activeId.value =
@@ -387,7 +388,7 @@ export const useEditorStore = defineStore('editor', () => {
 
   /**
    * Wandelt den aktiven Inhalt einmalig in HTML um, falls er noch als reiner
-   * Text vorliegt (aeltere Staende, Willkommen-Text). Ohne History-Eintrag --
+   * Text vorliegt (aeltere Staende). Ohne History-Eintrag --
    * es ist nur ein Formatwechsel des Speicherwerts, keine inhaltliche Aenderung.
    * Der Editor ruft das beim Oeffnen/Doc-Wechsel auf, damit sein innerHTML dem
    * gespeicherten Wert 1:1 entspricht (sonst wuerde der Editor bei jedem Tippen

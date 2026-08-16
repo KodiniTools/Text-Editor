@@ -183,22 +183,6 @@ export const de = {
   },
   doc: {
     untitled: 'Unbenannt',
-    welcomeName: 'Willkommen',
-    welcomeBody: `# Willkommen im Kodini Texteditor
-
-Ein datenschutzfreundlicher Texteditor - alles laeuft **lokal im Browser**.
-Keine Uploads, keine Server, keine Cookies.
-
-## Funktionen
-- Mehrere Dokumente (Tabs), automatisch lokal gespeichert
-- Suchen & Ersetzen (inkl. Regex)
-- Ueber 30 Text-Transformationen (Gross/Klein, Sortieren, Kodierung, ...)
-- Live Markdown-Vorschau
-- Statistik: Woerter, Zeichen, Lesezeit
-- Hell/Dunkel, Fokus-Modus, Export als .txt/.md
-
-Tipp: Strg+F zum Suchen, Strg+S zum Herunterladen.
-`,
   },
 }
 
@@ -380,22 +364,6 @@ export const en: Messages = {
   },
   doc: {
     untitled: 'Untitled',
-    welcomeName: 'Welcome',
-    welcomeBody: `# Welcome to the Kodini Text Editor
-
-A privacy-friendly text editor - everything runs **locally in your browser**.
-No uploads, no servers, no cookies.
-
-## Features
-- Multiple documents (tabs), saved locally and automatically
-- Find & Replace (incl. regex)
-- Over 30 text transformations (case, sorting, encoding, ...)
-- Live Markdown preview
-- Statistics: words, characters, reading time
-- Light/Dark, focus mode, export as .txt/.md
-
-Tip: Ctrl+F to search, Ctrl+S to download.
-`,
   },
 }
 
