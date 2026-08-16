@@ -167,6 +167,11 @@ useKeyboardShortcuts({
   <div
     class="relative flex h-full flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
   >
+    <!-- Nur fuer Suchmaschinen/Screenreader: eine eindeutige Ueberschrift und
+         Kurzbeschreibung der Seite (visuell ausgeblendet). -->
+    <h1 class="sr-only">{{ t.seo.heading }}</h1>
+    <p class="sr-only">{{ t.seo.tagline }}</p>
+
     <template v-if="!store.settings.focusMode">
       <DocumentTabs />
       <EditorToolbar

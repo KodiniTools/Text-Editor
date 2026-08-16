@@ -1,0 +1,28 @@
+{
+  "name": "Kodini Texteditor",
+  "short_name": "Texteditor",
+  "description": "Kostenloser Online-Texteditor: schreiben, formatieren, als PDF speichern oder drucken – direkt im Browser, ohne Anmeldung.",
+  "lang": "de",
+  "id": "/texteditor/",
+  "start_url": "/texteditor/",
+  "scope": "/texteditor/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fafafa",
+  "theme_color": "#fafafa",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "https://kodinitools.com/image/schweiz-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://kodinitools.com/images/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
