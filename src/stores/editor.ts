@@ -334,6 +334,11 @@ export const useEditorStore = defineStore('editor', () => {
     typingTimer = setTimeout(flushTyping, TYPING_DEBOUNCE)
   }
 
+  /** Leert das aktive Dokument -- eine Undo-Stufe, per Undo wiederherstellbar. */
+  function clearActiveDocument(): void {
+    replaceContent('')
+  }
+
   /** Ersetzt den Inhalt in einem Schritt (Transform / Paste / Import) -> eine History-Stufe. */
   function replaceContent(content: string): void {
     const doc = activeDoc.value
@@ -537,6 +542,7 @@ export const useEditorStore = defineStore('editor', () => {
     normalizeActiveToHtml,
     updateContent,
     replaceContent,
+    clearActiveDocument,
     undo,
     redo,
     newDocument,

@@ -64,6 +64,17 @@ describe('editor store - Undo/Redo', () => {
     expect(store.activeContent).toBe('')
   })
 
+  it('clearActiveDocument leert und ist per Undo wiederherstellbar', () => {
+    const store = useEditorStore()
+    store.newDocument('X')
+    store.replaceContent('<div>etwas Text</div>')
+    store.clearActiveDocument()
+    expect(store.activeContent).toBe('')
+    expect(store.canUndo).toBe(true)
+    store.undo()
+    expect(store.activeContent).toBe('<div>etwas Text</div>')
+  })
+
   it('canRedo wird nach neuer Aenderung geleert', () => {
     const store = useEditorStore()
     store.newDocument('X')
