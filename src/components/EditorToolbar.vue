@@ -61,7 +61,7 @@ function download(ext: 'txt' | 'md'): void {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `${doc.name || t.value.doc.untitled}.${ext}`
+  a.download = `${store.activeTitle || t.value.doc.untitled}.${ext}`
   a.click()
   URL.revokeObjectURL(url)
   downloadOpen.value = false

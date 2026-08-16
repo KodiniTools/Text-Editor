@@ -116,7 +116,7 @@ async function exportPdfDocument(): Promise<void> {
     await loadFont(findFont(store.settings.fontFamily))
     await exportPdf({
       ...pageRenderOptions(store.settings, store.activeContent),
-      fileName: store.activeDoc?.name || 'dokument',
+      fileName: store.activeTitle || 'dokument',
     })
   } finally {
     exporting.value = false
