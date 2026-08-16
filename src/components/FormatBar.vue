@@ -270,7 +270,7 @@ function onReset(): void {
           v-for="s in SWATCHES"
           :key="s.value || 'auto'"
           type="button"
-          class="fb-swatch h-5 w-5 rounded border transition-transform hover:scale-110"
+          class="fb-swatch inline-flex h-5 w-5 items-center justify-center rounded border leading-none transition-transform hover:scale-110"
           :class="
             store.settings.textColor === s.value
               ? 'border-accent ring-2 ring-accent/40'
