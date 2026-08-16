@@ -5,9 +5,9 @@ import { useI18n } from '@/i18n'
 const { t } = useI18n()
 
 /**
- * Kompakter Zahlenregler fuer die Format-Leiste: Wert + gestapelte Pfeile
- * (▲/▼) daneben. Spart Breite gegenueber den frueheren [-]/[+]-Knoepfen an
- * beiden Seiten. Der Wert bleibt immer innerhalb von min/max.
+ * Kompaktes Zahlenfeld fuer die Format-Leiste: Wert und rechts ein angesetzter
+ * Spinner (▲/▼) in EINEM Rahmen -- liest sich als ein Bedienelement und passt in
+ * Hoehe/Look zu den Auswahlfeldern der Leiste. Der Wert bleibt in [min, max].
  */
 const props = withDefaults(
   defineProps<{
@@ -20,9 +20,10 @@ const props = withDefaults(
     /** Einheit hinter dem Wert, z. B. 'px'. */
     unit?: string
     label: string
+    /** Mindestbreite der Wertanzeige (verhindert Springen beim Tippen). */
     width?: string
   }>(),
-  { step: 1, decimals: 0, unit: '', width: '3.25rem' },
+  { step: 1, decimals: 0, unit: '', width: '2.25rem' },
 )
 
 const emit = defineEmits<{ 'update:modelValue': [value: number] }>()
@@ -43,19 +44,21 @@ function nudge(direction: 1 | -1): void {
 </script>
 
 <template>
-  <div class="flex items-center gap-1" role="group" :aria-label="label">
+  <div
+    class="stepper flex h-7 items-stretch overflow-hidden rounded-md border border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-800"
+    role="group"
+    :aria-label="label"
+  >
     <span
-      class="text-right text-xs tabular-nums text-zinc-600 dark:text-zinc-300"
+      class="flex items-center justify-end px-1.5 text-xs tabular-nums leading-none text-zinc-700 dark:text-zinc-200"
       :style="{ minWidth: width }"
       aria-live="polite"
       >{{ display }}</span
     >
-    <span
-      class="spin flex flex-col overflow-hidden rounded border border-zinc-300 dark:border-zinc-600"
-    >
+    <span class="flex flex-col border-l border-zinc-300 dark:border-zinc-600">
       <button
         type="button"
-        class="spin-btn border-b border-zinc-300 dark:border-zinc-600"
+        class="spin-btn"
         :disabled="!canIncrease"
         :title="increaseLabel"
         :aria-label="increaseLabel"
@@ -74,7 +77,7 @@ function nudge(direction: 1 | -1): void {
       </button>
       <button
         type="button"
-        class="spin-btn"
+        class="spin-btn border-t border-zinc-300 dark:border-zinc-600"
         :disabled="!canDecrease"
         :title="decreaseLabel"
         :aria-label="decreaseLabel"
@@ -97,6 +100,6 @@ function nudge(direction: 1 | -1): void {
 
 <style scoped>
 .spin-btn {
-  @apply flex h-[13px] w-5 items-center justify-center text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-100;
+  @apply flex w-5 flex-1 items-center justify-center bg-zinc-50 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-30 dark:bg-zinc-700/40 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-100;
 }
 </style>

@@ -206,6 +206,7 @@ function onReset(): void {
         :max="LIMITS.lineHeight.max"
         :step="LIMITS.lineHeight.step"
         :decimals="1"
+        width="1.6rem"
         :label="t.format.lineHeightLabel"
         @update:model-value="store.updateSettings({ lineHeight: $event })"
       />
@@ -221,7 +222,7 @@ function onReset(): void {
         :step="LIMITS.letterSpacing.step"
         :decimals="1"
         unit="px"
-        width="3.75rem"
+        width="2.9rem"
         :label="t.format.letterSpacingLabel"
         @update:model-value="store.updateSettings({ letterSpacing: $event })"
       />
@@ -235,7 +236,7 @@ function onReset(): void {
       <div class="flex gap-1">
         <button
           type="button"
-          class="seg-btn flex h-[26px] w-7 items-center justify-center font-bold"
+          class="seg-btn flex h-7 w-7 items-center justify-center font-bold"
           :class="selection.bold ? 'seg-active' : ''"
           :title="t.format.boldTitle"
           :aria-label="t.format.bold"
@@ -247,7 +248,7 @@ function onReset(): void {
         </button>
         <button
           type="button"
-          class="seg-btn flex h-[26px] w-7 items-center justify-center italic"
+          class="seg-btn flex h-7 w-7 items-center justify-center italic"
           :class="selection.italic ? 'seg-active' : ''"
           :title="t.format.italicTitle"
           :aria-label="t.format.italic"
@@ -284,7 +285,7 @@ function onReset(): void {
       <div class="flex gap-1">
         <button
           type="button"
-          class="seg-btn flex h-[26px] w-7 items-center justify-center"
+          class="seg-btn flex h-7 w-7 items-center justify-center"
           :class="selection.bulletList ? 'seg-active' : ''"
           :title="t.format.bulletListTitle"
           :aria-label="t.format.bulletList"
@@ -306,7 +307,7 @@ function onReset(): void {
         </button>
         <button
           type="button"
-          class="seg-btn flex h-[26px] w-7 items-center justify-center"
+          class="seg-btn flex h-7 w-7 items-center justify-center"
           :class="selection.numberedList ? 'seg-active' : ''"
           :title="t.format.numberedListTitle"
           :aria-label="t.format.numberedList"
@@ -357,7 +358,7 @@ function onReset(): void {
         </button>
         <input
           type="color"
-          class="fb-color h-6 w-7 cursor-pointer rounded border border-zinc-300 bg-transparent p-0.5 dark:border-zinc-600"
+          class="fb-color h-7 w-8 cursor-pointer rounded-md border border-zinc-300 bg-transparent p-0.5 dark:border-zinc-600"
           :value="colorInputValue"
           :title="t.format.customColor"
           :aria-label="t.format.customColor"
@@ -376,7 +377,7 @@ function onReset(): void {
           v-for="a in ALIGNMENTS"
           :key="a.value"
           type="button"
-          class="seg-btn flex h-[26px] w-7 items-center justify-center"
+          class="seg-btn flex h-7 w-7 items-center justify-center"
           :class="store.settings.textAlign === a.value ? 'seg-active' : ''"
           :title="t.format[a.labelKey]"
           :aria-label="t.format[a.labelKey]"
@@ -427,7 +428,7 @@ function onReset(): void {
           v-for="o in ORIENTATIONS"
           :key="o.value"
           type="button"
-          class="seg-btn flex h-[26px] w-7 items-center justify-center"
+          class="seg-btn flex h-7 w-7 items-center justify-center"
           :class="store.settings.pageOrientation === o.value ? 'seg-active' : ''"
           :title="t.format[o.labelKey]"
           :aria-label="t.format[o.labelKey]"
@@ -523,13 +524,14 @@ function onReset(): void {
   @apply text-xs font-semibold text-zinc-500 dark:text-zinc-400;
 }
 .fb-select {
-  @apply rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-700 outline-none focus:border-accent dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200;
+  @apply h-7 rounded-md border border-zinc-300 bg-white px-2 text-xs text-zinc-700 outline-none focus:border-accent dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200;
 }
 .fb-divider {
-  @apply hidden h-5 w-px bg-zinc-200 sm:block dark:bg-zinc-700;
+  @apply mx-0.5 hidden h-6 w-px bg-zinc-200 sm:block dark:bg-zinc-700;
 }
+/* Einheitliche Knopfhoehe wie Auswahl-/Zahlenfelder (28px). */
 .seg-btn {
-  @apply rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-600 transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700;
+  @apply inline-flex h-7 items-center justify-center rounded-md border border-zinc-300 px-2 text-xs text-zinc-600 transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700;
 }
 .seg-active {
   @apply border-accent bg-accent-soft text-accent dark:bg-zinc-700;
