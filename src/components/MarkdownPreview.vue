@@ -2,23 +2,35 @@
 import { computed } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import { renderMarkdown } from '@/utils/markdown'
+import { htmlToMarkdown } from '@/utils/htmlToMarkdown'
 import { useI18n } from '@/i18n'
+import { useToast } from '@/composables/useToast'
 
 /**
- * Live-Vorschau des Dokuments als Markdown. Gerendert wird der REINE TEXT des
- * Dokuments (store.activePlain) -- also die Markdown-Quelle, die man tippt
- * (`# Titel`, `- Punkt`, `**fett**`, `[Link](…)`), nicht die Rich-Text-Auszeichnung.
- * So dient der Editor zugleich als Markdown-Quelle; wer lieber die Werkzeugleiste
- * nutzt, laesst die Vorschau einfach zu.
+ * Live-Vorschau des Dokuments als Markdown. Der Dokumentinhalt wird zu echtem
+ * Markdown umgewandelt (htmlToMarkdown) und daraus gerendert -- so spiegelt die
+ * Vorschau sowohl getippte Markdown-Syntax (`# Titel`, `- Punkt`, `**fett**`)
+ * als auch die WYSIWYG-Formatierung der Werkzeugleiste (Ueberschriften, Fett,
+ * Listen). Genau dieses Markdown liefert auch der `.md`-Export.
  */
 const store = useEditorStore()
 const { t } = useI18n()
+const { showToast } = useToast()
 
 const emit = defineEmits<{ close: [] }>()
 
-const source = computed(() => store.activePlain)
-const html = computed(() => renderMarkdown(source.value))
-const isEmpty = computed(() => source.value.trim() === '')
+const markdown = computed(() => htmlToMarkdown(store.activeHtml))
+const html = computed(() => renderMarkdown(markdown.value))
+const isEmpty = computed(() => markdown.value.trim() === '')
+
+async function copyMarkdown(): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(markdown.value)
+    showToast(t.value.toast.markdownCopied, { key: 'mdCopy' })
+  } catch {
+    showToast(t.value.toast.copyFailed, { type: 'error' })
+  }
+}
 </script>
 
 <template>
@@ -32,23 +44,34 @@ const isEmpty = computed(() => source.value.trim() === '')
       <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
         {{ t.markdownPreview.title }}
       </span>
-      <button
-        type="button"
-        class="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-        :title="t.markdownPreview.close"
-        :aria-label="t.markdownPreview.close"
-        @click="emit('close')"
-      >
-        <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true">
-          <path
-            d="M4 4l8 8M12 4l-8 8"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.6"
-            stroke-linecap="round"
-          />
-        </svg>
-      </button>
+      <div class="flex items-center gap-1">
+        <button
+          type="button"
+          class="rounded-md px-2 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-40 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+          :disabled="isEmpty"
+          :title="t.markdownPreview.copy"
+          @click="copyMarkdown"
+        >
+          {{ t.markdownPreview.copy }}
+        </button>
+        <button
+          type="button"
+          class="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+          :title="t.markdownPreview.close"
+          :aria-label="t.markdownPreview.close"
+          @click="emit('close')"
+        >
+          <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true">
+            <path
+              d="M4 4l8 8M12 4l-8 8"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+      </div>
     </header>
 
     <div class="min-h-0 flex-1 overflow-y-auto">
