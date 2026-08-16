@@ -17,6 +17,8 @@ import FormatBar from '@/components/FormatBar.vue'
 import EditorArea from '@/components/EditorArea.vue'
 import FindReplace from '@/components/FindReplace.vue'
 import StatusBar from '@/components/StatusBar.vue'
+import ShortcutHelp from '@/components/ShortcutHelp.vue'
+import { LIMITS } from '@/stores/editor'
 
 const store = useEditorStore()
 const { t } = useI18n()
@@ -29,6 +31,7 @@ const toolbarRef = ref<InstanceType<typeof EditorToolbar> | null>(null)
 const editorApi = computed<EditorApi | null>(() => editorAreaRef.value)
 
 const showFind = ref(false)
+const showHelp = ref(false)
 const cursorLine = ref(1)
 const cursorCol = ref(1)
 
@@ -66,6 +69,38 @@ function toggleFind(): void {
   } else {
     openFind()
   }
+}
+
+/* ---------- Shortcut-Helfer (Turbo-Nutzer) ---------- */
+/** Weiter-/Rueckwaerts-Suchen per Tastatur: Suche oeffnen, sonst direkt springen. */
+function findNextShortcut(): void {
+  if (showFind.value) findRef.value?.next()
+  else openFind()
+}
+function findPrevShortcut(): void {
+  if (showFind.value) findRef.value?.prev()
+  else openFind()
+}
+
+/** Zu Dokument n springen (1..8 = Position, 9 = letztes). */
+function switchToDocument(n: number): void {
+  const docs = store.documents
+  const idx = n >= 9 ? docs.length - 1 : n - 1
+  const doc = docs[idx]
+  if (doc) store.switchDocument(doc.id)
+}
+
+/** Schriftgroesse per Tastatur aendern (Store begrenzt auf den gueltigen Bereich). */
+function nudgeFontSize(delta: number): void {
+  store.updateSettings({ fontSize: store.settings.fontSize + delta * LIMITS.fontSize.step })
+}
+
+function toggleFocus(): void {
+  store.updateSettings({ focusMode: !store.settings.focusMode })
+}
+
+function toggleHelp(): void {
+  showHelp.value = !showHelp.value
 }
 
 /* ---------- Vorschau in neuem Tab ---------- */
@@ -141,9 +176,45 @@ onBeforeUnmount(() => pageStyleEl?.remove())
 watch(() => [store.settings.pageFormat, store.settings.pageOrientation], syncPageStyle)
 
 useKeyboardShortcuts({
+  // Datei & Dokumente
+  'mod+m': () => store.newDocument(),
+  'mod+o': () => toolbarRef.value?.triggerImport(),
+  'mod+s': () => toolbarRef.value?.download('txt'),
+  'mod+shift+s': exportPdfDocument,
+  'mod+p': printDocument,
+  'alt+1': () => switchToDocument(1),
+  'alt+2': () => switchToDocument(2),
+  'alt+3': () => switchToDocument(3),
+  'alt+4': () => switchToDocument(4),
+  'alt+5': () => switchToDocument(5),
+  'alt+6': () => switchToDocument(6),
+  'alt+7': () => switchToDocument(7),
+  'alt+8': () => switchToDocument(8),
+  'alt+9': () => switchToDocument(9),
+
+  // Bearbeiten & Suchen
+  'mod+z': () => store.undo(),
+  'mod+y': () => store.redo(),
+  'mod+shift+z': () => store.redo(),
   'mod+f': openFind,
+  'mod+g': findNextShortcut,
+  'mod+shift+g': findPrevShortcut,
+
+  // Format
+  'mod+b': () => editorApi.value?.toggleBold(),
+  'mod+i': () => editorApi.value?.toggleItalic(),
+  'mod+\\': () => editorApi.value?.clearFormatting(),
+  'mod+shift+.': () => nudgeFontSize(1),
+  'mod+shift+,': () => nudgeFontSize(-1),
+
+  // Ansicht
+  'mod+shift+f': toggleFocus,
+  'mod+/': toggleHelp,
+  f1: toggleHelp,
   esc: () => {
-    if (showFind.value) {
+    if (showHelp.value) {
+      showHelp.value = false
+    } else if (showFind.value) {
       showFind.value = false
       editorApi.value?.focusEditor()
     } else if (store.settings.focusMode) {
@@ -152,14 +223,6 @@ useKeyboardShortcuts({
       store.updateSettings({ focusMode: false })
     }
   },
-  'mod+m': () => store.newDocument(),
-  'mod+z': () => store.undo(),
-  'mod+y': () => store.redo(),
-  'mod+shift+z': () => store.redo(),
-  'mod+s': () => toolbarRef.value?.download('txt'),
-  'mod+p': printDocument,
-  'mod+b': () => editorApi.value?.toggleBold(),
-  'mod+i': () => editorApi.value?.toggleItalic(),
 })
 </script>
 
@@ -183,11 +246,14 @@ useKeyboardShortcuts({
         @print="printDocument"
         @export-pdf="exportPdfDocument"
         @preview="openPreview"
+        @help="showHelp = true"
       />
       <FormatBar :editor="editorApi" :selection="selFormat" />
     </template>
 
     <FindReplace v-if="showFind" ref="findRef" :editor="editorApi" @close="toggleFind" />
+
+    <ShortcutHelp v-if="showHelp" @close="showHelp = false" />
 
     <div class="flex min-h-0 flex-1">
       <div class="min-w-0 flex-1">

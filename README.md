@@ -44,19 +44,54 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
 - **Zweisprachig (DE/EN)** – die komplette Oberflaeche laesst sich ueber den Sprachumschalter der
   globalen Navigation wechseln; die Wahl wird gemerkt und beim ersten Besuch aus der Browsersprache abgeleitet
 - **Import/Export**: Datei oeffnen, als `.txt`/`.md` herunterladen, alles kopieren
+- **Tastenkuerzel fuer Turbo-Nutzer** – nahezu jede Aktion ist mit der Tastatur erreichbar; die
+  vollstaendige, plattformbewusste Uebersicht (macOS zeigt ⌘/⌥) oeffnet der Knopf mit dem
+  Tastatur-Symbol in der Werkzeugleiste bzw. `Strg + /` oder `F1`
 
 ## Tastenkuerzel
 
+`Strg` steht unter macOS fuer `Cmd`. Die Kombinationen sind so gewaehlt, dass sie mit den
+Browser-Kuerzeln nicht kollidieren; die Erkennung laeuft ueber die physische Taste (`e.code`),
+damit z. B. `Alt + 1` und `Strg + Shift + .` auch auf macOS und anderen Tastaturlayouts stimmen.
+
+**Datei & Dokumente**
+
 | Kuerzel | Aktion |
 |---|---|
-| `Strg/Cmd + F` | Suchen & Ersetzen |
-| `Strg/Cmd + M` | Neues Dokument |
-| `Strg/Cmd + Z` | Rueckgaengig |
-| `Strg/Cmd + Y` / `Strg/Cmd + Shift + Z` | Wiederholen |
-| `Strg/Cmd + S` | Als `.txt` herunterladen |
-| `Strg/Cmd + P` | Als PDF / drucken (im Seitenformat) |
-| `Esc` | Suche schliessen |
+| `Strg + M` | Neues Dokument |
+| `Strg + O` | Datei oeffnen (Import) |
+| `Strg + S` | Als `.txt` herunterladen |
+| `Strg + Shift + S` | Als PDF exportieren |
+| `Strg + P` | Als PDF / drucken (im Seitenformat) |
+| `Alt + 1` … `Alt + 9` | Zu Dokument 1–9 springen (9 = letztes) |
+
+**Bearbeiten & Suchen**
+
+| Kuerzel | Aktion |
+|---|---|
+| `Strg + Z` | Rueckgaengig |
+| `Strg + Y` / `Strg + Shift + Z` | Wiederholen |
+| `Strg + A` | Alles markieren |
+| `Strg + F` | Suchen & Ersetzen |
+| `Strg + G` / `Strg + Shift + G` | Weiter- / rueckwaerts suchen |
+
+**Format**
+
+| Kuerzel | Aktion |
+|---|---|
+| `Strg + B` | Fett |
+| `Strg + I` | Kursiv |
+| `Strg + \` | Formatierung entfernen |
+| `Strg + Shift + .` / `Strg + Shift + ,` | Schrift vergroessern / verkleinern |
 | `Tab` | 2 Leerzeichen einfuegen |
+
+**Ansicht**
+
+| Kuerzel | Aktion |
+|---|---|
+| `Strg + Shift + F` | Fokus-Modus umschalten |
+| `Esc` | Suche / Fokus / Uebersicht schliessen |
+| `Strg + /` · `F1` | Tastenkuerzel-Uebersicht |
 
 ## Installation & Start
 
@@ -112,7 +147,7 @@ src/
   components/
     DocumentTabs.vue  EditorToolbar.vue  TransformMenu.vue  FormatBar.vue
     FindReplace.vue   EditorArea.vue     PagePreview.vue      StatusBar.vue
-    NumberStepper.vue
+    NumberStepper.vue ShortcutHelp.vue
   views/EditorView.vue        Layout + Verdrahtung
 tests/                        Vitest-Specs
 ```

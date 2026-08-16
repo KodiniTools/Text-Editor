@@ -47,7 +47,7 @@ function focus(): void {
   refreshCount()
 }
 
-defineExpose({ focus })
+defineExpose({ focus, next, prev })
 </script>
 
 <template>
