@@ -137,6 +137,7 @@ export const de = {
     print: 'Drucken',
     back: 'Zum Editor',
     empty: 'Kein Dokument gefunden. Bitte im Editor-Tab schreiben.',
+    pageOf: (current: number, total: number): string => `Seite ${current} von ${total}`,
   },
   transformMenu: {
     hint: 'Wird auf Auswahl oder ganzen Text angewendet',
@@ -333,6 +334,7 @@ export const en: Messages = {
     print: 'Print',
     back: 'To editor',
     empty: 'No document found. Please write in the editor tab.',
+    pageOf: (current: number, total: number): string => `Page ${current} of ${total}`,
   },
   transformMenu: {
     hint: 'Applies to selection or whole text',
