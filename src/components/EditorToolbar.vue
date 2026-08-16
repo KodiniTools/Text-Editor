@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import TransformMenu from './TransformMenu.vue'
 import type { Transform } from '@/utils/textTransforms'
+import type { EditorApi, SelectionFormat } from '@/types'
 import { useI18n } from '@/i18n'
 import { usePageFormatLabel } from '@/composables/usePageFormatLabel'
 
 const store = useEditorStore()
 const { t } = useI18n()
 const pageFormatLabel = usePageFormatLabel()
+
+// Editor-API + Auswahlzustand: fuer "Alles markieren/Auswahl aufheben".
+const props = defineProps<{ editor: EditorApi | null; selection: SelectionFormat }>()
 
 const emit = defineEmits<{
   transform: [fn: Transform]
@@ -17,6 +21,15 @@ const emit = defineEmits<{
   exportPdf: []
   preview: []
 }>()
+
+/** Leeres Dokument -> "Text loeschen" deaktivieren. */
+const isEmpty = computed(() => store.activePlain.trim() === '')
+
+/** Umschalten: alles markieren bzw. Markierung aufheben. */
+function toggleSelectAll(): void {
+  if (props.selection.allSelected) props.editor?.deselect()
+  else props.editor?.selectAll()
+}
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const downloadOpen = ref(false)
@@ -115,8 +128,30 @@ defineExpose({ download, copyAll, triggerImport })
       </div>
     </div>
 
+    <button
+      type="button"
+      class="tb-btn"
+      :class="selection.allSelected ? 'text-accent' : ''"
+      :title="selection.allSelected ? t.toolbar.deselectTitle : t.toolbar.selectAllTitle"
+      :aria-pressed="selection.allSelected"
+      @mousedown.prevent
+      @click="toggleSelectAll"
+    >
+      {{ selection.allSelected ? t.toolbar.deselect : t.toolbar.selectAll }}
+    </button>
+
     <button type="button" class="tb-btn" :title="t.toolbar.copyTitle" @click="copyAll">
       {{ t.toolbar.copy }}
+    </button>
+
+    <button
+      type="button"
+      class="tb-btn text-red-600 disabled:text-zinc-400 dark:text-red-400"
+      :disabled="isEmpty"
+      :title="t.toolbar.clearTitle"
+      @click="store.clearActiveDocument()"
+    >
+      {{ t.toolbar.clear }}
     </button>
 
     <button

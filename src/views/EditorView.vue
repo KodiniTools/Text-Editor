@@ -34,6 +34,7 @@ const cursorCol = ref(1)
 // Entscheidung, ob Farbe auf die Auswahl oder das ganze Dokument wirkt.
 const selFormat = ref<SelectionFormat>({
   hasSelection: false,
+  allSelected: false,
   bold: false,
   italic: false,
   color: '',
@@ -151,6 +152,8 @@ useKeyboardShortcuts({
       <DocumentTabs />
       <EditorToolbar
         ref="toolbarRef"
+        :editor="editorApi"
+        :selection="selFormat"
         @transform="onTransform"
         @toggle-find="toggleFind"
         @print="printDocument"

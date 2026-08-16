@@ -5,6 +5,8 @@ import type { FindOptions } from '@/utils/find'
 export interface SelectionFormat {
   /** Es ist Text markiert (nicht nur ein Cursor). */
   hasSelection: boolean
+  /** Der gesamte Inhalt ist markiert (fuer den Umschalt-Knopf "Alles markieren"). */
+  allSelected: boolean
   bold: boolean
   italic: boolean
   /** Farbe an der Cursor-/Auswahlposition als Hex ('' = keine eigene Farbe). */
@@ -27,4 +29,8 @@ export interface EditorApi {
   applyColor: (color: string) => void
   /** Entfernt Fett/Kursiv/Farbe (Auswahl, sonst ganzes Dokument). */
   clearFormatting: () => void
+  /** Markiert den gesamten Inhalt. */
+  selectAll: () => void
+  /** Hebt die Markierung auf. */
+  deselect: () => void
 }

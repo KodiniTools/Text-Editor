@@ -239,6 +239,7 @@ function reportSelection(): void {
   }
   let bold = false
   let italic = false
+  let allSelected = false
   if (inside) {
     try {
       bold = document.queryCommandState('bold')
@@ -246,8 +247,16 @@ function reportSelection(): void {
     } catch {
       /* queryCommandState evtl. nicht verfuegbar */
     }
+    if (el && sel && !collapsed) {
+      const full = document.createRange()
+      full.selectNodeContents(el)
+      const r = sel.getRangeAt(0)
+      allSelected =
+        r.compareBoundaryPoints(Range.START_TO_START, full) <= 0 &&
+        r.compareBoundaryPoints(Range.END_TO_END, full) >= 0
+    }
   }
-  emit('selchange', { hasSelection: inside && !collapsed, bold, italic, color: '' })
+  emit('selchange', { hasSelection: inside && !collapsed, allSelected, bold, italic, color: '' })
 }
 
 // Letzte echte (nicht leere) Auswahl im Feld -- damit ein Klick auf einen
@@ -394,6 +403,30 @@ function applyTransform(fn: Transform): void {
 
 function focusEditor(): void {
   editable.value?.focus()
+}
+
+/* ---------- Alles markieren / Auswahl aufheben ---------- */
+function selectAll(): void {
+  const el = editable.value
+  if (!el) return
+  el.focus()
+  const range = document.createRange()
+  range.selectNodeContents(el)
+  const sel = window.getSelection()
+  sel?.removeAllRanges()
+  sel?.addRange(range)
+  if (!sel?.isCollapsed) savedRange = range.cloneRange()
+  reportSelection()
+  reportCursor()
+}
+
+function deselect(): void {
+  const sel = window.getSelection()
+  sel?.removeAllRanges()
+  // Gemerkte Auswahl verwerfen, damit ein spaeteres Format-Kommando sie nicht
+  // wiederherstellt.
+  savedRange = null
+  reportSelection()
 }
 
 /* ---------- Suchen & Ersetzen (ueber die Textknoten des Feldes) ---------- */
@@ -565,6 +598,8 @@ defineExpose({
   toggleItalic,
   applyColor,
   clearFormatting,
+  selectAll,
+  deselect,
 })
 </script>
 
