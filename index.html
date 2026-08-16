@@ -84,6 +84,63 @@
       }
     </script>
 
+    <!-- ===== Kritisches CSS fuer das statische Skelett (Prerender) ===== -->
+    <style>
+      .ktx-prerender {
+        min-height: 60vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1rem;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        color: #27272a;
+        background: #fafafa;
+      }
+      @media (prefers-color-scheme: dark) {
+        .ktx-prerender {
+          color: #e4e4e7;
+          background: #09090b;
+        }
+      }
+      .ktx-hero {
+        max-width: 44rem;
+        text-align: center;
+      }
+      .ktx-hero h1 {
+        margin: 0 0 0.75rem;
+        font-size: 1.9rem;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      .ktx-hero p {
+        margin: 0 auto 1.25rem;
+        max-width: 40rem;
+        font-size: 1.05rem;
+        line-height: 1.6;
+        opacity: 0.85;
+      }
+      .ktx-features {
+        margin: 0 0 1.5rem;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+      }
+      .ktx-features li {
+        border: 1px solid currentColor;
+        border-radius: 999px;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.85rem;
+        opacity: 0.75;
+      }
+      .ktx-loading {
+        font-size: 0.9rem;
+        opacity: 0.55;
+      }
+    </style>
+
     <!-- Google Consent Mode v2 (vor evtl. GTM) -->
     <!--INJECT:consent-mode-->
   </head>
@@ -91,7 +148,34 @@
     <!-- Globale Navigation (vendored aus dem KodiniTools-Partial) -->
     <!--INJECT:nav-->
 
-    <div id="app"></div>
+    <!--
+      Statisches Skelett (Prerender): sofort sichtbarer, crawlbarer Inhalt und
+      schneller First Paint. Vue leert #app beim Mounten (container.innerHTML =
+      ''), ersetzt das Skelett also vollstaendig durch die App -- kein Hydration,
+      keine Auswirkung auf die Funktionalitaet. Faellt JavaScript aus, bleibt
+      dieses Grundgeruest als Fallback stehen.
+    -->
+    <div id="app">
+      <div class="ktx-prerender">
+        <div class="ktx-hero">
+          <h1>Kodini Texteditor</h1>
+          <p>
+            Kostenloser Online-Texteditor: schreiben, formatieren, Bilder einfügen, als PDF
+            speichern oder drucken – direkt im Browser, ohne Anmeldung. Deine Texte bleiben lokal
+            auf deinem Gerät.
+          </p>
+          <ul class="ktx-features">
+            <li>Formatieren: Schrift, Größe, Farbe, fett, kursiv</li>
+            <li>Seitenformate A4, A3, Letter … hoch &amp; quer</li>
+            <li>Als PDF speichern oder drucken</li>
+            <li>Bilder frei platzieren</li>
+            <li>Suchen &amp; Ersetzen, 30+ Textwerkzeuge</li>
+            <li>Läuft lokal – ohne Anmeldung</li>
+          </ul>
+          <p class="ktx-loading">Editor wird geladen …</p>
+        </div>
+      </div>
+    </div>
 
     <!-- Fallback ohne JavaScript: gibt Crawlern/Nutzern ohne JS eine
          aussagekräftige Beschreibung des Werkzeugs. -->
