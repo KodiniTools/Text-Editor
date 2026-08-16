@@ -119,6 +119,10 @@ function applyTypography(el: HTMLElement, t: PageTypography): void {
   el.style.whiteSpace = t.wrap ? 'pre-wrap' : 'pre'
   el.style.overflowWrap = 'break-word'
   el.style.wordBreak = 'normal'
+  // Damit die globalen Ueberschriften-/Listen-Regeln (.editor-rich ...) auch im
+  // Export/der Vorschau greifen -- inkl. des Basis-Zeilenschritts fuers Raster.
+  el.classList.add('editor-rich')
+  el.style.setProperty('--editor-step', `${lineStepPx(t.fontSizePx, t.lineHeight)}px`)
 }
 
 /**

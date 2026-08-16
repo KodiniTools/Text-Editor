@@ -61,6 +61,34 @@ describe('sanitizeHtml', () => {
   })
 })
 
+describe('Ueberschriften & Listen', () => {
+  it('erkennt Ueberschriften/Listen als HTML-Inhalt', () => {
+    expect(isHtmlContent('<h1>Titel</h1>')).toBe(true)
+    expect(isHtmlContent('<ul><li>a</li></ul>')).toBe(true)
+    expect(isHtmlContent('<ol><li>1</li></ol>')).toBe(true)
+  })
+
+  it('behaelt Ueberschriften und Listen beim Bereinigen', () => {
+    const out = sanitizeHtml('<h1>Titel</h1><ul><li>Eins</li><li>Zwei</li></ul>')
+    expect(out).toContain('<h1>Titel</h1>')
+    expect(out).toContain('<ul>')
+    expect(out).toContain('<li>Eins</li>')
+  })
+
+  it('projiziert Ueberschriften/Listen als Zeilen in reinen Text', () => {
+    const html = '<h1>Titel</h1><ul><li>Eins</li><li>Zwei</li></ul><div>Ende</div>'
+    expect(htmlToPlain(html)).toBe('Titel\nEins\nZwei\nEnde')
+    expect(contentToPlain(html)).toBe('Titel\nEins\nZwei\nEnde')
+  })
+
+  it('erlaubt Fett/Farbe innerhalb einer Ueberschrift', () => {
+    const out = sanitizeHtml('<h2><b>Fett</b> <span style="color: #ff0000">rot</span></h2>')
+    expect(out).toContain('<h2>')
+    expect(out).toContain('<b>Fett</b>')
+    expect(out.toLowerCase()).toContain('color')
+  })
+})
+
 describe('contentToHtml / contentToPlain', () => {
   it('reiner Text wird zu HTML und wieder zu Text', () => {
     expect(contentToHtml('Hallo\nWelt')).toBe('<div>Hallo</div><div>Welt</div>')

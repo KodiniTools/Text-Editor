@@ -15,6 +15,10 @@
   --editor-line-height: 1.7;
   --editor-letter-spacing: 0px;
   --editor-align: left;
+  /* Basis-Zeilenschritt (Grundlinienraster) fuer Ueberschriften/Listen:
+     Schriftgroesse * Zeilenhoehe. Ueberschriften bleiben ein Vielfaches davon,
+     damit der zeilengenaue Seitenumbruch weiter aufgeht. */
+  --editor-step: calc(var(--editor-size) * var(--editor-line-height));
   /* --editor-color wird nur gesetzt, wenn eine eigene Textfarbe gewaehlt ist */
 
   color-scheme: light;
@@ -101,6 +105,64 @@ body {
     color: var(--editor-color, #000);
     background: #ffffff;
   }
+}
+
+/* =====================================================================
+ * Ueberschriften & Listen -- auf dem Grundlinienraster
+ *
+ * Gilt fuer den Editor UND den Export/Vorschau (beide tragen die Klasse
+ * `.editor-rich` und kennen `--editor-step`). Kernidee fuer den korrekten
+ * Seitenumbruch:
+ *   - Jede SICHTBARE Zeile ist genau EINEN Schritt hoch (line-height: 1 Schritt).
+ *   - Abstaende kommen nur als ganze Schritte dazu (padding-top).
+ *   - Die Schriftgroesse ist auf ~1 Schritt gedeckelt (min(...)), damit die
+ *     Glyphe nie ueber ihre Zeile hinausragt -- ein Seitenschnitt an einer
+ *     Schrittgrenze zerschneidet also nie eine Ueberschrift.
+ * Dadurch bleibt jeder Block ein Vielfaches des Schritts und die vorhandene
+ * zeilenbasierte Paginierung (paginateByLines) stimmt unveraendert weiter.
+ * ===================================================================== */
+.editor-rich h1,
+.editor-rich h2,
+.editor-rich h3 {
+  margin: 0;
+  padding: var(--editor-step) 0 0;
+  line-height: var(--editor-step);
+  font-weight: 700;
+}
+.editor-rich h1 {
+  font-size: min(1.6em, calc(var(--editor-step) * 0.98));
+}
+.editor-rich h2 {
+  font-size: min(1.3em, calc(var(--editor-step) * 0.98));
+}
+.editor-rich h3 {
+  font-size: min(1.15em, calc(var(--editor-step) * 0.98));
+  font-weight: 600;
+}
+.editor-rich ul,
+.editor-rich ol {
+  margin: 0;
+  padding: 0;
+  /* Marker sitzen im Einzug; die Zeilenhoehe bleibt der Basisschritt.
+     Tailwinds Preflight setzt `list-style: none` -- hier bewusst zurueckholen. */
+  padding-inline-start: 1.6em;
+  list-style-position: outside;
+}
+.editor-rich ul {
+  list-style-type: disc;
+}
+.editor-rich ol {
+  list-style-type: decimal;
+}
+.editor-rich li {
+  margin: 0;
+  padding: 0;
+  display: list-item;
+}
+/* Verschachtelte Listen: kein zusaetzlicher Aussenabstand (Raster halten). */
+.editor-rich li > ul,
+.editor-rich li > ol {
+  padding-inline-start: 1.3em;
 }
 
 /* Bildlaufleiste dezent */

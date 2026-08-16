@@ -5,7 +5,7 @@ import { findFont, fontList, isKnownFont, loadAllFonts, type EditorFont } from '
 import { PAGE_FORMATS, type PageFormatId, type PageOrientation } from '@/utils/pageFormats'
 import { useI18n } from '@/i18n'
 import type { Messages } from '@/i18n/messages'
-import type { EditorApi, SelectionFormat } from '@/types'
+import type { BlockType, EditorApi, SelectionFormat } from '@/types'
 import { useToast } from '@/composables/useToast'
 import NumberStepper from './NumberStepper.vue'
 
@@ -256,6 +256,75 @@ function onReset(): void {
           @click="editor?.toggleItalic()"
         >
           K
+        </button>
+      </div>
+    </div>
+
+    <span class="fb-divider" />
+
+    <!-- Absatz / Ueberschrift -->
+    <label class="fb-group">
+      <span class="fb-label">{{ t.format.block }}</span>
+      <select
+        class="fb-select"
+        :value="selection.block"
+        :title="t.format.block"
+        @change="editor?.setBlock(($event.target as HTMLSelectElement).value as BlockType)"
+      >
+        <option value="p">{{ t.format.blockNormal }}</option>
+        <option value="h1">{{ t.format.heading1 }}</option>
+        <option value="h2">{{ t.format.heading2 }}</option>
+        <option value="h3">{{ t.format.heading3 }}</option>
+      </select>
+    </label>
+
+    <!-- Listen -->
+    <div class="fb-group">
+      <span class="fb-label">{{ t.format.list }}</span>
+      <div class="flex gap-1">
+        <button
+          type="button"
+          class="seg-btn flex h-[26px] w-7 items-center justify-center"
+          :class="selection.bulletList ? 'seg-active' : ''"
+          :title="t.format.bulletListTitle"
+          :aria-label="t.format.bulletList"
+          :aria-pressed="selection.bulletList"
+          @mousedown.prevent
+          @click="editor?.toggleBulletList()"
+        >
+          <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" aria-hidden="true">
+            <circle cx="2.5" cy="4" r="1.2" fill="currentColor" />
+            <circle cx="2.5" cy="8" r="1.2" fill="currentColor" />
+            <circle cx="2.5" cy="12" r="1.2" fill="currentColor" />
+            <path
+              d="M6 4h8M6 8h8M6 12h8"
+              stroke="currentColor"
+              stroke-width="1.4"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="seg-btn flex h-[26px] w-7 items-center justify-center"
+          :class="selection.numberedList ? 'seg-active' : ''"
+          :title="t.format.numberedListTitle"
+          :aria-label="t.format.numberedList"
+          :aria-pressed="selection.numberedList"
+          @mousedown.prevent
+          @click="editor?.toggleNumberedList()"
+        >
+          <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" aria-hidden="true">
+            <text x="0.5" y="5.5" font-size="5" fill="currentColor">1</text>
+            <text x="0.5" y="10" font-size="5" fill="currentColor">2</text>
+            <text x="0.5" y="14.5" font-size="5" fill="currentColor">3</text>
+            <path
+              d="M6 4h8M6 8h8M6 12h8"
+              stroke="currentColor"
+              stroke-width="1.4"
+              stroke-linecap="round"
+            />
+          </svg>
         </button>
       </div>
     </div>

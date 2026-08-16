@@ -25,6 +25,12 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   Zeilenabstand, Laufweite, Textfarbe (8 Schnellfarben + freier Farbwaehler), Ausrichtung,
   Zeilenumbruch, Zuruecksetzen – alles undo-/redo-faehig. Ein-/ausblendbar ueber `Format`.
   Design (Hell/Dunkel) und Sprache steuert die globale Navigation
+- **Ueberschriften & Listen** – Absatz auf `Ueberschrift 1/2/3` umstellen sowie Aufzaehlungs- und
+  nummerierte Listen. Damit der zeilengenaue Seitenumbruch weiter aufgeht, sitzen die Bloecke auf
+  einem **Grundlinienraster**: jede sichtbare Zeile bleibt genau einen Basisschritt
+  (`Schriftgroesse × Zeilenhoehe`) hoch, Abstaende kommen nur als ganze Schritte dazu, und die
+  Ueberschriftengroesse ist auf ~einen Schritt gedeckelt – so zerschneidet ein Seitenschnitt nie
+  eine Ueberschrift. Editor, Vorschau und PDF teilen sich diese Regeln (Klasse `.editor-rich`)
 - **Seitenformat** (A3/A4/A5/Letter/Legal, Hoch- oder Querformat) – die Bearbeitung erfolgt auf
   einem masstabsgetreuen Blatt
 - **Vorschau = exportierte Datei**: Die Vorschau zeigt das Dokument als paginierte Seiten genau
@@ -92,6 +98,15 @@ damit z. B. `Alt + 1` und `Strg + Shift + .` auch auf macOS und anderen Tastatur
 | `Strg + \` | Formatierung entfernen |
 | `Strg + Shift + .` / `Strg + Shift + ,` | Schrift vergroessern / verkleinern |
 | `Tab` | 2 Leerzeichen einfuegen |
+
+**Absaetze & Listen**
+
+| Kuerzel | Aktion |
+|---|---|
+| `Strg + Alt + 0` | Normaler Text |
+| `Strg + Alt + 1` / `2` / `3` | Ueberschrift 1 / 2 / 3 |
+| `Strg + Shift + 8` | Aufzaehlungsliste |
+| `Strg + Shift + 7` | Nummerierte Liste |
 
 **Ansicht**
 
@@ -338,6 +353,11 @@ curl -I https://kodinitools.com/texteditor/assets/  # 403/404 (kein Directory-Li
 
 ## Bekannte Grenzen / Follow-ups
 
-- Kein Syntax-Highlighting im Editor (bewusst `<textarea>` fuer Robustheit statt contenteditable).
+- Der Editor ist ein `contenteditable`-Feld (fuer Inline-Auszeichnung, Ueberschriften, Listen und
+  frei platzierte Bilder); kein Syntax-Highlighting.
+- Ueberschriften/Listen sitzen auf dem Grundlinienraster – dadurch ist die Ueberschriftengroesse
+  auf ~einen Zeilenschritt gedeckelt (bei sehr enger Zeilenhoehe fallen die Ueberschriften daher
+  kleiner aus). Weitere Blocktypen (Zitat, Code) und echte Markdown-Ausgabe sind moegliche
+  Follow-ups.
 - Undo-History ist pro Session (nicht persistiert) und auf 200 Stufen begrenzt.
 - Regex im Suchfeld nutzt Nutzereingaben; ungueltige Muster werden abgefangen (kein Absturz).

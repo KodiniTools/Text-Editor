@@ -45,6 +45,9 @@ const selFormat = ref<SelectionFormat>({
   bold: false,
   italic: false,
   color: '',
+  block: 'p',
+  bulletList: false,
+  numberedList: false,
 })
 function onSelFormat(state: SelectionFormat): void {
   selFormat.value = state
@@ -236,6 +239,14 @@ useKeyboardShortcuts({
   'mod+\\': () => editorApi.value?.clearFormatting(),
   'mod+shift+.': () => nudgeFontSize(1),
   'mod+shift+,': () => nudgeFontSize(-1),
+
+  // Absaetze & Listen
+  'mod+alt+0': () => editorApi.value?.setBlock('p'),
+  'mod+alt+1': () => editorApi.value?.setBlock('h1'),
+  'mod+alt+2': () => editorApi.value?.setBlock('h2'),
+  'mod+alt+3': () => editorApi.value?.setBlock('h3'),
+  'mod+shift+8': () => editorApi.value?.toggleBulletList(),
+  'mod+shift+7': () => editorApi.value?.toggleNumberedList(),
 
   // Ansicht
   'mod+shift+f': toggleFocus,

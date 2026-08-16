@@ -64,6 +64,17 @@ const GROUPS: { id: GroupKey; rows: Row[] }[] = [
     ],
   },
   {
+    id: 'blocks',
+    rows: [
+      { label: 'normalText', combos: [['mod', 'alt', '0']] },
+      { label: 'heading1', combos: [['mod', 'alt', '1']] },
+      { label: 'heading2', combos: [['mod', 'alt', '2']] },
+      { label: 'heading3', combos: [['mod', 'alt', '3']] },
+      { label: 'bulletList', combos: [['mod', 'shift', '8']] },
+      { label: 'numberedList', combos: [['mod', 'shift', '7']] },
+    ],
+  },
+  {
     id: 'view',
     rows: [
       { label: 'focus', combos: [['mod', 'shift', 'F']] },
