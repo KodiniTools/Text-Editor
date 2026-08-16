@@ -528,6 +528,8 @@ function startDrag(img: ImagePlacement, e: PointerEvent): void {
   selectImage(img.id)
   const m = metrics.value
   if (!m) return
+  // Ganze Ziehbewegung = eine Undo-Stufe.
+  store.beginImageChange()
   const z = zoom.value
   const startX = e.clientX
   const startY = e.clientY
@@ -542,6 +544,7 @@ function startDrag(img: ImagePlacement, e: PointerEvent): void {
   const up = (): void => {
     window.removeEventListener('pointermove', move)
     window.removeEventListener('pointerup', up)
+    store.commitImageChange()
   }
   window.addEventListener('pointermove', move)
   window.addEventListener('pointerup', up)
@@ -552,6 +555,8 @@ function startResize(img: ImagePlacement, e: PointerEvent): void {
   selectImage(img.id)
   const m = metrics.value
   if (!m) return
+  // Ganze Skalier-Bewegung = eine Undo-Stufe.
+  store.beginImageChange()
   const z = zoom.value
   const startX = e.clientX
   const ow = img.w
@@ -564,6 +569,7 @@ function startResize(img: ImagePlacement, e: PointerEvent): void {
   const up = (): void => {
     window.removeEventListener('pointermove', move)
     window.removeEventListener('pointerup', up)
+    store.commitImageChange()
   }
   window.addEventListener('pointermove', move)
   window.addEventListener('pointerup', up)
