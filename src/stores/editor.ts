@@ -223,7 +223,13 @@ function loadDocs(): EditorDocument[] {
 function loadSettings(): EditorSettings {
   try {
     const raw = localStorage.getItem(STORAGE_SETTINGS)
-    if (raw) return normalizeSettings(JSON.parse(raw) as Partial<EditorSettings>)
+    if (raw) {
+      const s = normalizeSettings(JSON.parse(raw) as Partial<EditorSettings>)
+      // Fokus-Modus ist ein Sitzungszustand -- beim Laden nie aktiv, damit ein
+      // Neustart immer aus dem Fokus herausfuehrt (kein Steckenbleiben).
+      s.focusMode = false
+      return s
+    }
   } catch {
     /* ignore */
   }

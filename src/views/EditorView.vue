@@ -146,6 +146,10 @@ useKeyboardShortcuts({
     if (showFind.value) {
       showFind.value = false
       editorApi.value?.focusEditor()
+    } else if (store.settings.focusMode) {
+      // Fokus-Modus mit Esc verlassen -- der Editor-Zustand bleibt vollstaendig
+      // erhalten (Dokumente, Einstellungen, Undo/Redo-Historie).
+      store.updateSettings({ focusMode: false })
     }
   },
   'mod+m': () => store.newDocument(),
@@ -160,7 +164,9 @@ useKeyboardShortcuts({
 </script>
 
 <template>
-  <div class="flex h-full flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+  <div
+    class="relative flex h-full flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
+  >
     <template v-if="!store.settings.focusMode">
       <DocumentTabs />
       <EditorToolbar
@@ -191,13 +197,29 @@ useKeyboardShortcuts({
 
     <StatusBar v-if="!store.settings.focusMode" :cursor-line="cursorLine" :cursor-col="cursorCol" />
 
+    <!--
+      Fokus verlassen: bewusst ABSOLUTE innerhalb des Editorbereichs (nicht fixed
+      zum Viewport), damit der Knopf UNTER der globalen, klebrigen Navigation
+      sitzt und nicht von ihr verdeckt wird. Zusaetzlich beendet Esc den Fokus.
+    -->
     <button
       v-if="store.settings.focusMode"
       type="button"
-      class="fixed right-4 top-4 z-30 rounded-full bg-zinc-800/80 px-4 py-2 text-sm text-white shadow-lg backdrop-blur hover:bg-zinc-700"
+      class="absolute right-4 top-4 z-40 inline-flex items-center gap-2 rounded-full bg-zinc-800/90 px-4 py-2 text-sm font-medium text-white shadow-lg backdrop-blur hover:bg-zinc-700"
+      :title="`${t.focusOverlay.exit} (Esc)`"
       @click="store.updateSettings({ focusMode: false })"
     >
+      <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true">
+        <path
+          d="M4 4l8 8M12 4l-8 8"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+      </svg>
       {{ t.focusOverlay.exit }}
+      <span class="rounded bg-white/20 px-1.5 py-0.5 text-xs">Esc</span>
     </button>
 
     <!--
