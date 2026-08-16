@@ -618,7 +618,7 @@ defineExpose({
           ref="editable"
           class="editor-text editor-rich outline-none"
           :class="
-            pageActive ? 'relative block w-full' : 'min-h-0 w-full flex-1 overflow-auto px-6 py-5'
+            pageActive ? 'relative block w-full' : 'plain-pad min-h-0 w-full flex-1 overflow-auto'
           "
           :style="[editorStyle, textStyle]"
           contenteditable="true"
@@ -657,6 +657,17 @@ defineExpose({
 .editor-rich :deep(p) {
   margin: 0;
   padding: 0;
+}
+
+/*
+ * Bildschirm-Modus: der Klick-/Scrollbereich bleibt volle Breite, aber der
+ * Textblock wird auf eine angenehme Lesebreite (max. 48rem) zentriert. Dadurch
+ * brechen die Zeilen um -- und der Blocksatz wird sichtbar (statt bei voller
+ * Fensterbreite in einzeiligen Absaetzen "wirkungslos" zu erscheinen). Das
+ * Padding ist der halbe Ueberschuss ueber 48rem, mindestens aber 1,5rem.
+ */
+.plain-pad {
+  padding: 1.25rem max(1.5rem, calc((100% - 48rem) / 2));
 }
 
 /* Platzhalter, solange das Feld leer ist. */
