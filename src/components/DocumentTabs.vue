@@ -2,9 +2,16 @@
 import { nextTick, ref } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import { useI18n } from '@/i18n'
+import { useToast } from '@/composables/useToast'
 
 const store = useEditorStore()
 const { t } = useI18n()
+const { showToast } = useToast()
+
+function closeDocument(id: string): void {
+  store.closeDocument(id)
+  showToast(t.value.toast.closed, { type: 'info', key: 'close' })
+}
 const editingId = ref<string | null>(null)
 const editValue = ref('')
 const editInput = ref<HTMLInputElement | null>(null)
@@ -68,7 +75,7 @@ function commitEdit(): void {
         role="button"
         :title="t.tabs.closeTitle"
         :aria-label="t.tabs.closeTitle"
-        @click.stop="store.closeDocument(doc.id)"
+        @click.stop="closeDocument(doc.id)"
         >✕</span
       >
     </button>

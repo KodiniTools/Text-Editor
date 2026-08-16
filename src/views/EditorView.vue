@@ -7,6 +7,7 @@ import { pageSizeCss } from '@/utils/pageFormats'
 import { pageRenderOptions } from '@/utils/pageRenderOptions'
 import { exportPdf } from '@/utils/exportPdf'
 import { loadFont, findFont } from '@/config/fonts'
+import { useToast } from '@/composables/useToast'
 import type { EditorApi, SelectionFormat } from '@/types'
 import type { Transform } from '@/utils/textTransforms'
 
@@ -19,6 +20,7 @@ import StatusBar from '@/components/StatusBar.vue'
 
 const store = useEditorStore()
 const { t } = useI18n()
+const { showToast } = useToast()
 
 const editorAreaRef = ref<InstanceType<typeof EditorArea> | null>(null)
 const findRef = ref<InstanceType<typeof FindReplace> | null>(null)
@@ -77,7 +79,9 @@ function openPreview(): void {
   // Marker im Hash: die Vorschau erkennt daran, dass sie vom Editor geoeffnet
   // wurde, und schliesst sich beim "Zum Editor" (statt einen frischen Editor
   // ohne Undo-Historie zu laden).
-  window.open(`${import.meta.env.BASE_URL}preview#from=editor`, '_blank', 'noopener')
+  const win = window.open(`${import.meta.env.BASE_URL}preview#from=editor`, '_blank', 'noopener')
+  if (win === null) showToast(t.value.toast.previewBlocked, { type: 'error' })
+  else showToast(t.value.toast.previewOpened, { key: 'preview' })
 }
 
 /* ---------- Drucken / Als PDF ---------- */
@@ -105,7 +109,10 @@ function syncPageStyle(): void {
 function printDocument(): void {
   syncPageStyle()
   // Warten, bis der Druckinhalt im DOM steht, dann den Druckdialog oeffnen.
-  nextTick(() => window.print())
+  nextTick(() => {
+    showToast(t.value.toast.printing, { type: 'info', key: 'print' })
+    window.print()
+  })
 }
 
 /* ---------- Ein-Klick-PDF ---------- */
@@ -121,6 +128,9 @@ async function exportPdfDocument(): Promise<void> {
       ...pageRenderOptions(store.settings, store.activeContent),
       fileName: store.activeTitle || 'dokument',
     })
+    showToast(t.value.toast.pdfDone, { key: 'pdf' })
+  } catch {
+    showToast(t.value.toast.pdfFailed, { type: 'error' })
   } finally {
     exporting.value = false
   }

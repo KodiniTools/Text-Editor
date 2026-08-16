@@ -3,11 +3,13 @@ import { computed, ref, watch } from 'vue'
 import type { EditorApi } from '@/types'
 import type { FindOptions } from '@/utils/find'
 import { useI18n } from '@/i18n'
+import { useToast } from '@/composables/useToast'
 
 const props = defineProps<{ editor: EditorApi | null }>()
 const emit = defineEmits<{ close: [] }>()
 
 const { t } = useI18n()
+const { showToast } = useToast()
 
 const query = ref('')
 const replacement = ref('')
@@ -34,7 +36,8 @@ function replaceOne(): void {
   refreshCount()
 }
 function replaceAll(): void {
-  props.editor?.replaceAll(query.value, replacement.value, opts.value)
+  const n = props.editor?.replaceAll(query.value, replacement.value, opts.value) ?? 0
+  if (n > 0) showToast(t.value.toast.replaced(n), { key: 'replace' })
   refreshCount()
 }
 

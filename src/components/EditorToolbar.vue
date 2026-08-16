@@ -6,13 +6,25 @@ import type { Transform } from '@/utils/textTransforms'
 import type { EditorApi, SelectionFormat } from '@/types'
 import { useI18n } from '@/i18n'
 import { usePageFormatLabel } from '@/composables/usePageFormatLabel'
+import { useToast } from '@/composables/useToast'
 
 const store = useEditorStore()
 const { t } = useI18n()
+const { showToast } = useToast()
 const pageFormatLabel = usePageFormatLabel()
 
 // Editor-API + Auswahlzustand: fuer "Alles markieren/Auswahl aufheben".
 const props = defineProps<{ editor: EditorApi | null; selection: SelectionFormat }>()
+
+function newDocument(): void {
+  store.newDocument()
+  showToast(t.value.toast.newDoc, { key: 'newDoc' })
+}
+
+function clearText(): void {
+  store.clearActiveDocument()
+  showToast(t.value.toast.cleared, { type: 'info', key: 'clear' })
+}
 
 const emit = defineEmits<{
   transform: [fn: Transform]
@@ -47,6 +59,7 @@ function onFileChosen(e: Event): void {
   reader.onload = () => {
     const name = file.name.replace(/\.[^.]+$/, '')
     store.openDocument(name, String(reader.result ?? ''))
+    showToast(t.value.toast.opened(name), { key: 'open' })
   }
   reader.readAsText(file)
   input.value = ''
@@ -65,6 +78,7 @@ function download(ext: 'txt' | 'md'): void {
   a.click()
   URL.revokeObjectURL(url)
   downloadOpen.value = false
+  showToast(ext === 'md' ? t.value.toast.savedMd : t.value.toast.savedTxt, { key: 'save' })
 }
 
 function exportPdf(): void {
@@ -75,8 +89,9 @@ function exportPdf(): void {
 async function copyAll(): Promise<void> {
   try {
     await navigator.clipboard.writeText(store.activePlain)
+    showToast(t.value.toast.copied, { key: 'copy' })
   } catch {
-    /* Clipboard evtl. blockiert */
+    showToast(t.value.toast.copyFailed, { type: 'error' })
   }
 }
 
@@ -95,7 +110,7 @@ defineExpose({ download, copyAll, triggerImport })
   <div
     class="flex flex-wrap items-center gap-1 border-b border-zinc-200 bg-white px-2 py-1.5 dark:border-zinc-800 dark:bg-zinc-900"
   >
-    <button type="button" class="tb-btn" :title="t.toolbar.newTitle" @click="store.newDocument()">
+    <button type="button" class="tb-btn" :title="t.toolbar.newTitle" @click="newDocument">
       {{ t.toolbar.new }}
     </button>
     <button type="button" class="tb-btn" :title="t.toolbar.openTitle" @click="triggerImport">
@@ -149,7 +164,7 @@ defineExpose({ download, copyAll, triggerImport })
       class="tb-btn text-red-600 disabled:text-zinc-400 dark:text-red-400"
       :disabled="isEmpty"
       :title="t.toolbar.clearTitle"
-      @click="store.clearActiveDocument()"
+      @click="clearText"
     >
       {{ t.toolbar.clear }}
     </button>

@@ -6,12 +6,14 @@ import { PAGE_FORMATS, type PageFormatId, type PageOrientation } from '@/utils/p
 import { useI18n } from '@/i18n'
 import type { Messages } from '@/i18n/messages'
 import type { EditorApi, SelectionFormat } from '@/types'
+import { useToast } from '@/composables/useToast'
 import NumberStepper from './NumberStepper.vue'
 
 // Design (Hell/Dunkel/Auto) und Sprache steuert die globale Navigation --
 // deshalb liegen sie nicht mehr in der Format-Leiste.
 const store = useEditorStore()
 const { t } = useI18n()
+const { showToast } = useToast()
 
 // Editor-API + aktueller Auswahl-Zustand: fuer Inline-Fett/Kursiv/Farbe.
 const props = defineProps<{ editor: EditorApi | null; selection: SelectionFormat }>()
@@ -139,6 +141,7 @@ function setColor(value: string): void {
 function onReset(): void {
   props.editor?.clearFormatting()
   if (!props.selection.hasSelection) store.resetFormatting()
+  showToast(t.value.toast.formatReset, { type: 'info', key: 'formatReset' })
 }
 </script>
 
