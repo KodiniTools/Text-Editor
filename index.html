@@ -3,11 +3,87 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kodini Texteditor</title>
+
+    <!-- ===== SEO: Grunddaten ===== -->
+    <title>Kodini Texteditor – kostenloser Online-Texteditor ohne Anmeldung</title>
     <meta
       name="description"
-      content="Datenschutzfreundlicher Browser-Texteditor. Alle Verarbeitung passiert lokal im Browser."
+      content="Kostenloser Online-Texteditor: schreiben, formatieren, Bilder einfügen, als PDF speichern oder drucken – im Browser, ohne Anmeldung. Texte bleiben lokal."
     />
+    <link rel="canonical" href="https://kodinitools.com/texteditor/" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <meta name="author" content="KodiniTools" />
+    <meta name="application-name" content="Kodini Texteditor" />
+    <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Sprachvarianten (gleiche URL, Umschaltung im Browser DE/EN) -->
+    <link rel="alternate" hreflang="de" href="https://kodinitools.com/texteditor/" />
+    <link rel="alternate" hreflang="en" href="https://kodinitools.com/texteditor/" />
+    <link rel="alternate" hreflang="x-default" href="https://kodinitools.com/texteditor/" />
+
+    <!-- Icons + Web-App-Manifest -->
+    <link rel="icon" href="https://kodinitools.com/images/logo.png" />
+    <link rel="apple-touch-icon" href="https://kodinitools.com/image/schweiz-192x192.png" />
+    <link rel="manifest" href="site.webmanifest" />
+
+    <!-- ===== Open Graph (Link-Vorschau) ===== -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="KodiniTools" />
+    <meta property="og:title" content="Kodini Texteditor – kostenloser Online-Texteditor" />
+    <meta
+      property="og:description"
+      content="Schreiben, formatieren, Bilder einfügen, als PDF speichern oder drucken – direkt im Browser, ohne Anmeldung. Deine Texte bleiben lokal auf deinem Gerät."
+    />
+    <meta property="og:url" content="https://kodinitools.com/texteditor/" />
+    <meta property="og:image" content="https://kodinitools.com/images/logo.png" />
+    <meta property="og:image:alt" content="Kodini Texteditor" />
+    <meta property="og:locale" content="de_DE" />
+    <meta property="og:locale:alternate" content="en_US" />
+
+    <!-- ===== Twitter Card ===== -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Kodini Texteditor – kostenloser Online-Texteditor" />
+    <meta
+      name="twitter:description"
+      content="Schreiben, formatieren, Bilder einfügen, als PDF speichern oder drucken – im Browser, ohne Anmeldung. Texte bleiben lokal."
+    />
+    <meta name="twitter:image" content="https://kodinitools.com/images/logo.png" />
+
+    <!-- ===== Strukturierte Daten (schema.org WebApplication) ===== -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Kodini Texteditor",
+        "url": "https://kodinitools.com/texteditor/",
+        "description": "Kostenloser Online-Texteditor: schreiben, formatieren, Bilder einfügen, als PDF speichern oder drucken – direkt im Browser, ohne Anmeldung. Alle Verarbeitung passiert lokal im Browser.",
+        "applicationCategory": "Productivity",
+        "operatingSystem": "Web (alle Browser)",
+        "browserRequirements": "Requires JavaScript. Requires HTML5.",
+        "inLanguage": ["de", "en"],
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+        "featureList": [
+          "Schreiben und formatieren (Schrift, Größe, Farbe, fett, kursiv)",
+          "Seitenformate A3/A4/A5/Letter/Legal, hoch und quer",
+          "Als PDF speichern oder drucken mit exakter Vorschau",
+          "Bilder einfügen, frei platzieren und skalieren",
+          "Suchen & Ersetzen, über 30 Textwerkzeuge, Statistik, Fokus-Modus",
+          "Läuft lokal im Browser – ohne Anmeldung, ohne Upload"
+        ],
+        "publisher": {
+          "@type": "Organization",
+          "name": "KodiniTools",
+          "url": "https://kodinitools.com/"
+        }
+      }
+    </script>
+
     <!-- Google Consent Mode v2 (vor evtl. GTM) -->
     <!--INJECT:consent-mode-->
   </head>
@@ -16,6 +92,22 @@
     <!--INJECT:nav-->
 
     <div id="app"></div>
+
+    <!-- Fallback ohne JavaScript: gibt Crawlern/Nutzern ohne JS eine
+         aussagekräftige Beschreibung des Werkzeugs. -->
+    <noscript>
+      <main style="max-width: 42rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6">
+        <h1>Kodini Texteditor</h1>
+        <p>
+          Ein kostenloser Online-Texteditor für den Browser: schreiben, formatieren, Bilder
+          einfügen, als PDF speichern oder drucken – ohne Anmeldung. Alle Texte bleiben lokal auf
+          deinem Gerät.
+        </p>
+        <p>
+          Für die Nutzung wird JavaScript benötigt. Bitte aktiviere JavaScript in deinem Browser.
+        </p>
+      </main>
+    </noscript>
 
     <!-- Globaler Footer + Cookie-Banner -->
     <!--INJECT:footer-->

@@ -55,6 +55,11 @@ export const de = {
     placeholder: 'Hier schreiben ...',
     imageDelete: 'Bild loeschen',
   },
+  seo: {
+    heading: 'Kodini Texteditor – kostenloser Online-Texteditor',
+    tagline:
+      'Schreiben, formatieren, Bilder einfuegen, als PDF speichern oder drucken – direkt im Browser, ohne Anmeldung. Deine Texte bleiben lokal auf deinem Geraet.',
+  },
   find: {
     searchPlaceholder: 'Suchen',
     replacePlaceholder: 'Ersetzen durch',
@@ -260,6 +265,11 @@ export const en: Messages = {
   editor: {
     placeholder: 'Write here ...',
     imageDelete: 'Delete image',
+  },
+  seo: {
+    heading: 'Kodini Text Editor – free online text editor',
+    tagline:
+      'Write, format, add images, save as PDF or print – right in your browser, without signing up. Your text stays local on your device.',
   },
   find: {
     searchPlaceholder: 'Search',
