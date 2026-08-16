@@ -37,8 +37,25 @@ export function useAnchoredMenu(width = 176) {
     }
   }
 
-  function onWindowChange(): void {
-    if (open.value) close()
+  function onScroll(e: Event): void {
+    if (!open.value) return
+    const target = e.target
+    // Scrollen INNERHALB des Menues (lange Werkzeug-Liste) darf es nicht
+    // schliessen -- sonst verschwindet es beim Blaettern.
+    if (menuEl.value && target instanceof Node && menuEl.value.contains(target)) return
+    const el = anchorEl.value
+    if (!el) return
+    const b = el.getBoundingClientRect()
+    // Ist der Anker aus dem Sichtbereich gescrollt, schliessen; sonst dem Anker
+    // folgen (die Leiste/Seite scrollt) statt es einfach zu schliessen.
+    if (b.bottom < 0 || b.top > window.innerHeight || b.right < 0 || b.left > window.innerWidth) {
+      close()
+    } else {
+      measure()
+    }
+  }
+  function onResize(): void {
+    if (open.value) measure()
   }
   function onPointerDown(e: Event): void {
     const target = e.target as Node
@@ -50,15 +67,15 @@ export function useAnchoredMenu(width = 176) {
   }
 
   function bind(): void {
-    // `capture: true`, damit auch das Scrollen der Leiste selbst erfasst wird.
-    window.addEventListener('scroll', onWindowChange, true)
-    window.addEventListener('resize', onWindowChange)
+    // `capture: true`, damit auch das Scrollen der (Mobile) Leiste erfasst wird.
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', onResize)
     document.addEventListener('pointerdown', onPointerDown, true)
     document.addEventListener('keydown', onKey)
   }
   function unbind(): void {
-    window.removeEventListener('scroll', onWindowChange, true)
-    window.removeEventListener('resize', onWindowChange)
+    window.removeEventListener('scroll', onScroll, true)
+    window.removeEventListener('resize', onResize)
     document.removeEventListener('pointerdown', onPointerDown, true)
     document.removeEventListener('keydown', onKey)
   }
