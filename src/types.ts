@@ -33,4 +33,6 @@ export interface EditorApi {
   selectAll: () => void
   /** Hebt die Markierung auf. */
   deselect: () => void
+  /** Fuegt ein Bild ein (frei platzierbar). Gibt true bei Erfolg zurueck. */
+  insertImageFile: (file: File) => Promise<boolean>
 }

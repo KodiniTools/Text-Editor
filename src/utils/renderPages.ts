@@ -78,6 +78,15 @@ export interface PageTypography {
   wrap: boolean
 }
 
+/** Ein frei platziertes Bild in content-relativen px (siehe ImagePlacement). */
+export interface PageImage {
+  src: string
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
 export interface PageRenderOptions {
   /** Bereinigtes HTML des Dokuments (inkl. Inline-Fett/Kursiv/Farbe). */
   html: string
@@ -85,6 +94,8 @@ export interface PageRenderOptions {
   heightMm: number
   marginMm?: number
   typography: PageTypography
+  /** Frei platzierte Bilder (content-relativ, ueber Seiten hinweg). */
+  images?: PageImage[]
 }
 
 export interface RenderedPages {
@@ -148,8 +159,13 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
   applyTypography(meter, opts.typography)
   fillHtml(meter, opts.html)
   document.body.appendChild(meter)
-  const totalH = meter.scrollHeight
+  const textH = meter.scrollHeight
   document.body.removeChild(meter)
+
+  // Bilder koennen unter den Text reichen -> genug Seiten fuer beides.
+  const images = opts.images ?? []
+  const imagesBottom = images.reduce((max, img) => Math.max(max, img.y + img.h), 0)
+  const totalH = Math.max(textH, imagesBottom)
 
   // An Zeilengrenzen umbrechen, damit keine Zeile zwischen zwei Seiten
   // zerschnitten wird.
@@ -193,6 +209,26 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
     fillHtml(inner, opts.html)
 
     windowEl.appendChild(inner)
+
+    // Bilder dieser Seite (content-relativ; gleicher Versatz wie der Text). Nur
+    // die, die das Fenster dieser Seite schneiden. Ueberstehende werden vom
+    // Fenster (overflow: hidden) beschnitten -- wie ein Bild am Seitenrand.
+    const windowH = Math.min(contentH, pageStepPx)
+    const pageTop = i * pageStepPx
+    for (const img of images) {
+      if (img.y + img.h <= pageTop || img.y >= pageTop + windowH) continue
+      const el = document.createElement('img')
+      el.src = img.src
+      el.draggable = false
+      el.style.position = 'absolute'
+      el.style.left = `${img.x}px`
+      el.style.top = `${img.y - pageTop}px`
+      el.style.width = `${img.w}px`
+      el.style.height = `${img.h}px`
+      el.style.objectFit = 'fill'
+      windowEl.appendChild(el)
+    }
+
     page.appendChild(windowEl)
     root.appendChild(page)
     pages.push(page)

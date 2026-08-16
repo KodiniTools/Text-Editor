@@ -88,7 +88,7 @@ async function rebuild(): Promise<void> {
   }
   if (token !== rebuildToken || !stage.value || !viewport.value) return
 
-  const opts = pageRenderOptions(store.settings, store.activeContent)
+  const opts = pageRenderOptions(store.settings, store.activeContent, store.activeImages)
   const { root, pages, widthPx } = buildPages(opts)
 
   if (currentRoot) currentRoot.remove()
@@ -130,6 +130,8 @@ onBeforeUnmount(() => {
 
 // Inhalt tippen: sanft verzoegert neu aufbauen. Format/Schrift: sofort.
 watch(() => store.activeContent, scheduleRebuild)
+// Bilder (hinzufuegen/verschieben/skalieren/loeschen) -> neu aufbauen.
+watch(() => store.activeImages, scheduleRebuild, { deep: true })
 watch(
   () => [
     store.settings.pageFormat,

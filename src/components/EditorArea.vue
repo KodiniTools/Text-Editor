@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useEditorStore } from '@/stores/editor'
+import { useEditorStore, type ImagePlacement } from '@/stores/editor'
 import type { Transform } from '@/utils/textTransforms'
 import type { SelectionFormat } from '@/types'
 import { buildSearchRegex, countMatches as countInText, type FindOptions } from '@/utils/find'
@@ -429,6 +429,158 @@ function deselect(): void {
   reportSelection()
 }
 
+/* ---------- Bilder: einfuegen, verschieben, skalieren, loeschen ---------- */
+const selectedImageId = ref<string | null>(null)
+const MIN_IMAGE = 24
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+/** Bild-Overlay-Style (content-relativ; sitzt im skalierten Blatt). */
+function imageStyle(img: ImagePlacement): Record<string, string> {
+  const m = metrics.value
+  const left = (m ? m.margin : 0) + img.x
+  const top = (m ? m.margin : 0) + img.y
+  return { left: `${left}px`, top: `${top}px`, width: `${img.w}px`, height: `${img.h}px` }
+}
+
+/** Verkleinert das Bild (max. Kante 1400 px) und liefert eine data-URL. */
+function downscaleImage(file: File): Promise<{ src: string; w: number; h: number }> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const image = new Image()
+    image.onload = () => {
+      URL.revokeObjectURL(url)
+      const MAX = 1400
+      const scale = Math.min(1, MAX / Math.max(image.naturalWidth, image.naturalHeight))
+      const cw = Math.max(1, Math.round(image.naturalWidth * scale))
+      const ch = Math.max(1, Math.round(image.naturalHeight * scale))
+      const canvas = document.createElement('canvas')
+      canvas.width = cw
+      canvas.height = ch
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        reject(new Error('no-2d-context'))
+        return
+      }
+      ctx.drawImage(image, 0, 0, cw, ch)
+      // PNG/GIF/WEBP behalten Transparenz (PNG), Fotos werden als JPEG kleiner.
+      const keepAlpha = /image\/(png|gif|webp)/i.test(file.type)
+      const src = canvas.toDataURL(keepAlpha ? 'image/png' : 'image/jpeg', 0.85)
+      resolve({ src, w: cw, h: ch })
+    }
+    image.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('image-load-error'))
+    }
+    image.src = url
+  })
+}
+
+/**
+ * Fuegt ein Bild ein. Ohne Seitenformat wird A4 gewaehlt (freie Platzierung ist
+ * nur mit fester Seitenbreite exakt). Startgroesse ~60 % der Inhaltsbreite,
+ * zentriert, ungefaehr in der Mitte des Sichtbereichs.
+ */
+async function insertImageFile(file: File): Promise<boolean> {
+  if (!file.type.startsWith('image/')) return false
+  let img: { src: string; w: number; h: number }
+  try {
+    img = await downscaleImage(file)
+  } catch {
+    return false
+  }
+  if (!pageActive.value) store.updateSettings({ pageFormat: 'a4', pageOrientation: 'portrait' })
+  await nextTick()
+  const m = metrics.value
+  if (!m) return false
+  const aspect = img.w / img.h
+  const w = Math.min(img.w, Math.round(m.contentW * 0.6))
+  const h = Math.max(1, Math.round(w / aspect))
+  const x = Math.max(0, Math.round((m.contentW - w) / 2))
+  let y = 0
+  const hostEl = host.value
+  if (hostEl) {
+    const center = hostEl.scrollTop + hostEl.clientHeight / 2
+    y = Math.max(0, Math.round((center - 16 - m.margin * zoom.value) / zoom.value - h / 2))
+  }
+  const id = store.addImage({ src: img.src, x, y, w, h })
+  if (!id) return false
+  selectedImageId.value = id
+  editable.value?.blur()
+  nextTick(measure)
+  return true
+}
+
+function selectImage(id: string): void {
+  selectedImageId.value = id
+  editable.value?.blur()
+}
+
+function deleteImage(id: string): void {
+  store.removeImage(id)
+  if (selectedImageId.value === id) selectedImageId.value = null
+}
+
+/** Ziehen zum Verschieben. Bildschirm-Delta wird durch den Zoom geteilt. */
+function startDrag(img: ImagePlacement, e: PointerEvent): void {
+  selectImage(img.id)
+  const m = metrics.value
+  if (!m) return
+  const z = zoom.value
+  const startX = e.clientX
+  const startY = e.clientY
+  const ox = img.x
+  const oy = img.y
+  const move = (ev: PointerEvent): void => {
+    const nx = clamp(ox + (ev.clientX - startX) / z, 0, m.contentW - img.w)
+    const ny = Math.max(0, oy + (ev.clientY - startY) / z)
+    store.updateImage(img.id, { x: Math.round(nx), y: Math.round(ny) })
+    nextTick(measure)
+  }
+  const up = (): void => {
+    window.removeEventListener('pointermove', move)
+    window.removeEventListener('pointerup', up)
+  }
+  window.addEventListener('pointermove', move)
+  window.addEventListener('pointerup', up)
+}
+
+/** Ziehen an der Ecke zum Skalieren (Seitenverhaeltnis bleibt erhalten). */
+function startResize(img: ImagePlacement, e: PointerEvent): void {
+  selectImage(img.id)
+  const m = metrics.value
+  if (!m) return
+  const z = zoom.value
+  const startX = e.clientX
+  const ow = img.w
+  const aspect = img.w / img.h
+  const move = (ev: PointerEvent): void => {
+    const nw = clamp(ow + (ev.clientX - startX) / z, MIN_IMAGE, m.contentW - img.x)
+    store.updateImage(img.id, { w: Math.round(nw), h: Math.max(1, Math.round(nw / aspect)) })
+    nextTick(measure)
+  }
+  const up = (): void => {
+    window.removeEventListener('pointermove', move)
+    window.removeEventListener('pointerup', up)
+  }
+  window.addEventListener('pointermove', move)
+  window.addEventListener('pointerup', up)
+}
+
+/** Entf/Backspace loescht das gewaehlte Bild -- nur, wenn nicht im Text getippt wird. */
+function onImageKeydown(e: KeyboardEvent): void {
+  if (!selectedImageId.value) return
+  if (document.activeElement === editable.value) return
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    e.preventDefault()
+    deleteImage(selectedImageId.value)
+  }
+}
+onMounted(() => document.addEventListener('keydown', onImageKeydown))
+onBeforeUnmount(() => document.removeEventListener('keydown', onImageKeydown))
+
 /* ---------- Suchen & Ersetzen (ueber die Textknoten des Feldes) ---------- */
 function textNodes(): Text[] {
   const el = editable.value
@@ -600,6 +752,7 @@ defineExpose({
   clearFormatting,
   selectAll,
   deselect,
+  insertImageFile,
 })
 </script>
 
@@ -630,8 +783,37 @@ defineExpose({
           @keydown.tab="onTab"
           @keyup="reportCursor"
           @mouseup="reportSelection"
+          @pointerdown="selectedImageId = null"
           @paste="onPaste"
         />
+
+        <!-- Frei platzierte Bilder (nur im Seiten-Modus). Position/Groesse
+             content-relativ -> deckungsgleich mit Vorschau/PDF. -->
+        <template v-if="pageActive">
+          <div
+            v-for="img in store.activeImages"
+            :key="img.id"
+            class="img-frame"
+            :class="{ 'img-selected': img.id === selectedImageId }"
+            :style="imageStyle(img)"
+            @pointerdown.stop="startDrag(img, $event)"
+          >
+            <img :src="img.src" class="img-el" draggable="false" alt="" />
+            <template v-if="img.id === selectedImageId">
+              <span class="img-handle" @pointerdown.stop="startResize(img, $event)" />
+              <button
+                type="button"
+                class="img-del"
+                :title="t.editor.imageDelete"
+                :aria-label="t.editor.imageDelete"
+                @pointerdown.stop
+                @click.stop="deleteImage(img.id)"
+              >
+                ×
+              </button>
+            </template>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -657,6 +839,59 @@ defineExpose({
 .editor-rich :deep(p) {
   margin: 0;
   padding: 0;
+}
+
+/* Frei platziertes Bild (Overlay im skalierten Blatt). */
+.img-frame {
+  position: absolute;
+  z-index: 5;
+  box-sizing: border-box;
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+.img-el {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+}
+.img-selected {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 1px;
+}
+/* Skalier-Griff unten rechts. */
+.img-handle {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: rgb(var(--accent));
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+/* Loeschen oben rechts. */
+.img-del {
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  display: flex;
+  height: 20px;
+  width: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgb(220 38 38);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  cursor: pointer;
 }
 
 /*

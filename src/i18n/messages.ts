@@ -15,6 +15,9 @@ export const de = {
     newTitle: 'Neu (Strg+M)',
     open: 'Oeffnen',
     openTitle: 'Datei oeffnen',
+    image: 'Bild',
+    imageTitle: 'Bild einfuegen (frei platzierbar)',
+    imageToast: 'Bild eingefuegt -- mit der Maus verschieben und skalieren',
     save: 'Speichern',
     saveTitle: 'Herunterladen (Strg+S)',
     asTxt: 'Als .txt',
@@ -50,6 +53,7 @@ export const de = {
   },
   editor: {
     placeholder: 'Hier schreiben ...',
+    imageDelete: 'Bild loeschen',
   },
   find: {
     searchPlaceholder: 'Suchen',
@@ -217,6 +221,9 @@ export const en: Messages = {
     newTitle: 'New (Ctrl+M)',
     open: 'Open',
     openTitle: 'Open file',
+    image: 'Image',
+    imageTitle: 'Insert image (free placement)',
+    imageToast: 'Image inserted -- drag and scale with the mouse',
     save: 'Save',
     saveTitle: 'Download (Ctrl+S)',
     asTxt: 'As .txt',
@@ -252,6 +259,7 @@ export const en: Messages = {
   },
   editor: {
     placeholder: 'Write here ...',
+    imageDelete: 'Delete image',
   },
   find: {
     searchPlaceholder: 'Search',

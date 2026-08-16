@@ -11,12 +11,29 @@ import {
   type PageOrientation,
 } from '@/utils/pageFormats'
 
+/**
+ * Ein frei platziertes Bild. Position/Groesse sind content-relativ in px bei
+ * 96 dpi -- also im selben Koordinatensystem wie der Textbereich einer Seite
+ * (Breite = Papierbreite minus Rand). Dadurch stimmen Editor, Vorschau und PDF
+ * exakt ueberein. `y` laeuft ueber mehrere Seiten hinweg durch (Content-Hoehe).
+ */
+export interface ImagePlacement {
+  id: string
+  /** Bildquelle als data:-URL. */
+  src: string
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
 export interface EditorDocument {
   id: string
   name: string
   content: string
   createdAt: number
   updatedAt: number
+  images?: ImagePlacement[]
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system'
@@ -282,6 +299,8 @@ export const useEditorStore = defineStore('editor', () => {
   const activeHtml = computed(() => contentToHtml(activeContent.value))
   /** Inhalt als reiner Text (Statistik, .txt/.md, Kopieren, Suchen). */
   const activePlain = computed(() => contentToPlain(activeContent.value))
+  /** Frei platzierte Bilder des aktiven Dokuments. */
+  const activeImages = computed<ImagePlacement[]>(() => activeDoc.value?.images ?? [])
   /** Anzeigename des aktiven Dokuments (fuer Download-/PDF-Dateinamen). */
   const activeTitle = computed(() =>
     activeDoc.value ? documentTitle(activeDoc.value) : messages().doc.untitled,
@@ -380,6 +399,39 @@ export const useEditorStore = defineStore('editor', () => {
   /** Leert das aktive Dokument -- eine Undo-Stufe, per Undo wiederherstellbar. */
   function clearActiveDocument(): void {
     replaceContent('')
+  }
+
+  /* ---------- Bilder ---------- */
+  const DATA_IMAGE = /^data:image\/(png|jpe?g|gif|webp);base64,/i
+
+  /** Fuegt ein Bild hinzu (nur gueltige Bild-data-URLs) und gibt die ID zurueck. */
+  function addImage(image: Omit<ImagePlacement, 'id'>): string | null {
+    const doc = activeDoc.value
+    if (!doc || !DATA_IMAGE.test(image.src)) return null
+    if (!doc.images) doc.images = []
+    const id = `img_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
+    doc.images.push({ id, ...image })
+    doc.updatedAt = Date.now()
+    return id
+  }
+
+  /** Aendert Position/Groesse eines Bildes. */
+  function updateImage(id: string, patch: Partial<Omit<ImagePlacement, 'id' | 'src'>>): void {
+    const img = activeDoc.value?.images?.find((i) => i.id === id)
+    if (!img) return
+    Object.assign(img, patch)
+    if (activeDoc.value) activeDoc.value.updatedAt = Date.now()
+  }
+
+  /** Entfernt ein Bild. */
+  function removeImage(id: string): void {
+    const doc = activeDoc.value
+    if (!doc?.images) return
+    const idx = doc.images.findIndex((i) => i.id === id)
+    if (idx !== -1) {
+      doc.images.splice(idx, 1)
+      doc.updatedAt = Date.now()
+    }
   }
 
   /** Ersetzt den Inhalt in einem Schritt (Transform / Paste / Import) -> eine History-Stufe. */
@@ -580,6 +632,7 @@ export const useEditorStore = defineStore('editor', () => {
     activeContent,
     activeHtml,
     activePlain,
+    activeImages,
     activeTitle,
     documentTitle,
     canUndo,
@@ -588,6 +641,9 @@ export const useEditorStore = defineStore('editor', () => {
     updateContent,
     replaceContent,
     clearActiveDocument,
+    addImage,
+    updateImage,
+    removeImage,
     undo,
     redo,
     newDocument,
