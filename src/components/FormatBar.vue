@@ -147,7 +147,7 @@ function onReset(): void {
 
 <template>
   <div
-    class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-zinc-200 bg-zinc-50 px-2 py-1.5 dark:border-zinc-800 dark:bg-zinc-900/60"
+    class="hbar-scroll flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-zinc-200 bg-zinc-50 px-2 py-1.5 dark:border-zinc-800 dark:bg-zinc-900/60"
   >
     <!-- Schriftart -->
     <label class="fb-group">
@@ -270,7 +270,7 @@ function onReset(): void {
           v-for="s in SWATCHES"
           :key="s.value || 'auto'"
           type="button"
-          class="h-5 w-5 rounded border transition-transform hover:scale-110"
+          class="fb-swatch h-5 w-5 rounded border transition-transform hover:scale-110"
           :class="
             store.settings.textColor === s.value
               ? 'border-accent ring-2 ring-accent/40'
@@ -288,7 +288,7 @@ function onReset(): void {
         </button>
         <input
           type="color"
-          class="h-6 w-7 cursor-pointer rounded border border-zinc-300 bg-transparent p-0.5 dark:border-zinc-600"
+          class="fb-color h-6 w-7 cursor-pointer rounded border border-zinc-300 bg-transparent p-0.5 dark:border-zinc-600"
           :value="colorInputValue"
           :title="t.format.customColor"
           :aria-label="t.format.customColor"

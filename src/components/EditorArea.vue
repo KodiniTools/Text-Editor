@@ -900,6 +900,24 @@ defineExpose({
   cursor: pointer;
 }
 
+/* Touch: Skalier-Griff und Loeschen-Knopf groesser antippbar machen. */
+@media (pointer: coarse) {
+  .img-handle {
+    right: -11px;
+    bottom: -11px;
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+  }
+  .img-del {
+    right: -14px;
+    top: -14px;
+    height: 30px;
+    width: 30px;
+    font-size: 18px;
+  }
+}
+
 /*
  * Bildschirm-Modus: der Klick-/Scrollbereich bleibt volle Breite, aber der
  * Textblock wird auf eine angenehme Lesebreite (max. 48rem) zentriert. Dadurch

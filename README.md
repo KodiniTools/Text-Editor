@@ -34,6 +34,13 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   (`html2canvas` + `jsPDF`) – dadurch wird **jede** eigene Schrift pixelgenau uebernommen
 - **Drucken** (Knopf in der Werkzeugleiste bzw. `Strg/Cmd + P`) im gewaehlten Seitenformat
 - **Fokus-Modus** blendet alle Leisten aus
+- **Mobile / Touch** – die komplette Oberflaeche ist fuer Smartphones und Tablets angepasst:
+  Werkzeug-, Format- und Statusleiste werden auf schmalen Bildschirmen zu je einer horizontal
+  wischbaren Zeile (statt in viele Zeilen umzubrechen), Knoepfe und Farbfelder haben groessere
+  Tippflaechen, Formularfelder nutzen 16px (kein ungewolltes iOS-Zoom beim Fokus), Bild-Griffe zum
+  Skalieren/Loeschen sind groesser, und die Tab-Aktionen (Umbenennen/Schliessen) sind ohne Hover
+  dauerhaft sichtbar. Die Menues (`Speichern`, `Werkzeuge`) liegen per `Teleport` im `body`, damit
+  sie in einer scrollenden Leiste nicht abgeschnitten werden
 - **Zweisprachig (DE/EN)** – die komplette Oberflaeche laesst sich ueber den Sprachumschalter der
   globalen Navigation wechseln; die Wahl wird gemerkt und beim ersten Besuch aus der Browsersprache abgeleitet
 - **Import/Export**: Datei oeffnen, als `.txt`/`.md` herunterladen, alles kopieren
@@ -91,6 +98,7 @@ src/
     useTextStats.ts           Reaktive Textstatistik
     useTheme.ts               Design + Textdarstellung als CSS-Variablen
     useKeyboardShortcuts.ts   Globale Tastenkuerzel
+    useAnchoredMenu.ts        Dropdown per Teleport (scroll-/touchfest)
   utils/
     textTransforms.ts         Reine Transform-Funktionen (getestet)
     transformRegistry.ts      Gruppierte Liste fuers Menue

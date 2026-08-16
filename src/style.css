@@ -114,3 +114,85 @@ textarea::-webkit-scrollbar-thumb,
   background: rgb(161 161 170 / 0.4);
   border-radius: 9999px;
 }
+
+/* =====================================================================
+ * Mobile / Touch
+ *
+ * Ziel: die komplette Oberflaeche laesst sich auf Smartphones und Tablets mit
+ * dem Finger bedienen. Zwei Bausteine:
+ *   1. `.hbar-scroll` -- eine Leiste (Tabs, Werkzeuge, Format, Status) wird auf
+ *      schmalen Bildschirmen zu EINER horizontal scrollbaren Zeile, statt in
+ *      viele Zeilen umzubrechen. Das spart die knappe vertikale Hoehe.
+ *   2. `@media (pointer: coarse)` -- auf Zeigern ohne Praezision (Finger) werden
+ *      die Tippflaechen vergroessert und Formularfelder auf 16px gesetzt, damit
+ *      iOS beim Fokus nicht hineinzoomt.
+ * ===================================================================== */
+
+/*
+ * Horizontal scrollende Leiste auf schmalen Bildschirmen. Native <select>- und
+ * <input type="color">-Menues zeichnet der Browser in einer eigenen Ebene, sie
+ * werden also nicht abgeschnitten; die eigenen Dropdowns (Speichern, Werkzeuge)
+ * liegen per Teleport im <body> (siehe useAnchoredMenu).
+ */
+@media (max-width: 640px) {
+  .hbar-scroll {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .hbar-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  /* Elemente behalten ihre Groesse und scrollen, statt sich zu quetschen. */
+  .hbar-scroll > * {
+    flex-shrink: 0;
+  }
+}
+
+@media (pointer: coarse) {
+  /* iOS zoomt Formularfelder < 16px beim Fokus heran -> auf Touch verhindern.
+     Der Editor-Text selbst (contenteditable) bleibt bewusst ausgenommen, damit
+     seine eingestellte Schriftgroesse WYSIWYG erhalten bleibt. */
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Groessere Tippflaechen fuer die Knoepfe der Leisten und Menues. */
+  .tb-btn,
+  .seg-btn,
+  .fr-btn,
+  .menu-item,
+  .fb-select {
+    min-height: 40px;
+  }
+  .seg-btn {
+    min-width: 40px;
+  }
+  .step-btn {
+    min-height: 38px;
+    min-width: 38px;
+  }
+  /* Checkboxen sind mit dem Finger sonst kaum zu treffen. */
+  input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+  }
+  /* Farb-Schnellwahl und Farbwaehler groesser antippbar. */
+  .fb-swatch {
+    width: 28px;
+    height: 28px;
+  }
+  .fb-color {
+    width: 34px;
+    height: 30px;
+  }
+  /* Tab-Aktionen (Umbenennen/Schliessen) haben keinen Hover -> immer sichtbar. */
+  .tab-action {
+    opacity: 1;
+    padding: 4px 6px;
+  }
+}
