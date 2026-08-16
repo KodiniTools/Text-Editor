@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { DEFAULT_FONT_ID } from '@/config/fonts'
 import { messages } from '@/i18n'
+import { contentToHtml, contentToPlain } from '@/utils/richText'
 import {
   isOrientation,
   isPageFormatId,
@@ -238,6 +239,10 @@ export const useEditorStore = defineStore('editor', () => {
     documents.value.find((d) => d.id === activeId.value),
   )
   const activeContent = computed(() => activeDoc.value?.content ?? '')
+  /** Inhalt als bereinigtes HTML (Editor, Vorschau, PDF, Druck). */
+  const activeHtml = computed(() => contentToHtml(activeContent.value))
+  /** Inhalt als reiner Text (Statistik, .txt/.md, Kopieren, Suchen). */
+  const activePlain = computed(() => contentToPlain(activeContent.value))
 
   function ensureHistory(id: string): HistoryEntry {
     let h = history.get(id)
@@ -337,6 +342,21 @@ export const useEditorStore = defineStore('editor', () => {
     pushPast(doc.id, { content: doc.content, format: captureFormat() })
     doc.content = content
     doc.updatedAt = Date.now()
+  }
+
+  /**
+   * Wandelt den aktiven Inhalt einmalig in HTML um, falls er noch als reiner
+   * Text vorliegt (aeltere Staende, Willkommen-Text). Ohne History-Eintrag --
+   * es ist nur ein Formatwechsel des Speicherwerts, keine inhaltliche Aenderung.
+   * Der Editor ruft das beim Oeffnen/Doc-Wechsel auf, damit sein innerHTML dem
+   * gespeicherten Wert 1:1 entspricht (sonst wuerde der Editor bei jedem Tippen
+   * neu gerendert und der Cursor spraenge).
+   */
+  function normalizeActiveToHtml(): void {
+    const doc = activeDoc.value
+    if (!doc) return
+    const html = contentToHtml(doc.content)
+    if (html !== doc.content) doc.content = html
   }
 
   /** Aenderung der Darstellung (Format-Leiste) -> debounced eine History-Stufe. */
@@ -510,8 +530,11 @@ export const useEditorStore = defineStore('editor', () => {
     activeId,
     activeDoc,
     activeContent,
+    activeHtml,
+    activePlain,
     canUndo,
     canRedo,
+    normalizeActiveToHtml,
     updateContent,
     replaceContent,
     undo,

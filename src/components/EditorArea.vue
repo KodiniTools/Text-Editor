@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import type { Transform } from '@/utils/textTransforms'
+import type { SelectionFormat } from '@/types'
 import { buildSearchRegex, countMatches as countInText, type FindOptions } from '@/utils/find'
 import { pageDimensions } from '@/utils/pageFormats'
 import { DEFAULT_MARGIN_MM, mmToPx, lineStepPx, paginateByLines } from '@/utils/renderPages'
+import { htmlToPlain, plainToHtml, sanitizeHtml } from '@/utils/richText'
 import { useI18n } from '@/i18n'
 
 const store = useEditorStore()
@@ -12,40 +14,93 @@ const { t } = useI18n()
 
 const emit = defineEmits<{
   cursor: [line: number, col: number]
+  selchange: [state: SelectionFormat]
 }>()
 
-const textarea = ref<HTMLTextAreaElement | null>(null)
-
-const content = computed<string>({
-  get: () => store.activeContent,
-  set: (v) => store.updateContent(v),
-})
+// Der Editor ist ein contenteditable-Feld: nur so kann ein einzelnes Wort eine
+// eigene Auszeichnung (Fett/Kursiv/Farbe) tragen. Der Inhalt wird als HTML im
+// Store gehalten; reiner Text wird bei Bedarf abgeleitet (store.activePlain).
+const editable = ref<HTMLElement | null>(null)
 
 /**
- * Schrift, Groesse, Zeilenhoehe, Laufweite, Ausrichtung und Farbe kommen als
- * CSS-Variablen von useTheme -- hier bleibt nur der Zeilenumbruch, der kein
- * sinnvolles Gegenstueck als Variable hat.
+ * Zeilenumbruch als Inline-Style (kein sinnvolles Gegenstueck als CSS-Variable).
+ * Schrift/Groesse/Farbe/Ausrichtung kommen als --editor-*-Variablen von useTheme;
+ * Inline-Auszeichnungen im Text ueberschreiben Gewicht/Stil/Farbe punktuell.
  */
 const editorStyle = computed(() => ({
   whiteSpace: store.settings.wordWrap ? ('pre-wrap' as const) : ('pre' as const),
 }))
 
-/* ---------- Seiten-Ansicht (A4/A3/...) ---------- */
+/* ---------- Inhalt <-> Store synchronisieren ---------- */
 /**
- * In der Seiten-Ansicht ist das Textfeld exakt so breit wie der Textbereich der
- * Exportseite (Papierbreite minus Rand, in px bei 96 dpi). Bei identischer
- * Schriftgroesse, Laufweite und Umbruch-Regel bricht der Editor damit an genau
- * denselben Stellen um wie die spaeter gespeicherte/gedruckte Datei. Der
- * Zoom-Regler skaliert nur die Darstellung (CSS-Transform) und aendert den
- * Umbruch nicht.
+ * Schreibt den Store-Inhalt in das Feld -- aber nur bei EXTERNEN Aenderungen
+ * (Dokumentwechsel, Undo/Redo, Transformation, Suchen&Ersetzen). Beim Tippen
+ * setzt der Editor selbst den Store auf sein aktuelles innerHTML; dann stimmen
+ * beide ueberein und es wird NICHT neu geschrieben -- so bleibt der Cursor stehen.
  */
+function renderFromStore(caretToEnd = false): void {
+  const el = editable.value
+  if (!el) return
+  if (el.innerHTML === store.activeContent) return
+  el.innerHTML = store.activeContent
+  if (caretToEnd) placeCaretEnd()
+  nextTick(measure)
+}
+
+/** Liest das Feld und schiebt es in den Store (Tippen/Formatieren/Einfuegen). */
+function syncFromDom(): void {
+  const el = editable.value
+  if (!el) return
+  store.updateContent(el.innerHTML)
+  measure()
+  reportCursor()
+  reportSelection()
+}
+
+function placeCaretEnd(): void {
+  const el = editable.value
+  if (!el) return
+  const range = document.createRange()
+  range.selectNodeContents(el)
+  range.collapse(false)
+  const sel = window.getSelection()
+  sel?.removeAllRanges()
+  sel?.addRange(range)
+}
+
+onMounted(() => {
+  store.normalizeActiveToHtml()
+  if (editable.value) editable.value.innerHTML = store.activeContent
+  setupObserver()
+  nextTick(measure)
+  document.addEventListener('selectionchange', onSelectionChange)
+})
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
+  document.removeEventListener('selectionchange', onSelectionChange)
+})
+
+// Dokumentwechsel: Inhalt neu einsetzen (in HTML normalisiert).
+watch(
+  () => store.activeId,
+  () => {
+    store.normalizeActiveToHtml()
+    nextTick(() => renderFromStore(false))
+  },
+)
+// Externe Inhaltsaenderung (Undo/Redo/Transform/Ersetzen): Feld nachziehen.
+watch(
+  () => store.activeContent,
+  () => renderFromStore(true),
+)
+
+/* ---------- Seiten-Ansicht (A4/A3/...) ---------- */
 const host = ref<HTMLElement | null>(null)
-const textHeight = ref(0)
+const contentHeight = ref(0)
 
 const pageActive = computed(() => store.settings.pageFormat !== 'none')
 const zoom = computed(() => store.settings.pageZoom)
 
-/** Seitenmasse in px (96 dpi) -- dieselbe Umrechnung wie im Export. */
 const metrics = computed(() => {
   const dims = pageDimensions(store.settings.pageFormat, store.settings.pageOrientation)
   if (!dims) return null
@@ -55,14 +110,12 @@ const metrics = computed(() => {
   return { pageW, pageH, margin, contentW: pageW - 2 * margin, contentH: pageH - 2 * margin }
 })
 
-/** Blatthoehe = Rand oben/unten + mitwachsende Texthoehe (mind. eine Seite). */
 const sheetHeight = computed(() => {
   const m = metrics.value
   if (!m) return 0
-  return 2 * m.margin + Math.max(m.contentH, textHeight.value)
+  return 2 * m.margin + Math.max(m.contentH, contentHeight.value)
 })
 
-/** Aeussere (skalierte) Masse -- damit der graue Bereich korrekt scrollt. */
 const canvasStyle = computed(() =>
   metrics.value
     ? {
@@ -84,17 +137,16 @@ const sheetStyle = computed(() =>
 )
 
 const textStyle = computed(() =>
-  pageActive.value ? { height: `${textHeight.value}px` } : undefined,
+  metrics.value && pageActive.value ? { minHeight: `${metrics.value.contentH}px` } : undefined,
 )
 
-/** Fuehrungslinien dort, wo im Export eine neue Seite beginnt (an Zeilengrenzen,
- *  genau wie die Vorschau/der Export -- siehe paginateByLines). */
+/** Fuehrungslinien an den Zeilengrenzen, an denen der Export umbricht. */
 const pageBreaks = computed<number[]>(() => {
   const m = metrics.value
   if (!m || !pageActive.value) return []
   const step = lineStepPx(store.settings.fontSize, store.settings.lineHeight)
   const { pageStepPx, count } = paginateByLines(
-    Math.max(m.contentH, textHeight.value),
+    Math.max(m.contentH, contentHeight.value),
     m.contentH,
     step,
   )
@@ -103,172 +155,340 @@ const pageBreaks = computed<number[]>(() => {
   return lines
 })
 
-/** Textfeldhoehe an den Inhalt anpassen (Textareas wachsen nicht von selbst). */
-function syncHeight(): void {
-  const el = textarea.value
-  if (!el || !pageActive.value) return
-  el.style.height = 'auto'
-  textHeight.value = el.scrollHeight
-  el.style.height = `${el.scrollHeight}px`
+function measure(): void {
+  if (editable.value && pageActive.value) contentHeight.value = editable.value.scrollHeight
 }
 
-onMounted(() => nextTick(syncHeight))
-watch(content, () => nextTick(syncHeight))
-watch(
-  () => [
-    pageActive.value,
-    metrics.value?.contentW,
-    store.settings.fontSize,
-    store.settings.lineHeight,
-    store.settings.letterSpacing,
-    store.settings.fontFamily,
-    store.settings.wordWrap,
-  ],
-  () => nextTick(syncHeight),
-)
+let resizeObserver: ResizeObserver | null = null
+function setupObserver(): void {
+  if (typeof ResizeObserver === 'undefined' || !editable.value) return
+  resizeObserver = new ResizeObserver(measure)
+  resizeObserver.observe(editable.value)
+}
+watch([pageActive, metrics], () => nextTick(measure))
 
-/* ---------- Cursor-Position ---------- */
+/* ---------- Cursor-Position (Zeile/Spalte) ---------- */
 function reportCursor(): void {
-  const el = textarea.value
-  if (!el) return
-  const pos = el.selectionStart
-  const before = el.value.slice(0, pos)
+  const el = editable.value
+  const sel = window.getSelection()
+  if (!el || !sel || sel.rangeCount === 0) return
+  const range = sel.getRangeAt(0)
+  if (!el.contains(range.startContainer)) return
+  const pre = document.createRange()
+  pre.selectNodeContents(el)
+  pre.setEnd(range.startContainer, range.startOffset)
+  const holder = document.createElement('div')
+  holder.appendChild(pre.cloneContents())
+  const before = htmlToPlain(holder.innerHTML)
   const line = before.split('\n').length
-  const col = pos - before.lastIndexOf('\n')
+  const col = before.length - before.lastIndexOf('\n')
   emit('cursor', line, col)
 }
 
-/* ---------- Tab-Handling: 2 Leerzeichen einfuegen ---------- */
+/* ---------- Auswahl-Format an die Format-Leiste melden ---------- */
+function reportSelection(): void {
+  const el = editable.value
+  const sel = window.getSelection()
+  let inside = false
+  let collapsed = true
+  if (el && sel && sel.rangeCount > 0) {
+    const range = sel.getRangeAt(0)
+    inside = el.contains(range.commonAncestorContainer)
+    collapsed = sel.isCollapsed
+  }
+  let bold = false
+  let italic = false
+  if (inside) {
+    try {
+      bold = document.queryCommandState('bold')
+      italic = document.queryCommandState('italic')
+    } catch {
+      /* queryCommandState evtl. nicht verfuegbar */
+    }
+  }
+  emit('selchange', { hasSelection: inside && !collapsed, bold, italic, color: '' })
+}
+
+// Letzte echte (nicht leere) Auswahl im Feld -- damit ein Klick auf einen
+// Format-Knopf (der das Feld kurz den Fokus verlieren laesst) die Auswahl nicht
+// verliert.
+let savedRange: Range | null = null
+
+function onSelectionChange(): void {
+  // Nur reagieren, wenn die Auswahl in unserem Feld liegt.
+  const el = editable.value
+  const sel = window.getSelection()
+  if (!el || !sel || sel.rangeCount === 0) return
+  const range = sel.getRangeAt(0)
+  if (!el.contains(range.commonAncestorContainer)) return
+  if (!sel.isCollapsed) savedRange = range.cloneRange()
+  reportSelection()
+  reportCursor()
+}
+
+/** Stellt die zuletzt gemerkte Auswahl wieder her, falls der Fokus/die Auswahl
+ *  beim Klick auf die Leiste verloren ging. */
+function restoreSelection(): void {
+  const el = editable.value
+  const sel = window.getSelection()
+  if (!el || !sel) return
+  const valid =
+    sel.rangeCount > 0 && !sel.isCollapsed && el.contains(sel.getRangeAt(0).commonAncestorContainer)
+  if (valid || !savedRange) return
+  sel.removeAllRanges()
+  sel.addRange(savedRange)
+}
+
+/* ---------- Tastatur / Einfuegen ---------- */
 function onTab(e: KeyboardEvent): void {
   e.preventDefault()
-  insertAtSelection('  ')
-}
-
-function insertAtSelection(text: string): void {
-  const el = textarea.value
-  if (!el) return
-  const { selectionStart: a, selectionEnd: b, value } = el
-  const next = value.slice(0, a) + text + value.slice(b)
-  store.updateContent(next)
-  nextTick(() => {
-    if (!textarea.value) return
-    const caret = a + text.length
-    textarea.value.selectionStart = textarea.value.selectionEnd = caret
-    textarea.value.focus()
-    reportCursor()
-  })
-}
-
-/* ---------- Exposed: Transform auf Auswahl oder Gesamttext ---------- */
-function applyTransform(fn: Transform): void {
-  const el = textarea.value
-  if (!el) return
-  const { selectionStart: a, selectionEnd: b, value } = el
-  if (a !== b) {
-    const next = value.slice(0, a) + fn(value.slice(a, b)) + value.slice(b)
-    store.replaceContent(next)
-  } else {
-    store.replaceContent(fn(value))
-  }
-  nextTick(reportCursor)
-}
-
-function focusEditor(): void {
-  textarea.value?.focus()
+  insertText('  ')
 }
 
 function insertText(text: string): void {
-  insertAtSelection(text)
+  editable.value?.focus()
+  document.execCommand('insertText', false, text)
+  syncFromDom()
 }
 
-/* ---------- Exposed: Suchen & Ersetzen ---------- */
-function selectRange(start: number, end: number): void {
-  const el = textarea.value
+function onPaste(e: ClipboardEvent): void {
+  e.preventDefault()
+  const data = e.clipboardData
+  if (!data) return
+  const html = data.getData('text/html')
+  if (html) {
+    document.execCommand('insertHTML', false, sanitizeHtml(html))
+  } else {
+    document.execCommand('insertText', false, data.getData('text/plain'))
+  }
+  syncFromDom()
+}
+
+/* ---------- Inline-Formatierung (Fett/Kursiv/Farbe) ---------- */
+function ensureCssStyling(): void {
+  // Farbe/Gewicht/Stil als CSS-Style (span) statt <font>-Tags erzeugen.
+  try {
+    document.execCommand('styleWithCSS', false, 'true')
+  } catch {
+    /* aeltere Engines ignorieren das */
+  }
+}
+
+function toggleBold(): void {
+  editable.value?.focus()
+  restoreSelection()
+  ensureCssStyling()
+  document.execCommand('bold')
+  syncFromDom()
+}
+
+function toggleItalic(): void {
+  editable.value?.focus()
+  restoreSelection()
+  ensureCssStyling()
+  document.execCommand('italic')
+  syncFromDom()
+}
+
+function applyColor(color: string): void {
+  const el = editable.value
   if (!el) return
   el.focus()
-  el.selectionStart = start
-  el.selectionEnd = end
-  // Sichtbar scrollen
-  const before = el.value.slice(0, start)
-  const lineIndex = before.split('\n').length - 1
-  const lineHeight = store.settings.fontSize * store.settings.lineHeight
-  el.scrollTop = Math.max(0, lineIndex * lineHeight - el.clientHeight / 2)
+  restoreSelection()
+  ensureCssStyling()
+  // Leere Farbe ("Automatisch"): auf die aktuelle Standard-Textfarbe setzen.
+  const value = color || rgbToHex(getComputedStyle(el).color) || '#111827'
+  document.execCommand('foreColor', false, value)
+  syncFromDom()
+}
+
+function rgbToHex(rgb: string): string {
+  const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i)
+  if (!m) return ''
+  const hex = (n: string): string => Number(n).toString(16).padStart(2, '0')
+  return `#${hex(m[1]!)}${hex(m[2]!)}${hex(m[3]!)}`
+}
+
+/* ---------- Transformationen (Auswahl oder ganzer Text) ---------- */
+function applyTransform(fn: Transform): void {
+  const el = editable.value
+  const sel = window.getSelection()
+  const hasSel =
+    el &&
+    sel &&
+    sel.rangeCount > 0 &&
+    !sel.isCollapsed &&
+    el.contains(sel.getRangeAt(0).commonAncestorContainer)
+  if (hasSel) {
+    // Auswahl: transformierten reinen Text einsetzen (Auszeichnung der Auswahl
+    // geht dabei verloren -- Transformationen sind Text-Operationen).
+    el!.focus()
+    document.execCommand('insertText', false, fn(sel!.toString()))
+    syncFromDom()
+  } else {
+    // Ganzer Text: auf reinen Text anwenden (formatiert danach neutral).
+    store.replaceContent(plainToHtml(fn(store.activePlain)))
+  }
+}
+
+function focusEditor(): void {
+  editable.value?.focus()
+}
+
+/* ---------- Suchen & Ersetzen (ueber die Textknoten des Feldes) ---------- */
+function textNodes(): Text[] {
+  const el = editable.value
+  if (!el) return []
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+  const nodes: Text[] = []
+  let n = walker.nextNode()
+  while (n) {
+    nodes.push(n as Text)
+    n = walker.nextNode()
+  }
+  return nodes
+}
+
+function fullText(nodes: Text[]): string {
+  return nodes.map((n) => n.nodeValue ?? '').join('')
+}
+
+function pointAt(nodes: Text[], offset: number): { node: Text; offset: number } | null {
+  let acc = 0
+  for (const node of nodes) {
+    const len = node.nodeValue?.length ?? 0
+    if (offset <= acc + len) return { node, offset: offset - acc }
+    acc += len
+  }
+  const last = nodes[nodes.length - 1]
+  return last ? { node: last, offset: last.nodeValue?.length ?? 0 } : null
+}
+
+function selectionOffset(nodes: Text[]): number {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return 0
+  const range = sel.getRangeAt(0)
+  let acc = 0
+  for (const node of nodes) {
+    if (node === range.endContainer) return acc + range.endOffset
+    acc += node.nodeValue?.length ?? 0
+  }
+  return 0
+}
+
+function selectOffsets(nodes: Text[], start: number, end: number): void {
+  const a = pointAt(nodes, start)
+  const b = pointAt(nodes, end)
+  if (!a || !b) return
+  const range = document.createRange()
+  range.setStart(a.node, a.offset)
+  range.setEnd(b.node, b.offset)
+  const sel = window.getSelection()
+  sel?.removeAllRanges()
+  sel?.addRange(range)
+  const rect = range.getBoundingClientRect()
+  const host = editable.value?.closest('.page-backdrop, .plain-scroll') as HTMLElement | null
+  if (host && rect.height) {
+    const hostRect = host.getBoundingClientRect()
+    if (rect.top < hostRect.top || rect.bottom > hostRect.bottom) {
+      host.scrollTop += rect.top - hostRect.top - host.clientHeight / 2
+    }
+  }
   reportCursor()
 }
 
 function findNext(query: string, opts: FindOptions): boolean {
-  const el = textarea.value
-  if (!el) return false
+  const nodes = textNodes()
+  const text = fullText(nodes)
   const re = buildSearchRegex(query, opts, true)
   if (!re) return false
-  re.lastIndex = el.selectionEnd
-  let m = re.exec(el.value)
+  re.lastIndex = selectionOffset(nodes)
+  let m = re.exec(text)
   if (!m) {
     re.lastIndex = 0
-    m = re.exec(el.value)
+    m = re.exec(text)
   }
   if (!m) return false
-  selectRange(m.index, m.index + m[0].length)
+  editable.value?.focus()
+  selectOffsets(nodes, m.index, m.index + m[0].length)
   return true
 }
 
 function findPrev(query: string, opts: FindOptions): boolean {
-  const el = textarea.value
-  if (!el) return false
+  const nodes = textNodes()
+  const text = fullText(nodes)
   const re = buildSearchRegex(query, opts, true)
   if (!re) return false
-  const limit = el.selectionStart
+  const sel = window.getSelection()
+  const limit = sel && sel.rangeCount > 0 ? offsetOfStart(nodes, sel.getRangeAt(0)) : text.length
   let last: RegExpExecArray | null = null
   let m: RegExpExecArray | null
-  while ((m = re.exec(el.value)) !== null) {
+  while ((m = re.exec(text)) !== null) {
     if (m.index < limit) last = m
     else break
     if (m[0] === '') re.lastIndex++
   }
   if (!last) {
-    // Von hinten suchen (wrap)
     re.lastIndex = 0
-    while ((m = re.exec(el.value)) !== null) {
+    while ((m = re.exec(text)) !== null) {
       last = m
       if (m[0] === '') re.lastIndex++
     }
   }
   if (!last) return false
-  selectRange(last.index, last.index + last[0].length)
+  editable.value?.focus()
+  selectOffsets(nodes, last.index, last.index + last[0].length)
   return true
+}
+
+function offsetOfStart(nodes: Text[], range: Range): number {
+  let acc = 0
+  for (const node of nodes) {
+    if (node === range.startContainer) return acc + range.startOffset
+    acc += node.nodeValue?.length ?? 0
+  }
+  return 0
 }
 
 function replaceCurrent(query: string, replacement: string, opts: FindOptions): boolean {
-  const el = textarea.value
-  if (!el) return false
-  const selected = el.value.slice(el.selectionStart, el.selectionEnd)
+  const sel = window.getSelection()
   const re = buildSearchRegex(query, opts, false)
-  if (!re || selected === '' || !re.test(selected)) {
-    return findNext(query, opts)
-  }
-  const start = el.selectionStart
-  const next = el.value.slice(0, start) + replacement + el.value.slice(el.selectionEnd)
-  store.replaceContent(next)
-  nextTick(() => {
-    selectRange(start + replacement.length, start + replacement.length)
-    findNext(query, opts)
-  })
-  return true
+  if (!re || !sel || sel.rangeCount === 0 || sel.isCollapsed) return findNext(query, opts)
+  const selected = sel.toString()
+  if (!re.test(selected)) return findNext(query, opts)
+  const range = sel.getRangeAt(0)
+  range.deleteContents()
+  const node = document.createTextNode(replacement)
+  range.insertNode(node)
+  const after = document.createRange()
+  after.setStartAfter(node)
+  after.collapse(true)
+  sel.removeAllRanges()
+  sel.addRange(after)
+  syncFromDom()
+  return findNext(query, opts)
 }
 
 function replaceAll(query: string, replacement: string, opts: FindOptions): number {
-  const el = textarea.value
-  if (!el) return 0
   const re = buildSearchRegex(query, opts, true)
   if (!re) return 0
-  const count = (el.value.match(re) ?? []).length
-  if (count === 0) return 0
-  store.replaceContent(el.value.replace(re, replacement))
+  let count = 0
+  for (const node of textNodes()) {
+    const value = node.nodeValue ?? ''
+    re.lastIndex = 0
+    const next = value.replace(re, () => {
+      count++
+      return replacement
+    })
+    if (next !== value) node.nodeValue = next
+  }
+  if (count > 0) syncFromDom()
   return count
 }
 
 function countMatches(query: string, opts: FindOptions): number {
-  return countInText(store.activeContent, query, opts)
+  const text = editable.value ? fullText(textNodes()) : store.activePlain
+  return countInText(text, query, opts)
 }
 
 defineExpose({
@@ -280,16 +500,16 @@ defineExpose({
   replaceCurrent,
   replaceAll,
   countMatches,
+  toggleBold,
+  toggleItalic,
+  applyColor,
 })
 </script>
 
 <template>
-  <div ref="host" :class="pageActive ? 'page-backdrop' : 'flex h-full min-h-0 w-full'">
-    <!-- Aeusserer Rahmen: haelt (in der Seiten-Ansicht) die skalierte Groesse,
-         damit der graue Bereich korrekt scrollt. -->
+  <div ref="host" :class="pageActive ? 'page-backdrop' : 'plain-scroll flex h-full min-h-0 w-full'">
     <div :class="pageActive ? 'page-canvas' : 'flex h-full min-h-0 w-full'" :style="canvasStyle">
       <div :class="pageActive ? 'page-sheet' : 'flex h-full min-h-0 w-full'" :style="sheetStyle">
-        <!-- Seitenumbruch-Markierungen an den Stellen der Export-Seiten. -->
         <div
           v-for="(y, i) in pageBreaks"
           :key="i"
@@ -297,20 +517,23 @@ defineExpose({
           :style="{ top: `${y}px` }"
           aria-hidden="true"
         />
-        <textarea
-          ref="textarea"
-          v-model="content"
-          class="editor-text resize-none bg-transparent outline-none placeholder:text-zinc-400"
+        <div
+          ref="editable"
+          class="editor-text editor-rich outline-none"
           :class="
-            pageActive ? 'relative block w-full overflow-hidden' : 'min-h-0 w-full flex-1 px-6 py-5'
+            pageActive ? 'relative block w-full' : 'min-h-0 w-full flex-1 overflow-auto px-6 py-5'
           "
           :style="[editorStyle, textStyle]"
+          contenteditable="true"
+          role="textbox"
+          aria-multiline="true"
           spellcheck="true"
-          :placeholder="t.editor.placeholder"
+          :data-placeholder="t.editor.placeholder"
+          @input="syncFromDom"
           @keydown.tab="onTab"
           @keyup="reportCursor"
-          @click="reportCursor"
-          @select="reportCursor"
+          @mouseup="reportSelection"
+          @paste="onPaste"
         />
       </div>
     </div>
@@ -326,16 +549,31 @@ defineExpose({
   line-height: var(--editor-line-height);
   letter-spacing: var(--editor-letter-spacing);
   text-align: var(--editor-align);
-  /* Ohne eigene Textfarbe greift der Wert aus den Tailwind-Klassen. */
   color: var(--editor-color, inherit);
-  /* Umbruch-Regeln wie im Export (renderPages), damit die Zeilen an denselben
-     Stellen brechen. */
   overflow-wrap: break-word;
   word-break: normal;
 }
 
-/* Grauer Hintergrund, auf dem das Blatt schwebt (oben ausgerichtet, damit lange
-   Dokumente von oben nach unten gescrollt werden). */
+/* Absaetze/Zeilen des contenteditable ohne Aussenabstand -> gleiche Zeilenhoehe
+   wie im Export (Bedingung fuer den zeilengenauen Seitenumbruch). */
+.editor-rich :deep(div),
+.editor-rich :deep(p) {
+  margin: 0;
+  padding: 0;
+}
+
+/* Platzhalter, solange das Feld leer ist. */
+.editor-rich:empty::before,
+.editor-rich:has(> br:only-child)::before {
+  content: attr(data-placeholder);
+  color: rgb(161 161 170); /* zinc-400 */
+  pointer-events: none;
+}
+
+.plain-scroll {
+  overflow: auto;
+}
+
 .page-backdrop {
   display: flex;
   align-items: flex-start;
@@ -348,15 +586,11 @@ defineExpose({
   background: rgb(9 9 11); /* zinc-950 */
 }
 
-/* Aeusserer Rahmen: nimmt die skalierte Groesse ein, damit korrekt gescrollt
-   wird (der Zoom skaliert das Blatt per CSS-Transform). */
 .page-canvas {
   position: relative;
   flex: 0 0 auto;
 }
 
-/* Das "Blatt": weiss/dunkel je Theme, mit Schatten. Breite = echte Seitenbreite;
-   die Hoehe waechst mit dem Inhalt. */
 .page-sheet {
   position: relative;
   box-sizing: border-box;
@@ -368,7 +602,6 @@ defineExpose({
   background: rgb(24 24 27); /* zinc-900 */
 }
 
-/* Markierung, wo im Export eine neue Seite beginnt. */
 .page-break-guide {
   position: absolute;
   left: 0;

@@ -7,7 +7,7 @@ import { pageSizeCss } from '@/utils/pageFormats'
 import { pageRenderOptions } from '@/utils/pageRenderOptions'
 import { exportPdf } from '@/utils/exportPdf'
 import { loadFont, findFont } from '@/config/fonts'
-import type { EditorApi } from '@/types'
+import type { EditorApi, SelectionFormat } from '@/types'
 import type { Transform } from '@/utils/textTransforms'
 
 import DocumentTabs from '@/components/DocumentTabs.vue'
@@ -29,6 +29,18 @@ const editorApi = computed<EditorApi | null>(() => editorAreaRef.value)
 const showFind = ref(false)
 const cursorLine = ref(1)
 const cursorCol = ref(1)
+
+// Aktueller Formatzustand der Auswahl -- fuer die Fett/Kursiv-Knoepfe und die
+// Entscheidung, ob Farbe auf die Auswahl oder das ganze Dokument wirkt.
+const selFormat = ref<SelectionFormat>({
+  hasSelection: false,
+  bold: false,
+  italic: false,
+  color: '',
+})
+function onSelFormat(state: SelectionFormat): void {
+  selFormat.value = state
+}
 
 function onTransform(fn: Transform): void {
   editorApi.value?.applyTransform(fn)
@@ -65,8 +77,9 @@ function openPreview(): void {
 }
 
 /* ---------- Drucken / Als PDF ---------- */
-// Hoch aufgeloester Text der aktiven Seite -- wird nur im Druck sichtbar.
-const printContent = computed(() => store.activeContent)
+// Bereinigtes HTML der aktiven Seite (inkl. Inline-Fett/Kursiv/Farbe) -- nur im
+// Druck sichtbar.
+const printHtml = computed(() => store.activeHtml)
 
 /**
  * Haelt die `@page`-Regel (Papiergroesse + Ausrichtung) im Kopf des Dokuments
@@ -127,6 +140,8 @@ useKeyboardShortcuts({
   'mod+shift+z': () => store.redo(),
   'mod+s': () => toolbarRef.value?.download('txt'),
   'mod+p': printDocument,
+  'mod+b': () => editorApi.value?.toggleBold(),
+  'mod+i': () => editorApi.value?.toggleItalic(),
 })
 </script>
 
@@ -142,14 +157,19 @@ useKeyboardShortcuts({
         @export-pdf="exportPdfDocument"
         @preview="openPreview"
       />
-      <FormatBar />
+      <FormatBar :editor="editorApi" :selection="selFormat" />
     </template>
 
     <FindReplace v-if="showFind" ref="findRef" :editor="editorApi" @close="toggleFind" />
 
     <div class="flex min-h-0 flex-1">
       <div class="min-w-0 flex-1">
-        <EditorArea ref="editorAreaRef" class="h-full" @cursor="onCursor" />
+        <EditorArea
+          ref="editorAreaRef"
+          class="h-full"
+          @cursor="onCursor"
+          @selchange="onSelFormat"
+        />
       </div>
     </div>
 
@@ -170,6 +190,7 @@ useKeyboardShortcuts({
       Schrift, Groesse, Zeilenabstand, Laufweite und Ausrichtung mitgedruckt
       werden. Die Papiergroesse steuert die @page-Regel (siehe syncPageStyle).
     -->
-    <div id="print-root" aria-hidden="true">{{ printContent }}</div>
+    <!-- eslint-disable-next-line vue/no-v-html -- Inhalt ist bereits bereinigt (store.activeHtml) -->
+    <div id="print-root" aria-hidden="true" v-html="printHtml" />
   </div>
 </template>

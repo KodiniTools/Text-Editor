@@ -5,12 +5,16 @@ import { findFont, fontList, isKnownFont, loadAllFonts, type EditorFont } from '
 import { PAGE_FORMATS, type PageFormatId, type PageOrientation } from '@/utils/pageFormats'
 import { useI18n } from '@/i18n'
 import type { Messages } from '@/i18n/messages'
+import type { EditorApi, SelectionFormat } from '@/types'
 import NumberStepper from './NumberStepper.vue'
 
 // Design (Hell/Dunkel/Auto) und Sprache steuert die globale Navigation --
 // deshalb liegen sie nicht mehr in der Format-Leiste.
 const store = useEditorStore()
 const { t } = useI18n()
+
+// Editor-API + aktueller Auswahl-Zustand: fuer Inline-Fett/Kursiv/Farbe.
+const props = defineProps<{ editor: EditorApi | null; selection: SelectionFormat }>()
 
 type FormatKey = keyof Messages['format']
 
@@ -118,8 +122,13 @@ function loadFontPreviews(): void {
   loadAllFonts()
 }
 
+/**
+ * Farbe: ist Text markiert, wird nur die Auswahl eingefaerbt (Inline). Ohne
+ * Auswahl gilt die Farbe fuer das ganze Dokument (Standard-Textfarbe).
+ */
 function setColor(value: string): void {
-  store.updateSettings({ textColor: value })
+  if (props.selection.hasSelection) props.editor?.applyColor(value)
+  else store.updateSettings({ textColor: value })
 }
 </script>
 
@@ -207,6 +216,39 @@ function setColor(value: string): void {
 
     <span class="fb-divider" />
 
+    <!-- Inline-Stil: Fett/Kursiv fuer die markierte Auswahl -->
+    <div class="fb-group">
+      <span class="fb-label">{{ t.format.style }}</span>
+      <div class="flex gap-1">
+        <button
+          type="button"
+          class="seg-btn flex h-[26px] w-7 items-center justify-center font-bold"
+          :class="selection.bold ? 'seg-active' : ''"
+          :title="t.format.boldTitle"
+          :aria-label="t.format.bold"
+          :aria-pressed="selection.bold"
+          @mousedown.prevent
+          @click="editor?.toggleBold()"
+        >
+          F
+        </button>
+        <button
+          type="button"
+          class="seg-btn flex h-[26px] w-7 items-center justify-center italic"
+          :class="selection.italic ? 'seg-active' : ''"
+          :title="t.format.italicTitle"
+          :aria-label="t.format.italic"
+          :aria-pressed="selection.italic"
+          @mousedown.prevent
+          @click="editor?.toggleItalic()"
+        >
+          K
+        </button>
+      </div>
+    </div>
+
+    <span class="fb-divider" />
+
     <!-- Textfarbe -->
     <div class="fb-group">
       <span class="fb-label">{{ t.format.color }}</span>
@@ -225,6 +267,7 @@ function setColor(value: string): void {
           :title="t.format[s.labelKey]"
           :aria-label="t.format[s.labelKey]"
           :aria-pressed="store.settings.textColor === s.value"
+          @mousedown.prevent
           @click="setColor(s.value)"
         >
           <!-- Der Auto-Knopf zeigt statt einer Farbe ein A -->
