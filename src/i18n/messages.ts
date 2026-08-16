@@ -45,6 +45,8 @@ export const de = {
   tabs: {
     closeTitle: 'Schliessen',
     newDocTitle: 'Neues Dokument (Strg+M)',
+    renameTitle: 'Umbenennen (Doppelklick)',
+    renamePlaceholder: 'Name eingeben',
   },
   editor: {
     placeholder: 'Hier schreiben ...',
@@ -240,6 +242,8 @@ export const en: Messages = {
   tabs: {
     closeTitle: 'Close',
     newDocTitle: 'New document (Ctrl+M)',
+    renameTitle: 'Rename (double-click)',
+    renamePlaceholder: 'Enter a name',
   },
   editor: {
     placeholder: 'Write here ...',

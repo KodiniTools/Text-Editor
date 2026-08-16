@@ -1,6 +1,34 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { useEditorStore } from '@/stores/editor'
+import { documentTitle, useEditorStore } from '@/stores/editor'
+
+function doc(name: string, content: string) {
+  return { id: 'x', name, content, createdAt: 0, updatedAt: 0 }
+}
+
+describe('documentTitle', () => {
+  it('leitet bei "Unbenannt" den Titel aus der ersten Zeile ab', () => {
+    expect(documentTitle(doc('Unbenannt', '<div>Mein Brief</div><div>...</div>'))).toBe(
+      'Mein Brief',
+    )
+    expect(documentTitle(doc('Unbenannt 3', 'Erste Zeile\nzweite'))).toBe('Erste Zeile')
+  })
+
+  it('behaelt einen bewusst vergebenen Namen', () => {
+    expect(documentTitle(doc('Vertrag', '<div>Text</div>'))).toBe('Vertrag')
+    expect(documentTitle(doc('Willkommen', '# Willkommen\nText'))).toBe('Willkommen')
+  })
+
+  it('faellt bei leerem Inhalt auf "Unbenannt" zurueck', () => {
+    expect(documentTitle(doc('Unbenannt', ''))).toBe('Unbenannt')
+    expect(documentTitle(doc('Unbenannt 2', '<div><br></div>'))).toBe('Unbenannt 2')
+  })
+
+  it('entfernt Markdown-Rauten und kuerzt lange Titel', () => {
+    expect(documentTitle(doc('Unbenannt', '## Kapitel eins'))).toBe('Kapitel eins')
+    expect(documentTitle(doc('Unbenannt', 'a'.repeat(100))).length).toBe(60)
+  })
+})
 
 beforeEach(() => {
   localStorage.clear()

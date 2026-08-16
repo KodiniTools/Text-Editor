@@ -36,24 +36,38 @@ function commitEdit(): void {
           : 'border-transparent text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
       "
       @click="store.switchDocument(doc.id)"
-      @dblclick="startEdit(doc.id, doc.name)"
+      @dblclick="startEdit(doc.id, store.documentTitle(doc))"
     >
       <input
         v-if="editingId === doc.id"
         ref="editInput"
         v-model="editValue"
         class="w-28 rounded border border-accent bg-white px-1 text-sm text-zinc-900 outline-none dark:bg-zinc-800 dark:text-zinc-100"
+        :placeholder="t.tabs.renamePlaceholder"
         @click.stop
         @keydown.enter.prevent="commitEdit"
         @keydown.esc.prevent="editingId = null"
         @blur="commitEdit"
       />
-      <span v-else class="max-w-40 truncate">{{ doc.name }}</span>
+      <span v-else class="max-w-40 truncate" :title="t.tabs.renameTitle">{{
+        store.documentTitle(doc)
+      }}</span>
+      <!-- Umbenennen: sichtbarer Hinweis (zusaetzlich zum Doppelklick). -->
       <span
-        v-if="store.documents.length > 1"
+        v-if="editingId !== doc.id"
+        class="rounded px-1 text-xs text-zinc-400 opacity-0 hover:bg-zinc-300 hover:text-zinc-700 group-hover:opacity-100 dark:hover:bg-zinc-700"
+        role="button"
+        :title="t.tabs.renameTitle"
+        :aria-label="t.tabs.renameTitle"
+        @click.stop="startEdit(doc.id, store.documentTitle(doc))"
+        >✎</span
+      >
+      <span
+        v-if="store.documents.length > 1 && editingId !== doc.id"
         class="rounded px-1 text-xs text-zinc-400 opacity-0 hover:bg-zinc-300 hover:text-zinc-700 group-hover:opacity-100 dark:hover:bg-zinc-700"
         role="button"
         :title="t.tabs.closeTitle"
+        :aria-label="t.tabs.closeTitle"
         @click.stop="store.closeDocument(doc.id)"
         >✕</span
       >

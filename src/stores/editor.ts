@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { DEFAULT_FONT_ID } from '@/config/fonts'
 import { messages } from '@/i18n'
+import { MESSAGES } from '@/i18n/messages'
 import { contentToHtml, contentToPlain } from '@/utils/richText'
 import {
   isOrientation,
@@ -167,6 +168,37 @@ export function normalizeSettings(raw: Partial<EditorSettings>): EditorSettings 
   }
 }
 
+/** Standard-"Unbenannt"-Namen beider Sprachen (auch "Unbenannt 2", "Untitled 3", ...). */
+const UNTITLED_NAMES = [MESSAGES.de.doc.untitled, MESSAGES.en.doc.untitled]
+
+function isUntitledName(name: string): boolean {
+  return UNTITLED_NAMES.some(
+    (u) => name === u || (name.startsWith(`${u} `) && /^\d+$/.test(name.slice(u.length + 1))),
+  )
+}
+
+/** Erste nicht-leere Zeile als Titel (ohne Markdown-Rautezeichen, gekuerzt). */
+function firstContentLine(content: string): string {
+  const plain = contentToPlain(content)
+  const line = plain
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .find((s) => s.length > 0)
+  if (!line) return ''
+  return line.replace(/^#+\s*/, '').slice(0, 60)
+}
+
+/**
+ * Anzeigename eines Dokuments. Solange es "Unbenannt" heisst (nie umbenannt),
+ * wird der Titel aus der ersten Textzeile abgeleitet -- so unterscheiden sich
+ * die Tabs von allein, ohne dass der Nutzer etwas tun muss. Ein bewusst
+ * vergebener Name (Umbenennen, Import, "Willkommen") bleibt unveraendert.
+ */
+export function documentTitle(doc: EditorDocument): string {
+  if (!isUntitledName(doc.name)) return doc.name
+  return firstContentLine(doc.content) || doc.name
+}
+
 function uid(): string {
   return `doc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
 }
@@ -243,6 +275,10 @@ export const useEditorStore = defineStore('editor', () => {
   const activeHtml = computed(() => contentToHtml(activeContent.value))
   /** Inhalt als reiner Text (Statistik, .txt/.md, Kopieren, Suchen). */
   const activePlain = computed(() => contentToPlain(activeContent.value))
+  /** Anzeigename des aktiven Dokuments (fuer Download-/PDF-Dateinamen). */
+  const activeTitle = computed(() =>
+    activeDoc.value ? documentTitle(activeDoc.value) : messages().doc.untitled,
+  )
 
   function ensureHistory(id: string): HistoryEntry {
     let h = history.get(id)
@@ -537,6 +573,8 @@ export const useEditorStore = defineStore('editor', () => {
     activeContent,
     activeHtml,
     activePlain,
+    activeTitle,
+    documentTitle,
     canUndo,
     canRedo,
     normalizeActiveToHtml,
