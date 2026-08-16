@@ -71,6 +71,12 @@ describe('htmlToMarkdown', () => {
     expect(htmlToMarkdown(real)).toBe('# Projektplan\n\n**Wichtig**\n\n- Punkt eins')
   })
 
+  it('rettet eine (ungueltig) in einer Ueberschrift steckende Liste', () => {
+    // So sieht die kaputte Struktur aus, wenn man Ueberschrift + Liste kombiniert.
+    expect(htmlToMarkdown('<h1><ol><li>b</li><li>c</li></ol></h1>')).toBe('1. b\n2. c')
+    expect(htmlToMarkdown('<h1>Titel<ol><li>x</li></ol></h1>')).toBe('# Titel\n\n1. x')
+  })
+
   it('leerer Inhalt -> leerer String', () => {
     expect(htmlToMarkdown('')).toBe('')
     expect(htmlToMarkdown('<div><br></div>')).toBe('')
