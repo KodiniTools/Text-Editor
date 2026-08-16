@@ -95,6 +95,29 @@ describe('editor store - Undo/Redo', () => {
     expect(store.activeContent).toBe('')
   })
 
+  it('fuegt Bilder hinzu, aendert und entfernt sie', () => {
+    const store = useEditorStore()
+    store.newDocument('X')
+    const okSrc = 'data:image/png;base64,AAAA'
+    const id = store.addImage({ src: okSrc, x: 10, y: 20, w: 100, h: 50 })
+    expect(id).not.toBeNull()
+    expect(store.activeImages.length).toBe(1)
+    expect(store.activeImages[0]!.x).toBe(10)
+    store.updateImage(id!, { x: 42, w: 200, h: 100 })
+    expect(store.activeImages[0]!.x).toBe(42)
+    expect(store.activeImages[0]!.w).toBe(200)
+    store.removeImage(id!)
+    expect(store.activeImages.length).toBe(0)
+  })
+
+  it('lehnt ungueltige Bildquellen ab (kein data:image)', () => {
+    const store = useEditorStore()
+    store.newDocument('X')
+    expect(store.addImage({ src: 'https://example.com/x.png', x: 0, y: 0, w: 1, h: 1 })).toBeNull()
+    expect(store.addImage({ src: 'javascript:alert(1)', x: 0, y: 0, w: 1, h: 1 })).toBeNull()
+    expect(store.activeImages.length).toBe(0)
+  })
+
   it('clearActiveDocument leert und ist per Undo wiederherstellbar', () => {
     const store = useEditorStore()
     store.newDocument('X')

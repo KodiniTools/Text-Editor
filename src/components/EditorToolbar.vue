@@ -44,8 +44,22 @@ function toggleSelectAll(): void {
 }
 
 const fileInput = ref<HTMLInputElement | null>(null)
+const imageInput = ref<HTMLInputElement | null>(null)
 const downloadOpen = ref(false)
 const downloadRoot = ref<HTMLElement | null>(null)
+
+/* ---------- Bild einfuegen ---------- */
+function triggerImage(): void {
+  imageInput.value?.click()
+}
+async function onImageChosen(e: Event): Promise<void> {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file || !props.editor) return
+  const ok = await props.editor.insertImageFile(file)
+  if (ok) showToast(t.value.toolbar.imageToast, { key: 'image' })
+}
 
 /* ---------- Import ---------- */
 function triggerImport(): void {
@@ -115,6 +129,9 @@ defineExpose({ download, copyAll, triggerImport })
     </button>
     <button type="button" class="tb-btn" :title="t.toolbar.openTitle" @click="triggerImport">
       {{ t.toolbar.open }}
+    </button>
+    <button type="button" class="tb-btn" :title="t.toolbar.imageTitle" @click="triggerImage">
+      {{ t.toolbar.image }}
     </button>
 
     <div ref="downloadRoot" class="relative">
@@ -227,6 +244,13 @@ defineExpose({ download, copyAll, triggerImport })
       accept=".txt,.md,.markdown,text/*"
       class="hidden"
       @change="onFileChosen"
+    />
+    <input
+      ref="imageInput"
+      type="file"
+      accept="image/png,image/jpeg,image/gif,image/webp"
+      class="hidden"
+      @change="onImageChosen"
     />
   </div>
 </template>

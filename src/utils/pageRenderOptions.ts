@@ -3,10 +3,10 @@
  * PDF-Export ab -- eine gemeinsame Quelle, damit beide identisch sind.
  */
 
-import type { EditorSettings } from '@/stores/editor'
+import type { EditorSettings, ImagePlacement } from '@/stores/editor'
 import { findFont } from '@/config/fonts'
 import { pageDimensions } from '@/utils/pageFormats'
-import type { PageRenderOptions } from '@/utils/renderPages'
+import type { PageImage, PageRenderOptions } from '@/utils/renderPages'
 import { contentToHtml } from '@/utils/richText'
 
 /** Ohne gewaehltes Format wird A4 Hochformat verwendet (wie beim Drucken). */
@@ -15,12 +15,19 @@ const FALLBACK = { widthMm: 210, heightMm: 297 }
 /**
  * @param content Roh gespeicherter Inhalt (HTML oder aelterer reiner Text) --
  *   wird hier zu bereinigtem HTML fuer Vorschau/PDF gemacht.
+ * @param images Frei platzierte Bilder des Dokuments (content-relativ).
  */
-export function pageRenderOptions(settings: EditorSettings, content: string): PageRenderOptions {
+export function pageRenderOptions(
+  settings: EditorSettings,
+  content: string,
+  images: ImagePlacement[] = [],
+): PageRenderOptions {
   const font = findFont(settings.fontFamily)
   const dims = pageDimensions(settings.pageFormat, settings.pageOrientation) ?? FALLBACK
+  const pageImages: PageImage[] = images.map(({ src, x, y, w, h }) => ({ src, x, y, w, h }))
   return {
     html: contentToHtml(content),
+    images: pageImages,
     widthMm: dims.widthMm,
     heightMm: dims.heightMm,
     typography: {

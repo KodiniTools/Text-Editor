@@ -125,7 +125,7 @@ async function exportPdfDocument(): Promise<void> {
     // Ersatzschrift zurueck.
     await loadFont(findFont(store.settings.fontFamily))
     await exportPdf({
-      ...pageRenderOptions(store.settings, store.activeContent),
+      ...pageRenderOptions(store.settings, store.activeContent, store.activeImages),
       fileName: store.activeTitle || 'dokument',
     })
     showToast(t.value.toast.pdfDone, { key: 'pdf' })
