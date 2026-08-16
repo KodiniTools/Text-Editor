@@ -62,7 +62,7 @@ export function sanitizeHtml(html: string): string {
 }
 
 /** Erkennt, ob ein gespeicherter Inhalt bereits HTML ist (neue Dokumente) oder
- *  noch reiner Text (aeltere Staende, Willkommen-Text). */
+ *  noch reiner Text (aeltere Staende). */
 export function isHtmlContent(raw: string): boolean {
   return /<(?:\/?)(?:b|strong|i|em|span|br|div|p)\b/i.test(raw)
 }
