@@ -118,6 +118,42 @@ describe('editor store - Undo/Redo', () => {
     expect(store.activeImages.length).toBe(0)
   })
 
+  it('macht Bild-Einfuegen und -Loeschen per Undo/Redo rueckgaengig', () => {
+    const store = useEditorStore()
+    store.newDocument('X')
+    const id = store.addImage({ src: 'data:image/png;base64,AAAA', x: 10, y: 20, w: 100, h: 50 })!
+    expect(store.activeImages.length).toBe(1)
+    store.undo()
+    expect(store.activeImages.length).toBe(0)
+    store.redo()
+    expect(store.activeImages.length).toBe(1)
+    // Loeschen -> Undo stellt es wieder her.
+    store.removeImage(id)
+    expect(store.activeImages.length).toBe(0)
+    store.undo()
+    expect(store.activeImages.length).toBe(1)
+    expect(store.activeImages[0]!.x).toBe(10)
+  })
+
+  it('fasst eine Bild-Geste (verschieben/skalieren) zu einer Undo-Stufe zusammen', () => {
+    const store = useEditorStore()
+    store.newDocument('X')
+    const id = store.addImage({ src: 'data:image/png;base64,AAAA', x: 0, y: 0, w: 100, h: 100 })!
+    // Eine Geste: begin -> mehrere updates -> commit = EINE Stufe.
+    store.beginImageChange()
+    store.updateImage(id, { x: 5 })
+    store.updateImage(id, { x: 25 })
+    store.updateImage(id, { x: 50, y: 30 })
+    store.commitImageChange()
+    expect(store.activeImages[0]!.x).toBe(50)
+    store.undo() // eine Stufe -> zurueck auf x:0,y:0
+    expect(store.activeImages[0]!.x).toBe(0)
+    expect(store.activeImages[0]!.y).toBe(0)
+    store.redo()
+    expect(store.activeImages[0]!.x).toBe(50)
+    expect(store.activeImages[0]!.y).toBe(30)
+  })
+
   it('clearActiveDocument leert und ist per Undo wiederherstellbar', () => {
     const store = useEditorStore()
     store.newDocument('X')

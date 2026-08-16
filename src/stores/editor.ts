@@ -100,6 +100,21 @@ export const FORMAT_KEYS: (keyof FormatState)[] = [
 interface Snapshot {
   content: string
   format: FormatState
+  images: ImagePlacement[]
+}
+
+/** Tiefe (flache) Kopie der Bildliste fuer die History. */
+function cloneImages(images?: ImagePlacement[]): ImagePlacement[] {
+  return (images ?? []).map((i) => ({ ...i }))
+}
+
+/** Vergleicht zwei Bildlisten nach Position/Groesse (nicht der Quelle). */
+function sameImages(a: ImagePlacement[], b: ImagePlacement[]): boolean {
+  if (a.length !== b.length) return false
+  return a.every((img, i) => {
+    const o = b[i]!
+    return img.id === o.id && img.x === o.x && img.y === o.y && img.w === o.w && img.h === o.h
+  })
 }
 
 interface HistoryEntry {
@@ -278,6 +293,9 @@ export const useEditorStore = defineStore('editor', () => {
   // zusammengefasst (viele Stepper-Klicks, Farbwaehler-Ziehen = eine Stufe);
   // ein Wechsel auf ein anderes Feld schliesst die offene Stufe ab.
   let formatKeys: string | null = null
+  // Zustand VOR einer Bild-Geste (Ziehen/Skalieren). Die ganze Geste wird zu
+  // EINER Undo-Stufe zusammengefasst (Start bei pointerdown, Ende bei pointerup).
+  let imageBase: { docId: string; images: ImagePlacement[] } | null = null
 
   /* ---------- Init ---------- */
   // Ohne gespeicherte Dokumente mit einem leeren, unbenannten Blatt starten.
@@ -355,7 +373,12 @@ export const useEditorStore = defineStore('editor', () => {
     }
     const doc = activeDoc.value
     if (doc && typingBase !== null && typingBase !== doc.content) {
-      pushPast(doc.id, { content: typingBase, format: captureFormat() })
+      // Tippen aendert keine Bilder -> aktuelle Bildliste uebernehmen.
+      pushPast(doc.id, {
+        content: typingBase,
+        format: captureFormat(),
+        images: cloneImages(doc.images),
+      })
     }
     typingBase = null
   }
@@ -368,16 +391,35 @@ export const useEditorStore = defineStore('editor', () => {
     }
     const doc = activeDoc.value
     if (doc && formatBase !== null && !sameFormat(formatBase, captureFormat())) {
-      pushPast(doc.id, { content: doc.content, format: formatBase })
+      pushPast(doc.id, {
+        content: doc.content,
+        format: formatBase,
+        images: cloneImages(doc.images),
+      })
     }
     formatBase = null
     formatKeys = null
+  }
+
+  /** Committet eine offene Bild-Geste (Ziehen/Skalieren) als eine History-Stufe. */
+  function flushImage(): void {
+    if (imageBase === null) return
+    const doc = documents.value.find((d) => d.id === imageBase!.docId)
+    if (doc && !sameImages(imageBase.images, doc.images ?? [])) {
+      pushPast(doc.id, {
+        content: doc.content,
+        format: captureFormat(),
+        images: imageBase.images,
+      })
+    }
+    imageBase = null
   }
 
   /** Committet alles Offene (vor Undo/Redo, Dokumentwechsel, ...). */
   function flushPending(): void {
     flushTyping()
     flushFormat()
+    flushImage()
   }
 
   /* ---------- Actions: Inhalt ---------- */
@@ -386,9 +428,10 @@ export const useEditorStore = defineStore('editor', () => {
   function updateContent(content: string): void {
     const doc = activeDoc.value
     if (!doc || doc.content === content) return
-    // Eine offene Format-Aenderung zuerst festschreiben, damit die Zeitachse
+    // Offene Format-/Bild-Aenderung zuerst festschreiben, damit die Zeitachse
     // linear bleibt (erst formatieren, dann tippen = zwei getrennte Stufen).
     flushFormat()
+    flushImage()
     if (typingBase === null) typingBase = doc.content
     doc.content = content
     doc.updatedAt = Date.now()
@@ -404,10 +447,16 @@ export const useEditorStore = defineStore('editor', () => {
   /* ---------- Bilder ---------- */
   const DATA_IMAGE = /^data:image\/(png|jpe?g|gif|webp);base64,/i
 
-  /** Fuegt ein Bild hinzu (nur gueltige Bild-data-URLs) und gibt die ID zurueck. */
+  /** Fuegt ein Bild hinzu (nur gueltige Bild-data-URLs) -> eine Undo-Stufe. */
   function addImage(image: Omit<ImagePlacement, 'id'>): string | null {
     const doc = activeDoc.value
     if (!doc || !DATA_IMAGE.test(image.src)) return null
+    flushPending()
+    pushPast(doc.id, {
+      content: doc.content,
+      format: captureFormat(),
+      images: cloneImages(doc.images),
+    })
     if (!doc.images) doc.images = []
     const id = `img_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
     doc.images.push({ id, ...image })
@@ -415,7 +464,25 @@ export const useEditorStore = defineStore('editor', () => {
     return id
   }
 
-  /** Aendert Position/Groesse eines Bildes. */
+  /**
+   * Beginnt eine Bild-Geste (Ziehen/Skalieren). Merkt den Zustand VOR der Geste,
+   * damit die anschliessenden updateImage-Aufrufe zu EINER Undo-Stufe werden.
+   * Der Editor ruft das bei pointerdown, commitImageChange bei pointerup.
+   */
+  function beginImageChange(): void {
+    const doc = activeDoc.value
+    if (!doc || imageBase !== null) return
+    flushTyping()
+    flushFormat()
+    imageBase = { docId: doc.id, images: cloneImages(doc.images) }
+  }
+
+  /** Schliesst die Bild-Geste ab (schreibt bei Aenderung eine Undo-Stufe). */
+  function commitImageChange(): void {
+    flushImage()
+  }
+
+  /** Aendert Position/Groesse eines Bildes (History via begin/commitImageChange). */
   function updateImage(id: string, patch: Partial<Omit<ImagePlacement, 'id' | 'src'>>): void {
     const img = activeDoc.value?.images?.find((i) => i.id === id)
     if (!img) return
@@ -423,15 +490,20 @@ export const useEditorStore = defineStore('editor', () => {
     if (activeDoc.value) activeDoc.value.updatedAt = Date.now()
   }
 
-  /** Entfernt ein Bild. */
+  /** Entfernt ein Bild -> eine Undo-Stufe (per Undo wiederherstellbar). */
   function removeImage(id: string): void {
     const doc = activeDoc.value
     if (!doc?.images) return
     const idx = doc.images.findIndex((i) => i.id === id)
-    if (idx !== -1) {
-      doc.images.splice(idx, 1)
-      doc.updatedAt = Date.now()
-    }
+    if (idx === -1) return
+    flushPending()
+    pushPast(doc.id, {
+      content: doc.content,
+      format: captureFormat(),
+      images: cloneImages(doc.images),
+    })
+    doc.images.splice(idx, 1)
+    doc.updatedAt = Date.now()
   }
 
   /** Ersetzt den Inhalt in einem Schritt (Transform / Paste / Import) -> eine History-Stufe. */
@@ -439,7 +511,11 @@ export const useEditorStore = defineStore('editor', () => {
     const doc = activeDoc.value
     if (!doc || doc.content === content) return
     flushPending()
-    pushPast(doc.id, { content: doc.content, format: captureFormat() })
+    pushPast(doc.id, {
+      content: doc.content,
+      format: captureFormat(),
+      images: cloneImages(doc.images),
+    })
     doc.content = content
     doc.updatedAt = Date.now()
   }
@@ -466,8 +542,9 @@ export const useEditorStore = defineStore('editor', () => {
       Object.assign(settings, normalizeSettings({ ...settings, ...patch }))
       return
     }
-    // Offene Tipp-Sequenz zuerst festschreiben (siehe updateContent).
+    // Offene Tipp-/Bild-Sequenz zuerst festschreiben (siehe updateContent).
     flushTyping()
+    flushImage()
     const keys = Object.keys(patch).sort().join(',')
     // Betrifft die Aenderung andere Felder als der offene Schub, diesen zuerst
     // als eigene Stufe abschliessen.
@@ -488,10 +565,15 @@ export const useEditorStore = defineStore('editor', () => {
     const h = ensureHistory(doc.id)
     const prev = h.past.pop()
     if (prev === undefined) return
-    h.future.push({ content: doc.content, format: captureFormat() })
+    h.future.push({
+      content: doc.content,
+      format: captureFormat(),
+      images: cloneImages(doc.images),
+    })
     doc.content = prev.content
     doc.updatedAt = Date.now()
     applyFormat(prev.format)
+    doc.images = cloneImages(prev.images)
     touch()
   }
 
@@ -502,10 +584,11 @@ export const useEditorStore = defineStore('editor', () => {
     const h = ensureHistory(doc.id)
     const next = h.future.pop()
     if (next === undefined) return
-    h.past.push({ content: doc.content, format: captureFormat() })
+    h.past.push({ content: doc.content, format: captureFormat(), images: cloneImages(doc.images) })
     doc.content = next.content
     doc.updatedAt = Date.now()
     applyFormat(next.format)
+    doc.images = cloneImages(next.images)
     touch()
   }
 
@@ -644,6 +727,8 @@ export const useEditorStore = defineStore('editor', () => {
     addImage,
     updateImage,
     removeImage,
+    beginImageChange,
+    commitImageChange,
     undo,
     redo,
     newDocument,
