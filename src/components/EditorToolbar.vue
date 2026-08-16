@@ -33,6 +33,7 @@ const emit = defineEmits<{
   print: []
   exportPdf: []
   preview: []
+  help: []
 }>()
 
 /** Leeres Dokument -> "Text loeschen" deaktivieren. */
@@ -243,6 +244,32 @@ defineExpose({ download, copyAll, triggerImport })
       @click="store.updateSettings({ focusMode: !store.settings.focusMode })"
     >
       {{ t.toolbar.focus }}
+    </button>
+
+    <button
+      type="button"
+      class="tb-btn"
+      :title="t.toolbar.shortcutsTitle"
+      :aria-label="t.toolbar.shortcutsTitle"
+      @click="emit('help')"
+    >
+      <svg viewBox="0 0 20 14" class="h-4 w-6" fill="none" aria-hidden="true">
+        <rect
+          x="0.7"
+          y="0.7"
+          width="18.6"
+          height="12.6"
+          rx="2"
+          stroke="currentColor"
+          stroke-width="1.2"
+        />
+        <path
+          d="M4 4h0M7 4h0M10 4h0M13 4h0M16 4h0M4 7h0M7 7h0M10 7h0M13 7h0M16 7h0M6 10h8"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+      </svg>
     </button>
 
     <input
