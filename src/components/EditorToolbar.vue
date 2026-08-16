@@ -10,6 +10,7 @@ import { useToast } from '@/composables/useToast'
 import { useAnchoredMenu } from '@/composables/useAnchoredMenu'
 import { pageRenderOptions } from '@/utils/pageRenderOptions'
 import { buildHtmlDocument } from '@/utils/exportHtml'
+import { htmlToMarkdown } from '@/utils/htmlToMarkdown'
 import { safeFileName } from '@/utils/exportPdf'
 import { downloadBlob, readFileAsText } from '@/utils/files'
 
@@ -106,9 +107,12 @@ function onFileChosen(e: Event): void {
 function download(ext: 'txt' | 'md'): void {
   const doc = store.activeDoc
   if (!doc) return
-  // Reiner Text -- Inline-Formatierung (Fett/Kursiv/Farbe) gibt es nur in PDF/Druck.
+  // .md: echtes Markdown (Ueberschriften/Fett/Kursiv/Listen bleiben erhalten).
+  // .txt: reiner Text.
+  const content = ext === 'md' ? htmlToMarkdown(store.activeHtml) : store.activePlain
+  const type = ext === 'md' ? 'text/markdown;charset=utf-8' : 'text/plain;charset=utf-8'
   const name = `${safeFileName(store.activeTitle || t.value.doc.untitled)}.${ext}`
-  downloadBlob(store.activePlain, name, 'text/plain;charset=utf-8')
+  downloadBlob(content, name, type)
   closeDownload()
   showToast(ext === 'md' ? t.value.toast.savedMd : t.value.toast.savedTxt, { key: 'save' })
 }

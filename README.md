@@ -33,11 +33,14 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   eine Ueberschrift. Editor, Vorschau und PDF teilen sich diese Regeln (Klasse `.editor-rich`)
 - **Seitenformat** (A3/A4/A5/Letter/Legal, Hoch- oder Querformat) – die Bearbeitung erfolgt auf
   einem masstabsgetreuen Blatt
-- **Markdown-Live-Vorschau**: ueber `Markdown` in der Werkzeugleiste klappt neben dem Editor eine
-  Live-Vorschau auf (auf schmalen Schirmen darunter). Gerendert wird der **reine Text** des
-  Dokuments als Markdown (`# Titel`, `- Punkt`, `**fett**`, `[Link](…)`, Zitate, Code, Tabellen) –
-  der Editor dient so zugleich als Markdown-Quelle. Das Rendern (`marked`) wird per `DOMPurify`
-  bereinigt (kein XSS)
+- **Markdown-Live-Vorschau + echter Markdown-Export**: ueber `Markdown` in der Werkzeugleiste
+  klappt neben dem Editor eine Live-Vorschau auf (auf schmalen Schirmen darunter). Der Dokument-
+  inhalt wird zu **echtem Markdown** umgewandelt (`utils/htmlToMarkdown.ts`) und daraus gerendert –
+  so spiegelt die Vorschau **sowohl** getippte Markdown-Syntax (`# Titel`, `- Punkt`, `**fett**`)
+  **als auch** die WYSIWYG-Formatierung der Werkzeugleiste (Ueberschriften, Fett/Kursiv, Listen).
+  Genau dieses Markdown liefert der `.md`-Export (`Speichern -> Als .md`, formatierungstreu statt
+  nur reiner Text) und der Knopf `Markdown kopieren` im Kopf der Vorschau. Das Rendern (`marked`)
+  wird per `DOMPurify` bereinigt (kein XSS)
 - **Vorschau = exportierte Datei**: Die Vorschau zeigt das Dokument als paginierte Seiten genau
   so, wie das PDF aussieht (gleicher Umbruch, gleiche Schrift)
 - **PDF-Export mit einem Klick** (`Speichern -> Als PDF`): erzeugt direkt eine `.pdf` im gewaehlten
@@ -54,9 +57,10 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   sie in einer scrollenden Leiste nicht abgeschnitten werden
 - **Zweisprachig (DE/EN)** – die komplette Oberflaeche laesst sich ueber den Sprachumschalter der
   globalen Navigation wechseln; die Wahl wird gemerkt und beim ersten Besuch aus der Browsersprache abgeleitet
-- **Import/Export**: Datei oeffnen, als `.txt`/`.md`/**HTML** herunterladen, alles kopieren. Der
-  HTML-Export ist eigenstaendig (self-contained) und uebernimmt Typografie und Bilder wie die
-  Vorschau -- der Text bleibt dabei echter, auswaehlbarer Text (kein Rasterbild)
+- **Import/Export**: Datei oeffnen, als `.txt` (reiner Text), `.md` (**echtes Markdown**, siehe
+  oben) oder **HTML** herunterladen, alles kopieren. Der HTML-Export ist eigenstaendig
+  (self-contained) und uebernimmt Typografie und Bilder wie die Vorschau -- der Text bleibt dabei
+  echter, auswaehlbarer Text (kein Rasterbild)
 - **Sicherung (Backup & Wiederherstellung)**: unter `Speichern -> Sicherung exportieren` werden
   **alle** Dokumente samt Einstellungen als eine `.json` gesichert; `Sicherung wiederherstellen`
   (oder eine `.json` einfach ins Fenster ziehen) fuegt die Dokumente **hinzu** (nichts geht
@@ -177,7 +181,9 @@ src/
     renderPages.ts            Seiten-DOM fuer Vorschau + PDF (getestet)
     pageRenderOptions.ts      Settings -> Render-Optionen (gemeinsame Quelle)
     exportPdf.ts              Ein-Klick-PDF (html2canvas + jsPDF, dyn. geladen)
-    markdown.ts               Markdown -> bereinigtes HTML
+    exportHtml.ts             Eigenstaendiges HTML-Dokument bauen (getestet)
+    markdown.ts               Markdown -> bereinigtes HTML (marked + DOMPurify)
+    htmlToMarkdown.ts         Rich-Text-HTML -> echtes Markdown (getestet)
   components/
     DocumentTabs.vue  EditorToolbar.vue  TransformMenu.vue  FormatBar.vue
     FindReplace.vue   EditorArea.vue     PagePreview.vue      StatusBar.vue
@@ -389,7 +395,8 @@ curl -I https://kodinitools.com/texteditor/assets/  # 403/404 (kein Directory-Li
   frei platzierte Bilder); kein Syntax-Highlighting.
 - Ueberschriften/Listen sitzen auf dem Grundlinienraster – dadurch ist die Ueberschriftengroesse
   auf ~einen Zeilenschritt gedeckelt (bei sehr enger Zeilenhoehe fallen die Ueberschriften daher
-  kleiner aus). Weitere Blocktypen (Zitat, Code) und echte Markdown-Ausgabe sind moegliche
-  Follow-ups.
+  kleiner aus). Weitere Editor-Blocktypen (Zitat, Code, Links per Werkzeugleiste) sind moegliche
+  Follow-ups. Der Markdown-Export deckt Ueberschriften, Fett/Kursiv und Listen ab; frei platzierte
+  Bilder liegen ausserhalb des Textflusses und sind nicht Teil der `.md`-Ausgabe.
 - Undo-History ist pro Session (nicht persistiert) und auf 200 Stufen begrenzt.
 - Regex im Suchfeld nutzt Nutzereingaben; ungueltige Muster werden abgefangen (kein Absturz).

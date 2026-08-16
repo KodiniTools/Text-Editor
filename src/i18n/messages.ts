@@ -166,8 +166,9 @@ export const de = {
   markdownPreview: {
     title: 'Markdown-Vorschau',
     empty:
-      'Schreibe Markdown (z. B. „# Titel", „- Punkt", „**fett**") – die Vorschau erscheint hier live.',
+      'Schreibe Markdown (z. B. „# Titel", „- Punkt", „**fett**") oder formatiere über die Leiste – die Vorschau erscheint hier live.',
     close: 'Vorschau schließen',
+    copy: 'Markdown kopieren',
   },
   pwa: {
     offlineReady: 'App ist jetzt offline verfügbar',
@@ -231,8 +232,9 @@ export const de = {
     newDoc: 'Neues Dokument angelegt',
     opened: (name: string): string => `Datei geöffnet: ${name}`,
     savedTxt: 'Als .txt-Datei gespeichert',
-    savedMd: 'Als .md-Datei gespeichert',
+    savedMd: 'Als Markdown-Datei gespeichert',
     savedHtml: 'Als HTML-Datei gespeichert',
+    markdownCopied: 'Markdown in die Zwischenablage kopiert',
     backupSaved: (n: number): string =>
       n === 1 ? 'Sicherung gespeichert (1 Dokument)' : `Sicherung gespeichert (${n} Dokumente)`,
     backupRestored: (n: number): string =>
@@ -458,8 +460,9 @@ export const en: Messages = {
   markdownPreview: {
     title: 'Markdown preview',
     empty:
-      'Write Markdown (e.g. “# Title”, “- item”, “**bold**”) – the preview shows up here live.',
+      'Write Markdown (e.g. “# Title”, “- item”, “**bold**”) or format via the bar – the preview shows up here live.',
     close: 'Close preview',
+    copy: 'Copy Markdown',
   },
   pwa: {
     offlineReady: 'App is ready to work offline',
@@ -523,8 +526,9 @@ export const en: Messages = {
     newDoc: 'New document created',
     opened: (name: string): string => `File opened: ${name}`,
     savedTxt: 'Saved as .txt file',
-    savedMd: 'Saved as .md file',
+    savedMd: 'Saved as Markdown file',
     savedHtml: 'Saved as HTML file',
+    markdownCopied: 'Markdown copied to clipboard',
     backupSaved: (n: number): string =>
       n === 1 ? 'Backup saved (1 document)' : `Backup saved (${n} documents)`,
     backupRestored: (n: number): string =>
