@@ -126,6 +126,20 @@ const STORAGE_DOCS = 'kodini-editor-docs-v1'
 const STORAGE_ACTIVE = 'kodini-editor-active-v1'
 const STORAGE_SETTINGS = 'kodini-editor-settings-v1'
 const HISTORY_LIMIT = 200
+
+/** Format der Sicherungsdatei (alle Dokumente + Einstellungen als JSON). */
+export const BACKUP_VERSION = 1
+export const BACKUP_APP_ID = 'kodini-texteditor'
+
+export interface BackupFile {
+  app: typeof BACKUP_APP_ID
+  type: 'backup'
+  version: number
+  exportedAt: number
+  documents: EditorDocument[]
+  activeId?: string
+  settings?: Partial<EditorSettings>
+}
 const TYPING_DEBOUNCE = 500
 const FORMAT_DEBOUNCE = 400
 
@@ -682,6 +696,77 @@ export const useEditorStore = defineStore('editor', () => {
     })
   }
 
+  /* ---------- Sicherung (Backup / Restore) ---------- */
+  /**
+   * Erstellt eine vollstaendige Sicherung: alle Dokumente (inkl. Bilder), das
+   * aktive Dokument und die Einstellungen. Reines JSON-taugliches Objekt.
+   */
+  function exportBackup(): BackupFile {
+    flushPending()
+    return {
+      app: BACKUP_APP_ID,
+      type: 'backup',
+      version: BACKUP_VERSION,
+      exportedAt: Date.now(),
+      documents: documents.value.map((d) => ({
+        ...d,
+        images: cloneImages(d.images),
+      })),
+      activeId: activeId.value,
+      settings: { ...settings },
+    }
+  }
+
+  /** Prueft und bereinigt ein einzelnes Dokument aus einer Fremddatei. */
+  function sanitizeImportedDoc(d: Partial<EditorDocument>): EditorDocument {
+    const now = Date.now()
+    const name =
+      typeof d.name === 'string' && d.name.trim() ? d.name.slice(0, 200) : messages().doc.untitled
+    const images = Array.isArray(d.images)
+      ? d.images
+          .filter((im) => im && DATA_IMAGE.test(String(im.src)))
+          .map((im) => ({
+            id: `img_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+            src: String(im.src),
+            x: Number.isFinite(im.x) ? Math.round(im.x) : 0,
+            y: Number.isFinite(im.y) ? Math.round(im.y) : 0,
+            w: Number.isFinite(im.w) ? Math.max(1, Math.round(im.w)) : 1,
+            h: Number.isFinite(im.h) ? Math.max(1, Math.round(im.h)) : 1,
+          }))
+      : []
+    return {
+      id: uid(),
+      name,
+      // Inhalt ueber contentToHtml -> immer bereinigtes, sicheres HTML.
+      content: contentToHtml(typeof d.content === 'string' ? d.content : ''),
+      createdAt: typeof d.createdAt === 'number' ? d.createdAt : now,
+      updatedAt: now,
+      ...(images.length ? { images } : {}),
+    }
+  }
+
+  /**
+   * Stellt eine Sicherung wieder her, indem ihre Dokumente **hinzugefuegt**
+   * werden (nicht ersetzt) -- so gehen vorhandene Dokumente nie verloren. Jedes
+   * importierte Dokument bekommt eine neue ID. Gibt die Anzahl importierter
+   * Dokumente zurueck (0 = keine gueltige Sicherung).
+   */
+  function importBackup(raw: unknown): number {
+    const data = raw as Partial<BackupFile> | null
+    if (!data || data.app !== BACKUP_APP_ID || !Array.isArray(data.documents)) return 0
+    const incoming = data.documents.filter((d) => d && typeof d === 'object')
+    if (incoming.length === 0) return 0
+    flushPending()
+    let firstNewId = ''
+    for (const d of incoming) {
+      const doc = sanitizeImportedDoc(d)
+      documents.value.push(doc)
+      if (!firstNewId) firstNewId = doc.id
+    }
+    if (firstNewId) activeId.value = firstNewId
+    return incoming.length
+  }
+
   /* ---------- Persistenz ---------- */
   watch(
     documents,
@@ -738,6 +823,8 @@ export const useEditorStore = defineStore('editor', () => {
     closeDocument,
     updateSettings,
     resetFormatting,
+    exportBackup,
+    importBackup,
     persistNow,
   }
 })
