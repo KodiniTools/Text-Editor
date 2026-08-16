@@ -234,9 +234,11 @@ textarea::-webkit-scrollbar-thumb,
   .seg-btn {
     min-width: 40px;
   }
-  .step-btn {
-    min-height: 38px;
-    min-width: 38px;
+  /* Kompakter Zahlen-Spinner: die beiden gestapelten Pfeile groesser antippbar
+     (zusammen ~40px hoch), ohne die Leiste zu sehr aufzublaehen. */
+  .spin-btn {
+    min-height: 20px;
+    min-width: 28px;
   }
   /* Checkboxen sind mit dem Finger sonst kaum zu treffen. */
   input[type='checkbox'] {
