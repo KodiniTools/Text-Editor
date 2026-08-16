@@ -234,11 +234,13 @@ textarea::-webkit-scrollbar-thumb,
   .seg-btn {
     min-width: 40px;
   }
-  /* Kompakter Zahlen-Spinner: die beiden gestapelten Pfeile groesser antippbar
-     (zusammen ~40px hoch), ohne die Leiste zu sehr aufzublaehen. */
+  /* Kompaktes Zahlenfeld auf Touch hoeher (die Pfeile fuellen es je zur Haelfte),
+     damit sie mit dem Finger gut zu treffen sind. */
+  .stepper {
+    height: 42px;
+  }
   .spin-btn {
-    min-height: 20px;
-    min-width: 28px;
+    min-width: 30px;
   }
   /* Checkboxen sind mit dem Finger sonst kaum zu treffen. */
   input[type='checkbox'] {
