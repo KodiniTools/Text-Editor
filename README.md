@@ -43,7 +43,15 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   sie in einer scrollenden Leiste nicht abgeschnitten werden
 - **Zweisprachig (DE/EN)** – die komplette Oberflaeche laesst sich ueber den Sprachumschalter der
   globalen Navigation wechseln; die Wahl wird gemerkt und beim ersten Besuch aus der Browsersprache abgeleitet
-- **Import/Export**: Datei oeffnen, als `.txt`/`.md` herunterladen, alles kopieren
+- **Import/Export**: Datei oeffnen, als `.txt`/`.md`/**HTML** herunterladen, alles kopieren. Der
+  HTML-Export ist eigenstaendig (self-contained) und uebernimmt Typografie und Bilder wie die
+  Vorschau -- der Text bleibt dabei echter, auswaehlbarer Text (kein Rasterbild)
+- **Sicherung (Backup & Wiederherstellung)**: unter `Speichern -> Sicherung exportieren` werden
+  **alle** Dokumente samt Einstellungen als eine `.json` gesichert; `Sicherung wiederherstellen`
+  (oder eine `.json` einfach ins Fenster ziehen) fuegt die Dokumente **hinzu** (nichts geht
+  verloren). Wichtig, weil die Daten sonst nur im `localStorage` liegen
+- **Drag & Drop**: Text (`.txt`/`.md`), Bilder oder eine Sicherung (`.json`) einfach ins Fenster
+  ziehen -- Text wird als neues Dokument geoeffnet, Bilder werden platziert, Sicherungen importiert
 - **Tastenkuerzel fuer Turbo-Nutzer** – nahezu jede Aktion ist mit der Tastatur erreichbar; die
   vollstaendige, plattformbewusste Uebersicht (macOS zeigt ⌘/⌥) oeffnet der Knopf mit dem
   Tastatur-Symbol in der Werkzeugleiste bzw. `Strg + /` oder `F1`
@@ -134,10 +142,13 @@ src/
     useTheme.ts               Design + Textdarstellung als CSS-Variablen
     useKeyboardShortcuts.ts   Globale Tastenkuerzel
     useAnchoredMenu.ts        Dropdown per Teleport (scroll-/touchfest)
+    useFileDrop.ts            Globales Drag & Drop fuer Dateien
   utils/
     textTransforms.ts         Reine Transform-Funktionen (getestet)
     transformRegistry.ts      Gruppierte Liste fuers Menue
     find.ts                   Regex-Bau + Trefferzaehlung (getestet)
+    files.ts                  Datei-Helfer: Lesen, Typ-Erkennung, Download (getestet)
+    exportHtml.ts             Eigenstaendiges HTML-Dokument bauen (getestet)
     fontFiles.ts              Dateiname -> Familie/Schnitt (getestet)
     pageFormats.ts            Papierformate + @page-Groesse (getestet)
     renderPages.ts            Seiten-DOM fuer Vorschau + PDF (getestet)

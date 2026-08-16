@@ -22,7 +22,12 @@ export const de = {
     saveTitle: 'Herunterladen (Strg+S)',
     asTxt: 'Als .txt',
     asMd: 'Als .md',
+    asHtml: 'Als HTML',
     asPdf: 'Als PDF',
+    backupSave: 'Sicherung exportieren',
+    backupSaveHint: 'Alle Dokumente als .json',
+    backupRestore: 'Sicherung wiederherstellen',
+    backupRestoreHint: 'Dokumente aus .json hinzufügen',
     copy: 'Kopieren',
     print: 'Drucken',
     printTitle: 'Drucken (Strg+P)',
@@ -142,6 +147,10 @@ export const de = {
   focusOverlay: {
     exit: 'Fokus beenden',
   },
+  drop: {
+    title: 'Zum Öffnen hier ablegen',
+    hint: 'Text (.txt/.md), Bild oder Sicherung (.json)',
+  },
   shortcuts: {
     title: 'Tastenkürzel',
     intro: 'Schneller arbeiten mit der Tastatur. Unter macOS steht „Strg" für „Cmd".',
@@ -192,6 +201,12 @@ export const de = {
     opened: (name: string): string => `Datei geöffnet: ${name}`,
     savedTxt: 'Als .txt-Datei gespeichert',
     savedMd: 'Als .md-Datei gespeichert',
+    savedHtml: 'Als HTML-Datei gespeichert',
+    backupSaved: (n: number): string =>
+      n === 1 ? 'Sicherung gespeichert (1 Dokument)' : `Sicherung gespeichert (${n} Dokumente)`,
+    backupRestored: (n: number): string =>
+      n === 1 ? '1 Dokument aus Sicherung importiert' : `${n} Dokumente aus Sicherung importiert`,
+    backupInvalid: 'Keine gültige Sicherungsdatei',
     copied: 'In die Zwischenablage kopiert',
     copyFailed: 'Kopieren nicht möglich (Zwischenablage blockiert)',
     cleared: 'Text gelöscht -- mit Strg+Z rückgängig',
@@ -269,7 +284,12 @@ export const en: Messages = {
     saveTitle: 'Download (Ctrl+S)',
     asTxt: 'As .txt',
     asMd: 'As .md',
+    asHtml: 'As HTML',
     asPdf: 'As PDF',
+    backupSave: 'Export backup',
+    backupSaveHint: 'All documents as .json',
+    backupRestore: 'Restore backup',
+    backupRestoreHint: 'Add documents from .json',
     copy: 'Copy',
     print: 'Print',
     printTitle: 'Print (Ctrl+P)',
@@ -388,6 +408,10 @@ export const en: Messages = {
   focusOverlay: {
     exit: 'Exit focus',
   },
+  drop: {
+    title: 'Drop here to open',
+    hint: 'Text (.txt/.md), image or backup (.json)',
+  },
   shortcuts: {
     title: 'Keyboard shortcuts',
     intro: 'Work faster with the keyboard. On macOS “Ctrl” means “Cmd”.',
@@ -438,6 +462,12 @@ export const en: Messages = {
     opened: (name: string): string => `File opened: ${name}`,
     savedTxt: 'Saved as .txt file',
     savedMd: 'Saved as .md file',
+    savedHtml: 'Saved as HTML file',
+    backupSaved: (n: number): string =>
+      n === 1 ? 'Backup saved (1 document)' : `Backup saved (${n} documents)`,
+    backupRestored: (n: number): string =>
+      n === 1 ? '1 document imported from backup' : `${n} documents imported from backup`,
+    backupInvalid: 'Not a valid backup file',
     copied: 'Copied to clipboard',
     copyFailed: 'Could not copy (clipboard blocked)',
     cleared: 'Text cleared -- undo with Ctrl+Z',

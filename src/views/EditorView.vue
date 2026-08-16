@@ -2,10 +2,12 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+import { useFileDrop } from '@/composables/useFileDrop'
 import { useI18n } from '@/i18n'
 import { pageSizeCss } from '@/utils/pageFormats'
 import { pageRenderOptions } from '@/utils/pageRenderOptions'
 import { exportPdf } from '@/utils/exportPdf'
+import { isBackupFile, isImageFile, isTextFile, readFileAsText } from '@/utils/files'
 import { loadFont, findFont } from '@/config/fonts'
 import { useToast } from '@/composables/useToast'
 import type { EditorApi, SelectionFormat } from '@/types'
@@ -102,6 +104,34 @@ function toggleFocus(): void {
 function toggleHelp(): void {
   showHelp.value = !showHelp.value
 }
+
+/* ---------- Drag & Drop (Datei ins Fenster ziehen) ---------- */
+/**
+ * Verteilt abgelegte Dateien: Bilder ins Dokument, `.json`-Sicherungen
+ * wiederherstellen, Text (.txt/.md/...) als neues Dokument oeffnen.
+ */
+async function handleDroppedFiles(files: File[]): Promise<void> {
+  for (const file of files) {
+    if (isImageFile(file)) {
+      const ok = await editorApi.value?.insertImageFile(file)
+      if (ok) showToast(t.value.toolbar.imageToast, { key: 'image' })
+    } else if (isBackupFile(file)) {
+      try {
+        const n = store.importBackup(JSON.parse(await readFileAsText(file)))
+        if (n > 0) showToast(t.value.toast.backupRestored(n), { key: 'backup' })
+        else showToast(t.value.toast.backupInvalid, { type: 'error' })
+      } catch {
+        showToast(t.value.toast.backupInvalid, { type: 'error' })
+      }
+    } else if (isTextFile(file)) {
+      const name = file.name.replace(/\.[^.]+$/, '')
+      store.openDocument(name, await readFileAsText(file))
+      showToast(t.value.toast.opened(name), { key: 'open' })
+    }
+  }
+}
+
+const { active: dropActive } = useFileDrop(handleDroppedFiles)
 
 /* ---------- Vorschau in neuem Tab ---------- */
 /**
@@ -267,6 +297,32 @@ useKeyboardShortcuts({
     </div>
 
     <StatusBar v-if="!store.settings.focusMode" :cursor-line="cursorLine" :cursor-col="cursorCol" />
+
+    <!--
+      Ablage-Ueberlagerung fuer Drag & Drop. pointer-events-none, damit sie die
+      Drop-Erkennung (auf window) nicht stoert -- rein visuell.
+    -->
+    <div
+      v-if="dropActive"
+      class="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-accent/10 p-6 backdrop-blur-sm"
+    >
+      <div
+        class="rounded-2xl border-2 border-dashed border-accent bg-white/90 px-8 py-6 text-center shadow-xl dark:bg-zinc-900/90"
+      >
+        <svg viewBox="0 0 24 24" class="mx-auto mb-2 h-9 w-9 text-accent" aria-hidden="true">
+          <path
+            d="M12 16V4m0 0L7 9m5-5l5 5M5 17v2a1 1 0 001 1h12a1 1 0 001-1v-2"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <p class="text-lg font-semibold text-zinc-800 dark:text-zinc-100">{{ t.drop.title }}</p>
+        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ t.drop.hint }}</p>
+      </div>
+    </div>
 
     <!--
       Fokus verlassen: bewusst ABSOLUTE innerhalb des Editorbereichs (nicht fixed
