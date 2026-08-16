@@ -164,6 +164,14 @@ body {
 .editor-rich li > ol {
   padding-inline-start: 1.3em;
 }
+/* Sicherheitsnetz: eine (ungueltig) in einer Ueberschrift steckende Liste darf
+   nicht in Ueberschriftengroesse erscheinen. Der Editor raeumt das beim
+   Bearbeiten auf (normalizeRichBlocks); dies faengt Altbestand beim Anzeigen ab. */
+.editor-rich :where(h1, h2, h3) :where(ul, ol, li) {
+  font-size: var(--editor-size);
+  font-weight: 400;
+  line-height: var(--editor-step);
+}
 
 /* Bildlaufleiste dezent */
 textarea::-webkit-scrollbar,

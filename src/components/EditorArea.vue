@@ -390,6 +390,43 @@ function clearFormatting(): void {
 
 /* ---------- Bloecke (Ueberschriften) und Listen ---------- */
 /**
+ * Raeumt ungueltige Verschachtelung von Ueberschrift und Liste auf. Der Browser
+ * verpackt beim Kombinieren (z. B. "alles markieren -> Liste, dann Ueberschrift")
+ * die Liste gern IN eine Ueberschrift (`<h1><ol>...</ol></h1>`) -- dann erben die
+ * Eintraege die H1-Groesse und der Markdown-Export verliert die Liste.
+ * Ueberschrift + Liste ist kein sinnvoller Block: die Liste gewinnt.
+ */
+function normalizeRichBlocks(): void {
+  const el = editable.value
+  if (!el) return
+  // Liste in Ueberschrift -> Ueberschrift aufloesen (Inhalt inkl. Liste bleibt).
+  el.querySelectorAll('h1, h2, h3').forEach((h) => {
+    if (!h.querySelector('ul, ol')) return
+    const parent = h.parentNode
+    if (!parent) return
+    while (h.firstChild) parent.insertBefore(h.firstChild, h)
+    parent.removeChild(h)
+  })
+  // Ueberschrift in einem Listeneintrag -> entfernen (Text bleibt).
+  el.querySelectorAll('li h1, li h2, li h3').forEach((h) => {
+    const parent = h.parentNode
+    if (!parent) return
+    while (h.firstChild) parent.insertBefore(h.firstChild, h)
+    parent.removeChild(h)
+  })
+  // Benachbarte gleichartige Listen zusammenfuehren (execCommand splittet oft).
+  el.querySelectorAll('ul, ol').forEach((list) => {
+    let next = list.nextElementSibling
+    while (next && next.tagName === list.tagName) {
+      const after = next.nextElementSibling
+      while (next.firstChild) list.appendChild(next.firstChild)
+      next.remove()
+      next = after
+    }
+  })
+}
+
+/**
  * Setzt den Blocktyp der aktuellen Zeile(n). 'p' = normale Zeile (wieder ein
  * <div>, wie der Editor sie sonst nutzt). Eine eigene Undo-Stufe.
  */
@@ -398,15 +435,22 @@ function setBlock(block: BlockType): void {
     // Bracket-Form ('<h1>') ist die breit kompatible Schreibweise fuer
     // formatBlock. Normal -> <div> (der Editor arbeitet mit <div>-Zeilen).
     document.execCommand('formatBlock', false, block === 'p' ? '<div>' : `<${block}>`)
+    normalizeRichBlocks()
   })
 }
 
 function toggleBulletList(): void {
-  runCommand(() => document.execCommand('insertUnorderedList'))
+  runCommand(() => {
+    document.execCommand('insertUnorderedList')
+    normalizeRichBlocks()
+  })
 }
 
 function toggleNumberedList(): void {
-  runCommand(() => document.execCommand('insertOrderedList'))
+  runCommand(() => {
+    document.execCommand('insertOrderedList')
+    normalizeRichBlocks()
+  })
 }
 
 /** Blocktyp an der aktuellen Cursorposition (fuer die Format-Leiste). */

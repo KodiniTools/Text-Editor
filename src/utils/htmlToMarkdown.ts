@@ -123,11 +123,16 @@ function walk(node: Node, b: Builder): void {
     if (tag === 'H1' || tag === 'H2' || tag === 'H3') {
       flush(b)
       const level = Number(tag[1])
-      b.paragraphs.push(
-        `${'#'.repeat(level)} ${inline(el)
-          .replace(/\s*\n\s*/g, ' ')
-          .trim()}`,
-      )
+      const heading = inline(el)
+        .replace(/\s*\n\s*/g, ' ')
+        .trim()
+      if (heading) b.paragraphs.push(`${'#'.repeat(level)} ${heading}`)
+      // Robust gegen fehlplatzierte Listen IN einer Ueberschrift (Altbestand):
+      // `inline` ueberspringt sie -> hier als eigene Listen-Bloecke anhaengen.
+      el.querySelectorAll('ul, ol').forEach((list) => {
+        if (list.closest('li')) return // nur oberste Listen; Verschachtelung macht listLines
+        b.paragraphs.push(listLines(list as HTMLElement, list.tagName === 'OL', 0).join('\n'))
+      })
     } else if (tag === 'UL' || tag === 'OL') {
       flush(b)
       b.paragraphs.push(listLines(el, tag === 'OL', 0).join('\n'))
