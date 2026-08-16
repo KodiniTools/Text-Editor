@@ -58,6 +58,9 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   verloren). Wichtig, weil die Daten sonst nur im `localStorage` liegen
 - **Drag & Drop**: Text (`.txt`/`.md`), Bilder oder eine Sicherung (`.json`) einfach ins Fenster
   ziehen -- Text wird als neues Dokument geoeffnet, Bilder werden platziert, Sicherungen importiert
+- **PWA / Offline**: installierbar (App-Symbol, eigenes Fenster) und **komplett offline** nutzbar –
+  ein Service Worker cacht die App-Shell und alle Assets (auch die PDF-Export-Bausteine). Neue
+  Versionen werden als dezentes „Neu laden"-Banner angeboten (kein ungefragtes Neuladen)
 - **Tastenkuerzel fuer Turbo-Nutzer** – nahezu jede Aktion ist mit der Tastatur erreichbar; die
   vollstaendige, plattformbewusste Uebersicht (macOS zeigt ⌘/⌥) oeffnet der Knopf mit dem
   Tastatur-Symbol in der Werkzeugleiste bzw. `Strg + /` oder `F1`
@@ -173,7 +176,7 @@ src/
   components/
     DocumentTabs.vue  EditorToolbar.vue  TransformMenu.vue  FormatBar.vue
     FindReplace.vue   EditorArea.vue     PagePreview.vue      StatusBar.vue
-    NumberStepper.vue ShortcutHelp.vue
+    NumberStepper.vue ShortcutHelp.vue  PwaPrompt.vue
   views/EditorView.vue        Layout + Verdrahtung
 tests/                        Vitest-Specs
 ```
@@ -279,6 +282,30 @@ Nutzerdaten); nur das erste Willkommensdokument wird in der Startsprache angeleg
   auf deine Markenfarbe setzen, ggf. `--accent-soft` fuer hell/dunkel.
 - Passt zum Privacy-First-Ansatz: keine Netzwerkaufrufe zur Laufzeit, solange keine eigene
   Schrift ausgewaehlt ist (dann wird genau deren Datei geladen).
+
+## PWA / Offline
+
+Der Editor ist eine installierbare **Progressive Web App** und laeuft komplett **offline** – das
+passt zum Privacy-First-Ansatz (die Dokumente liegen ohnehin nur im `localStorage`).
+
+- **Service Worker** via [`vite-plugin-pwa`](https://vite-pwa-org.netlify.app/) (Workbox,
+  `generateSW`). Konfiguration in [`vite.config.ts`](vite.config.ts): die App-Shell und **alle**
+  gebauten Assets werden vorab gecacht – inklusive der faul geladenen PDF-Bausteine
+  (`jspdf`/`html2canvas`), damit auch der PDF-Export offline funktioniert. Fuer die eigenen
+  Schriften (`/public/fonts/`), die Schriftliste (`fonts.json`) und die App-Icons gibt es
+  Runtime-Caches.
+- **Manifest**: [`public/site.webmanifest`](public/site.webmanifest) bleibt die Quelle
+  (`manifest: false` im Plugin) – `display: standalone`, eigener `scope`/`start_url` unter
+  `/texteditor/`.
+- **Updates**: bewusst als **Angebot**. Ist eine neue Version bereit, zeigt
+  [`components/PwaPrompt.vue`](src/components/PwaPrompt.vue) ein kleines „Neu laden"-Banner
+  (`registerType: 'prompt'`) – so laedt die App nie ungefragt mitten im Tippen neu. Beim ersten
+  Offline-Bereitstehen erscheint einmalig ein Hinweis-Toast.
+- **Dev**: der Service Worker ist im Dev-Server aus (Standard) – kein Cache-Aerger beim Entwickeln.
+  Zum Testen `npm run build && npm run preview`.
+- **nginx**: `/texteditor/sw.js` wird bewusst mit `Cache-Control: no-cache` ausgeliefert (Block in
+  [`deploy/nginx-texteditor.conf`](deploy/nginx-texteditor.conf)), damit Updates zeitnah ankommen.
+  Die eigentlichen App-Assets bleiben gehasht und langlebig gecacht.
 
 ## Deployment auf kodinitools.com
 

@@ -3,6 +3,7 @@ import { useEditorStore } from '@/stores/editor'
 import { useTheme } from '@/composables/useTheme'
 import { discoverFonts } from '@/config/fonts'
 import ToastHost from '@/components/ToastHost.vue'
+import PwaPrompt from '@/components/PwaPrompt.vue'
 
 const store = useEditorStore()
 useTheme(store.settings)
@@ -15,4 +16,5 @@ void discoverFonts(import.meta.env.BASE_URL)
 <template>
   <RouterView />
   <ToastHost />
+  <PwaPrompt />
 </template>

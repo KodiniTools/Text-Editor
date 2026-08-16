@@ -161,6 +161,12 @@ export const de = {
     title: 'Zum Öffnen hier ablegen',
     hint: 'Text (.txt/.md), Bild oder Sicherung (.json)',
   },
+  pwa: {
+    offlineReady: 'App ist jetzt offline verfügbar',
+    updateAvailable: 'Neue Version verfügbar.',
+    reload: 'Neu laden',
+    dismiss: 'Später',
+  },
   shortcuts: {
     title: 'Tastenkürzel',
     intro: 'Schneller arbeiten mit der Tastatur. Unter macOS steht „Strg" für „Cmd".',
@@ -438,6 +444,12 @@ export const en: Messages = {
   drop: {
     title: 'Drop here to open',
     hint: 'Text (.txt/.md), image or backup (.json)',
+  },
+  pwa: {
+    offlineReady: 'App is ready to work offline',
+    updateAvailable: 'A new version is available.',
+    reload: 'Reload',
+    dismiss: 'Later',
   },
   shortcuts: {
     title: 'Keyboard shortcuts',
