@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useEditorStore } from '@/stores/editor'
 import { useI18n } from '@/i18n'
 import { pageSizeCss } from '@/utils/pageFormats'
@@ -16,6 +17,28 @@ import PagePreview from '@/components/PagePreview.vue'
 const store = useEditorStore()
 const { t } = useI18n()
 const pageFormatLabel = usePageFormatLabel()
+const router = useRouter()
+
+/**
+ * Zurueck zum Editor. Diese Ansicht hat der Editor per window.open geoeffnet --
+ * deshalb den Vorschau-Tab schliessen, damit der Nutzer im urspruenglichen
+ * Editor-Tab landet (dort ist die Undo/Redo-Historie erhalten). Wurde die
+ * Vorschau direkt geoeffnet/gebookmarkt und laesst sich nicht per Skript
+ * schliessen, im selben Tab zum Editor navigieren.
+ */
+function backToEditor(): void {
+  // Nur wenn der Editor diesen Tab geoeffnet hat (Marker im Hash), schliessen --
+  // dann landet der Nutzer im urspruenglichen Editor-Tab mit erhaltener
+  // Historie. Sonst (direkt geoeffnet/gebookmarkt) im selben Tab zum Editor.
+  if (window.location.hash.includes('from=editor')) {
+    window.close()
+    window.setTimeout(() => {
+      if (!window.closed) router.push('/')
+    }, 150)
+  } else {
+    router.push('/')
+  }
+}
 
 // @page-Regel setzen, damit "Drucken" im gewaehlten Format ausgibt.
 let pageStyleEl: HTMLStyleElement | null = null
@@ -59,14 +82,16 @@ function printDocument(): void {
     >
       <div class="min-w-0">
         <h1 class="truncate text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-          {{ store.activeDoc?.name || t.previewView.title }}
+          {{ store.activeTitle || t.previewView.title }}
         </h1>
         <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">
           {{ t.previewView.subtitle }} · {{ pageFormatLabel }}
         </p>
       </div>
       <div class="ml-auto flex items-center gap-2">
-        <RouterLink to="/" class="pv-btn">{{ t.previewView.back }}</RouterLink>
+        <button type="button" class="pv-btn" :title="t.previewView.backTitle" @click="backToEditor">
+          {{ t.previewView.back }}
+        </button>
         <button type="button" class="pv-btn pv-btn-primary" @click="printDocument">
           {{ t.previewView.print }}
         </button>

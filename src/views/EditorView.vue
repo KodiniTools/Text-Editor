@@ -74,7 +74,10 @@ function toggleFind(): void {
  */
 function openPreview(): void {
   store.persistNow()
-  window.open(`${import.meta.env.BASE_URL}preview`, '_blank', 'noopener')
+  // Marker im Hash: die Vorschau erkennt daran, dass sie vom Editor geoeffnet
+  // wurde, und schliesst sich beim "Zum Editor" (statt einen frischen Editor
+  // ohne Undo-Historie zu laden).
+  window.open(`${import.meta.env.BASE_URL}preview#from=editor`, '_blank', 'noopener')
 }
 
 /* ---------- Drucken / Als PDF ---------- */
