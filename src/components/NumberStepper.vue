@@ -5,8 +5,9 @@ import { useI18n } from '@/i18n'
 const { t } = useI18n()
 
 /**
- * Kompakter Zahlenregler fuer die Format-Leiste: [-] Wert [+].
- * Der Wert bleibt immer innerhalb von min/max.
+ * Kompakter Zahlenregler fuer die Format-Leiste: Wert + gestapelte Pfeile
+ * (▲/▼) daneben. Spart Breite gegenueber den frueheren [-]/[+]-Knoepfen an
+ * beiden Seiten. Der Wert bleibt immer innerhalb von min/max.
  */
 const props = withDefaults(
   defineProps<{
@@ -43,37 +44,59 @@ function nudge(direction: 1 | -1): void {
 
 <template>
   <div class="flex items-center gap-1" role="group" :aria-label="label">
-    <button
-      type="button"
-      class="step-btn"
-      :disabled="!canDecrease"
-      :title="decreaseLabel"
-      :aria-label="decreaseLabel"
-      @click="nudge(-1)"
-    >
-      &minus;
-    </button>
     <span
-      class="text-center text-xs tabular-nums text-zinc-600 dark:text-zinc-300"
+      class="text-right text-xs tabular-nums text-zinc-600 dark:text-zinc-300"
       :style="{ minWidth: width }"
       aria-live="polite"
       >{{ display }}</span
     >
-    <button
-      type="button"
-      class="step-btn"
-      :disabled="!canIncrease"
-      :title="increaseLabel"
-      :aria-label="increaseLabel"
-      @click="nudge(1)"
+    <span
+      class="spin flex flex-col overflow-hidden rounded border border-zinc-300 dark:border-zinc-600"
     >
-      +
-    </button>
+      <button
+        type="button"
+        class="spin-btn border-b border-zinc-300 dark:border-zinc-600"
+        :disabled="!canIncrease"
+        :title="increaseLabel"
+        :aria-label="increaseLabel"
+        @click="nudge(1)"
+      >
+        <svg viewBox="0 0 10 6" class="h-1.5 w-2.5" aria-hidden="true">
+          <path
+            d="M1 5 L5 1.5 L9 5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="spin-btn"
+        :disabled="!canDecrease"
+        :title="decreaseLabel"
+        :aria-label="decreaseLabel"
+        @click="nudge(-1)"
+      >
+        <svg viewBox="0 0 10 6" class="h-1.5 w-2.5" aria-hidden="true">
+          <path
+            d="M1 1 L5 4.5 L9 1"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    </span>
   </div>
 </template>
 
 <style scoped>
-.step-btn {
-  @apply flex h-6 w-6 items-center justify-center rounded border border-zinc-300 text-sm leading-none text-zinc-600 transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700;
+.spin-btn {
+  @apply flex h-[13px] w-5 items-center justify-center text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-100;
 }
 </style>
