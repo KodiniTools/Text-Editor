@@ -130,6 +130,16 @@ function setColor(value: string): void {
   if (props.selection.hasSelection) props.editor?.applyColor(value)
   else store.updateSettings({ textColor: value })
 }
+
+/**
+ * Zuruecksetzen: entfernt Fett/Kursiv/Farbe aus dem Text. Ist Text markiert,
+ * nur dort; sonst wird zusaetzlich die Dokument-Formatierung (Schrift, Groesse,
+ * Abstaende, Farbe, Ausrichtung) auf den Standard gesetzt.
+ */
+function onReset(): void {
+  props.editor?.clearFormatting()
+  if (!props.selection.hasSelection) store.resetFormatting()
+}
 </script>
 
 <template>
@@ -425,7 +435,8 @@ function setColor(value: string): void {
       type="button"
       class="seg-btn ml-auto"
       :title="t.format.resetTitle"
-      @click="store.resetFormatting()"
+      @mousedown.prevent
+      @click="onReset"
     >
       {{ t.format.reset }}
     </button>

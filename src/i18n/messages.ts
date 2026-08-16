@@ -104,7 +104,8 @@ export const de = {
     wrap: 'Umbruch',
     wrapTitle: 'Lange Zeilen umbrechen',
     reset: 'Zuruecksetzen',
-    resetTitle: 'Schrift, Groesse, Abstaende und Farbe zuruecksetzen',
+    resetTitle:
+      'Fett/Kursiv/Farbe entfernen (markiert: nur Auswahl; sonst ganzes Dokument samt Schrift, Groesse, Abstaenden)',
     language: 'Sprache',
     page: 'Seite',
     pageScreen: 'Bildschirm',
@@ -291,7 +292,8 @@ export const en: Messages = {
     wrap: 'Wrap',
     wrapTitle: 'Wrap long lines',
     reset: 'Reset',
-    resetTitle: 'Reset font, size, spacing and color',
+    resetTitle:
+      'Remove bold/italic/color (selection only if any; otherwise the whole document incl. font, size, spacing)',
     language: 'Language',
     page: 'Page',
     pageScreen: 'Screen',

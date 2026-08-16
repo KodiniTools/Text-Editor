@@ -47,7 +47,7 @@ function renderFromStore(caretToEnd = false): void {
   nextTick(measure)
 }
 
-/** Liest das Feld und schiebt es in den Store (Tippen/Formatieren/Einfuegen). */
+/** Liest das Feld und schiebt es in den Store (Tippen -> debounced eine Stufe). */
 function syncFromDom(): void {
   const el = editable.value
   if (!el) return
@@ -55,6 +55,47 @@ function syncFromDom(): void {
   measure()
   reportCursor()
   reportSelection()
+}
+
+// Waehrend eines eigenen Kommandos (Fett/Kursiv/Farbe/Einfuegen/Zuruecksetzen)
+// wird das vom Browser ausgeloeste input-Event unterdrueckt: solche Aktionen
+// sollen NICHT ueber den (zusammenfassenden) Tipp-Pfad laufen, sondern als eine
+// eigene, klar abgegrenzte Undo-Stufe committet werden.
+let suppressInput = false
+
+function onInput(): void {
+  if (suppressInput) return
+  syncFromDom()
+}
+
+/** Schreibt den aktuellen Feldinhalt als EINE eigene Undo-Stufe fest. */
+function commitDiscrete(): void {
+  const el = editable.value
+  if (!el) return
+  store.replaceContent(el.innerHTML)
+  measure()
+  reportCursor()
+  reportSelection()
+}
+
+/**
+ * Fuehrt ein contenteditable-Kommando aus und macht daraus genau eine Undo-Stufe.
+ * Die zuletzt gemerkte Auswahl wird vorher wiederhergestellt, damit ein Klick auf
+ * die Format-Leiste (der den Fokus kurz nimmt) die Auswahl nicht verliert.
+ */
+function runCommand(fn: () => void): void {
+  const el = editable.value
+  if (!el) return
+  el.focus()
+  restoreSelection()
+  ensureCssStyling()
+  suppressInput = true
+  try {
+    fn()
+  } finally {
+    suppressInput = false
+  }
+  commitDiscrete()
 }
 
 function placeCaretEnd(): void {
@@ -256,12 +297,10 @@ function onPaste(e: ClipboardEvent): void {
   const data = e.clipboardData
   if (!data) return
   const html = data.getData('text/html')
-  if (html) {
-    document.execCommand('insertHTML', false, sanitizeHtml(html))
-  } else {
-    document.execCommand('insertText', false, data.getData('text/plain'))
-  }
-  syncFromDom()
+  runCommand(() => {
+    if (html) document.execCommand('insertHTML', false, sanitizeHtml(html))
+    else document.execCommand('insertText', false, data.getData('text/plain'))
+  })
 }
 
 /* ---------- Inline-Formatierung (Fett/Kursiv/Farbe) ---------- */
@@ -275,31 +314,54 @@ function ensureCssStyling(): void {
 }
 
 function toggleBold(): void {
-  editable.value?.focus()
-  restoreSelection()
-  ensureCssStyling()
-  document.execCommand('bold')
-  syncFromDom()
+  runCommand(() => document.execCommand('bold'))
 }
 
 function toggleItalic(): void {
-  editable.value?.focus()
-  restoreSelection()
-  ensureCssStyling()
-  document.execCommand('italic')
-  syncFromDom()
+  runCommand(() => document.execCommand('italic'))
 }
 
 function applyColor(color: string): void {
   const el = editable.value
   if (!el) return
-  el.focus()
-  restoreSelection()
-  ensureCssStyling()
   // Leere Farbe ("Automatisch"): auf die aktuelle Standard-Textfarbe setzen.
   const value = color || rgbToHex(getComputedStyle(el).color) || '#111827'
-  document.execCommand('foreColor', false, value)
-  syncFromDom()
+  runCommand(() => document.execCommand('foreColor', false, value))
+}
+
+/**
+ * Entfernt Fett/Kursiv/Farbe. Ist Text markiert, nur dort; sonst im ganzen
+ * Dokument. Eine eigene Undo-Stufe.
+ */
+function clearFormatting(): void {
+  const el = editable.value
+  if (!el) return
+  el.focus()
+  // Bewusst KEIN restoreSelection: eine echte Auswahl bleibt dank
+  // @mousedown.prevent am Knopf erhalten; ohne Auswahl soll wirklich das ganze
+  // Dokument neutralisiert werden (nicht die zuletzt gemerkte Auswahl).
+  const sel = window.getSelection()
+  const hadSelection = !!(
+    sel &&
+    sel.rangeCount > 0 &&
+    !sel.isCollapsed &&
+    el.contains(sel.getRangeAt(0).commonAncestorContainer)
+  )
+  ensureCssStyling()
+  suppressInput = true
+  try {
+    if (!hadSelection && sel) {
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      sel.removeAllRanges()
+      sel.addRange(range)
+    }
+    document.execCommand('removeFormat')
+  } finally {
+    suppressInput = false
+  }
+  if (!hadSelection) window.getSelection()?.removeAllRanges()
+  commitDiscrete()
 }
 
 function rgbToHex(rgb: string): string {
@@ -322,9 +384,8 @@ function applyTransform(fn: Transform): void {
   if (hasSel) {
     // Auswahl: transformierten reinen Text einsetzen (Auszeichnung der Auswahl
     // geht dabei verloren -- Transformationen sind Text-Operationen).
-    el!.focus()
-    document.execCommand('insertText', false, fn(sel!.toString()))
-    syncFromDom()
+    const replacement = fn(sel!.toString())
+    runCommand(() => document.execCommand('insertText', false, replacement))
   } else {
     // Ganzer Text: auf reinen Text anwenden (formatiert danach neutral).
     store.replaceContent(plainToHtml(fn(store.activePlain)))
@@ -503,6 +564,7 @@ defineExpose({
   toggleBold,
   toggleItalic,
   applyColor,
+  clearFormatting,
 })
 </script>
 
@@ -529,7 +591,7 @@ defineExpose({
           aria-multiline="true"
           spellcheck="true"
           :data-placeholder="t.editor.placeholder"
-          @input="syncFromDom"
+          @input="onInput"
           @keydown.tab="onTab"
           @keyup="reportCursor"
           @mouseup="reportSelection"

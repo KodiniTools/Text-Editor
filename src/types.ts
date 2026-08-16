@@ -25,4 +25,6 @@ export interface EditorApi {
   toggleBold: () => void
   toggleItalic: () => void
   applyColor: (color: string) => void
+  /** Entfernt Fett/Kursiv/Farbe (Auswahl, sonst ganzes Dokument). */
+  clearFormatting: () => void
 }
