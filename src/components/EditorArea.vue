@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useEditorStore, type ImagePlacement } from '@/stores/editor'
 import type { Transform } from '@/utils/textTransforms'
-import type { SelectionFormat } from '@/types'
+import type { BlockType, SelectionFormat } from '@/types'
 import { buildSearchRegex, countMatches as countInText, type FindOptions } from '@/utils/find'
 import { pageDimensions } from '@/utils/pageFormats'
 import { DEFAULT_MARGIN_MM, mmToPx, lineStepPx, paginateByLines } from '@/utils/renderPages'
@@ -240,13 +240,19 @@ function reportSelection(): void {
   let bold = false
   let italic = false
   let allSelected = false
+  let bulletList = false
+  let numberedList = false
+  let block: BlockType = 'p'
   if (inside) {
     try {
       bold = document.queryCommandState('bold')
       italic = document.queryCommandState('italic')
+      bulletList = document.queryCommandState('insertUnorderedList')
+      numberedList = document.queryCommandState('insertOrderedList')
     } catch {
       /* queryCommandState evtl. nicht verfuegbar */
     }
+    block = currentBlock()
     if (el && sel && !collapsed) {
       const full = document.createRange()
       full.selectNodeContents(el)
@@ -256,7 +262,16 @@ function reportSelection(): void {
         r.compareBoundaryPoints(Range.END_TO_END, full) >= 0
     }
   }
-  emit('selchange', { hasSelection: inside && !collapsed, allSelected, bold, italic, color: '' })
+  emit('selchange', {
+    hasSelection: inside && !collapsed,
+    allSelected,
+    bold,
+    italic,
+    color: '',
+    block,
+    bulletList,
+    numberedList,
+  })
 }
 
 // Letzte echte (nicht leere) Auswahl im Feld -- damit ein Klick auf einen
@@ -371,6 +386,45 @@ function clearFormatting(): void {
   }
   if (!hadSelection) window.getSelection()?.removeAllRanges()
   commitDiscrete()
+}
+
+/* ---------- Bloecke (Ueberschriften) und Listen ---------- */
+/**
+ * Setzt den Blocktyp der aktuellen Zeile(n). 'p' = normale Zeile (wieder ein
+ * <div>, wie der Editor sie sonst nutzt). Eine eigene Undo-Stufe.
+ */
+function setBlock(block: BlockType): void {
+  runCommand(() => {
+    // Bracket-Form ('<h1>') ist die breit kompatible Schreibweise fuer
+    // formatBlock. Normal -> <div> (der Editor arbeitet mit <div>-Zeilen).
+    document.execCommand('formatBlock', false, block === 'p' ? '<div>' : `<${block}>`)
+  })
+}
+
+function toggleBulletList(): void {
+  runCommand(() => document.execCommand('insertUnorderedList'))
+}
+
+function toggleNumberedList(): void {
+  runCommand(() => document.execCommand('insertOrderedList'))
+}
+
+/** Blocktyp an der aktuellen Cursorposition (fuer die Format-Leiste). */
+function currentBlock(): BlockType {
+  const el = editable.value
+  const sel = window.getSelection()
+  if (!el || !sel || sel.rangeCount === 0) return 'p'
+  let node: Node | null = sel.getRangeAt(0).startContainer
+  while (node && node !== el) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const tag = (node as HTMLElement).tagName
+      if (tag === 'H1') return 'h1'
+      if (tag === 'H2') return 'h2'
+      if (tag === 'H3') return 'h3'
+    }
+    node = node.parentNode
+  }
+  return 'p'
 }
 
 function rgbToHex(rgb: string): string {
@@ -756,6 +810,9 @@ defineExpose({
   toggleItalic,
   applyColor,
   clearFormatting,
+  setBlock,
+  toggleBulletList,
+  toggleNumberedList,
   selectAll,
   deselect,
   insertImageFile,

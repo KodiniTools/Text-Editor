@@ -15,14 +15,36 @@
 
 import DOMPurify from 'dompurify'
 
-/** Erlaubte Tags: Absaetze/Zeilen und die drei Inline-Auszeichnungen. */
-const ALLOWED_TAGS = ['b', 'strong', 'i', 'em', 'span', 'br', 'div', 'p']
+/**
+ * Erlaubte Tags: Absaetze/Zeilen, die drei Inline-Auszeichnungen sowie
+ * Ueberschriften (h1-h3) und Listen (ul/ol/li). Die Block-Elemente bekommen ihr
+ * rasterkonformes Aussehen ueber globales CSS (siehe style.css), nicht ueber
+ * Inline-Styles -- deshalb bleiben die erlaubten Style-Eigenschaften unveraendert
+ * (nur Farbe/Gewicht/Stil, die die Zeilenhoehe nicht sprengen).
+ */
+const ALLOWED_TAGS = [
+  'b',
+  'strong',
+  'i',
+  'em',
+  'span',
+  'br',
+  'div',
+  'p',
+  'h1',
+  'h2',
+  'h3',
+  'ul',
+  'ol',
+  'li',
+]
 /** Nur das style-Attribut -- und darin nur die Eigenschaften unten. */
 const ALLOWED_ATTR = ['style']
 /** Style-Eigenschaften, die die Zeilenhoehe NICHT veraendern. */
 const ALLOWED_STYLE = new Set(['color', 'font-weight', 'font-style'])
 
-const BLOCK_TAGS = new Set(['DIV', 'P'])
+/** Block-Elemente, die im reinen Text zu Zeilenumbruechen werden. */
+const BLOCK_TAGS = new Set(['DIV', 'P', 'H1', 'H2', 'H3', 'LI'])
 
 function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -64,7 +86,7 @@ export function sanitizeHtml(html: string): string {
 /** Erkennt, ob ein gespeicherter Inhalt bereits HTML ist (neue Dokumente) oder
  *  noch reiner Text (aeltere Staende). */
 export function isHtmlContent(raw: string): boolean {
-  return /<(?:\/?)(?:b|strong|i|em|span|br|div|p)\b/i.test(raw)
+  return /<(?:\/?)(?:b|strong|i|em|span|br|div|p|h1|h2|h3|ul|ol|li)\b/i.test(raw)
 }
 
 /** Reiner Text -> HTML: je Zeile ein <div>, leere Zeilen als <div><br></div>. */
@@ -82,7 +104,7 @@ export function htmlToPlain(html: string): string {
     // Fallback ohne DOM (Tests): Tags grob entfernen.
     return html
       .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<\/(div|p)>/gi, '\n')
+      .replace(/<\/(div|p|h1|h2|h3|li)>/gi, '\n')
       .replace(/<[^>]+>/g, '')
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')

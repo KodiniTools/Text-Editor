@@ -1,6 +1,9 @@
 import type { Transform } from '@/utils/textTransforms'
 import type { FindOptions } from '@/utils/find'
 
+/** Absatz-/Blocktyp an der Cursorposition. */
+export type BlockType = 'p' | 'h1' | 'h2' | 'h3'
+
 /** Aktueller Formatzustand der Auswahl im Editor (fuer die Format-Leiste). */
 export interface SelectionFormat {
   /** Es ist Text markiert (nicht nur ein Cursor). */
@@ -11,6 +14,12 @@ export interface SelectionFormat {
   italic: boolean
   /** Farbe an der Cursor-/Auswahlposition als Hex ('' = keine eigene Farbe). */
   color: string
+  /** Blocktyp der aktuellen Zeile (Normal/Ueberschrift). */
+  block: BlockType
+  /** Cursor steht in einer Aufzaehlungsliste. */
+  bulletList: boolean
+  /** Cursor steht in einer nummerierten Liste. */
+  numberedList: boolean
 }
 
 /** Oeffentliche Methoden der EditorArea-Komponente (via defineExpose). */
@@ -29,6 +38,12 @@ export interface EditorApi {
   applyColor: (color: string) => void
   /** Entfernt Fett/Kursiv/Farbe (Auswahl, sonst ganzes Dokument). */
   clearFormatting: () => void
+  /** Setzt den Blocktyp der aktuellen Zeile(n) (Normal/Ueberschrift). */
+  setBlock: (block: BlockType) => void
+  /** Aufzaehlungsliste an/aus. */
+  toggleBulletList: () => void
+  /** Nummerierte Liste an/aus. */
+  toggleNumberedList: () => void
   /** Markiert den gesamten Inhalt. */
   selectAll: () => void
   /** Hebt die Markierung auf. */
