@@ -20,6 +20,7 @@ import EditorArea from '@/components/EditorArea.vue'
 import FindReplace from '@/components/FindReplace.vue'
 import StatusBar from '@/components/StatusBar.vue'
 import ShortcutHelp from '@/components/ShortcutHelp.vue'
+import MarkdownPreview from '@/components/MarkdownPreview.vue'
 import { LIMITS } from '@/stores/editor'
 
 const store = useEditorStore()
@@ -34,6 +35,7 @@ const editorApi = computed<EditorApi | null>(() => editorAreaRef.value)
 
 const showFind = ref(false)
 const showHelp = ref(false)
+const showMarkdown = ref(false)
 const cursorLine = ref(1)
 const cursorCol = ref(1)
 
@@ -282,11 +284,13 @@ useKeyboardShortcuts({
         ref="toolbarRef"
         :editor="editorApi"
         :selection="selFormat"
+        :markdown-open="showMarkdown"
         @transform="onTransform"
         @toggle-find="toggleFind"
         @print="printDocument"
         @export-pdf="exportPdfDocument"
         @preview="openPreview"
+        @toggle-markdown="showMarkdown = !showMarkdown"
         @help="showHelp = true"
       />
       <FormatBar :editor="editorApi" :selection="selFormat" />
@@ -296,8 +300,8 @@ useKeyboardShortcuts({
 
     <ShortcutHelp v-if="showHelp" @close="showHelp = false" />
 
-    <div class="flex min-h-0 flex-1">
-      <div class="min-w-0 flex-1">
+    <div class="flex min-h-0 flex-1 flex-col md:flex-row">
+      <div class="min-h-0 min-w-0 flex-1">
         <EditorArea
           ref="editorAreaRef"
           class="h-full"
@@ -305,6 +309,13 @@ useKeyboardShortcuts({
           @selchange="onSelFormat"
         />
       </div>
+      <!-- Markdown-Live-Vorschau: auf schmalen Schirmen unter dem Editor,
+           ab md nebeneinander (je halbe Breite). -->
+      <MarkdownPreview
+        v-if="showMarkdown"
+        class="min-h-0 min-w-0 flex-1 border-t border-zinc-200 md:border-l md:border-t-0 dark:border-zinc-800"
+        @close="showMarkdown = false"
+      />
     </div>
 
     <StatusBar v-if="!store.settings.focusMode" :cursor-line="cursorLine" :cursor-col="cursorCol" />

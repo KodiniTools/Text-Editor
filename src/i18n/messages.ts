@@ -45,6 +45,8 @@ export const de = {
     findTitle: 'Suchen & Ersetzen (Strg+F)',
     preview: 'Vorschau',
     previewTitle: 'Exakte Vorschau in neuem Tab öffnen',
+    markdown: 'Markdown',
+    markdownTitle: 'Markdown-Live-Vorschau ein-/ausblenden',
     focus: 'Fokus',
     focusTitle: 'Fokus-Modus',
     format: 'Format',
@@ -160,6 +162,12 @@ export const de = {
   drop: {
     title: 'Zum Öffnen hier ablegen',
     hint: 'Text (.txt/.md), Bild oder Sicherung (.json)',
+  },
+  markdownPreview: {
+    title: 'Markdown-Vorschau',
+    empty:
+      'Schreibe Markdown (z. B. „# Titel", „- Punkt", „**fett**") – die Vorschau erscheint hier live.',
+    close: 'Vorschau schließen',
   },
   pwa: {
     offlineReady: 'App ist jetzt offline verfügbar',
@@ -330,6 +338,8 @@ export const en: Messages = {
     findTitle: 'Find & Replace (Ctrl+F)',
     preview: 'Preview',
     previewTitle: 'Open exact preview in a new tab',
+    markdown: 'Markdown',
+    markdownTitle: 'Toggle live Markdown preview',
     focus: 'Focus',
     focusTitle: 'Focus mode',
     format: 'Format',
@@ -444,6 +454,12 @@ export const en: Messages = {
   drop: {
     title: 'Drop here to open',
     hint: 'Text (.txt/.md), image or backup (.json)',
+  },
+  markdownPreview: {
+    title: 'Markdown preview',
+    empty:
+      'Write Markdown (e.g. “# Title”, “- item”, “**bold**”) – the preview shows up here live.',
+    close: 'Close preview',
   },
   pwa: {
     offlineReady: 'App is ready to work offline',

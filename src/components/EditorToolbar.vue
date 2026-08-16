@@ -19,7 +19,12 @@ const { showToast } = useToast()
 const pageFormatLabel = usePageFormatLabel()
 
 // Editor-API + Auswahlzustand: fuer "Alles markieren/Auswahl aufheben".
-const props = defineProps<{ editor: EditorApi | null; selection: SelectionFormat }>()
+// markdownOpen: hebt den Markdown-Knopf hervor, wenn die Vorschau offen ist.
+const props = defineProps<{
+  editor: EditorApi | null
+  selection: SelectionFormat
+  markdownOpen?: boolean
+}>()
 
 function newDocument(): void {
   store.newDocument()
@@ -37,6 +42,7 @@ const emit = defineEmits<{
   print: []
   exportPdf: []
   preview: []
+  toggleMarkdown: []
   help: []
 }>()
 
@@ -301,6 +307,16 @@ defineExpose({ download, copyAll, triggerImport })
 
     <button type="button" class="tb-btn" :title="t.toolbar.previewTitle" @click="emit('preview')">
       {{ t.toolbar.preview }}
+    </button>
+    <button
+      type="button"
+      class="tb-btn"
+      :class="props.markdownOpen ? 'text-accent' : ''"
+      :title="t.toolbar.markdownTitle"
+      :aria-pressed="props.markdownOpen"
+      @click="emit('toggleMarkdown')"
+    >
+      {{ t.toolbar.markdown }}
     </button>
     <button
       type="button"

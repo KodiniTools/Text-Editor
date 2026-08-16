@@ -33,6 +33,11 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   eine Ueberschrift. Editor, Vorschau und PDF teilen sich diese Regeln (Klasse `.editor-rich`)
 - **Seitenformat** (A3/A4/A5/Letter/Legal, Hoch- oder Querformat) – die Bearbeitung erfolgt auf
   einem masstabsgetreuen Blatt
+- **Markdown-Live-Vorschau**: ueber `Markdown` in der Werkzeugleiste klappt neben dem Editor eine
+  Live-Vorschau auf (auf schmalen Schirmen darunter). Gerendert wird der **reine Text** des
+  Dokuments als Markdown (`# Titel`, `- Punkt`, `**fett**`, `[Link](…)`, Zitate, Code, Tabellen) –
+  der Editor dient so zugleich als Markdown-Quelle. Das Rendern (`marked`) wird per `DOMPurify`
+  bereinigt (kein XSS)
 - **Vorschau = exportierte Datei**: Die Vorschau zeigt das Dokument als paginierte Seiten genau
   so, wie das PDF aussieht (gleicher Umbruch, gleiche Schrift)
 - **PDF-Export mit einem Klick** (`Speichern -> Als PDF`): erzeugt direkt eine `.pdf` im gewaehlten
@@ -176,7 +181,7 @@ src/
   components/
     DocumentTabs.vue  EditorToolbar.vue  TransformMenu.vue  FormatBar.vue
     FindReplace.vue   EditorArea.vue     PagePreview.vue      StatusBar.vue
-    NumberStepper.vue ShortcutHelp.vue  PwaPrompt.vue
+    NumberStepper.vue ShortcutHelp.vue  PwaPrompt.vue  MarkdownPreview.vue
   views/EditorView.vue        Layout + Verdrahtung
 tests/                        Vitest-Specs
 ```
