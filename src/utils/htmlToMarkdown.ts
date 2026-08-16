@@ -90,38 +90,61 @@ function hasBlockChild(el: HTMLElement): boolean {
   return el.querySelector('h1,h2,h3,ul,ol,div,p') !== null
 }
 
-/** Sammelt Bloecke (rekursiv) -- der Editor verpackt Listen z. B. in <div>. */
-function walk(node: Node, blocks: string[]): void {
+/**
+ * Baut die Ausgabe absatzweise. Aufeinanderfolgende Textzeilen (einfacher
+ * Enter im Editor) landen in EINEM Absatz und werden mit einem harten
+ * Markdown-Umbruch (zwei Leerzeichen + \n) getrennt -- so bleiben sie auch in
+ * fremden Markdown-Renderern (GitHub, VS Code, pandoc) getrennte Zeilen. Eine
+ * Leerzeile (doppelter Enter) beendet den Absatz.
+ */
+interface Builder {
+  paragraphs: string[]
+  lines: string[]
+}
+
+function flush(b: Builder): void {
+  if (b.lines.length > 0) {
+    b.paragraphs.push(b.lines.join('  \n'))
+    b.lines = []
+  }
+}
+
+/** Sammelt die Bloecke (rekursiv) -- der Editor verpackt Listen z. B. in <div>. */
+function walk(node: Node, b: Builder): void {
   node.childNodes.forEach((child) => {
     if (child.nodeType === Node.TEXT_NODE) {
       const text = child.nodeValue ?? ''
-      if (text.trim()) blocks.push(text)
+      if (text.trim()) b.lines.push(text.trim())
       return
     }
     if (child.nodeType !== Node.ELEMENT_NODE) return
     const el = child as HTMLElement
     const tag = el.tagName
     if (tag === 'H1' || tag === 'H2' || tag === 'H3') {
+      flush(b)
       const level = Number(tag[1])
-      // Leerzeile davor/danach -- Ueberschriften stehen in Markdown allein.
-      blocks.push(
-        '',
+      b.paragraphs.push(
         `${'#'.repeat(level)} ${inline(el)
           .replace(/\s*\n\s*/g, ' ')
           .trim()}`,
-        '',
       )
     } else if (tag === 'UL' || tag === 'OL') {
-      blocks.push('', ...listLines(el, tag === 'OL', 0), '')
+      flush(b)
+      b.paragraphs.push(listLines(el, tag === 'OL', 0).join('\n'))
     } else if (tag === 'BR') {
-      blocks.push('')
+      flush(b)
     } else if ((tag === 'DIV' || tag === 'P') && hasBlockChild(el)) {
       // Reiner Wrapper um eine Liste/Ueberschrift -> hindurchgehen.
-      walk(el, blocks)
+      walk(el, b)
     } else {
-      // div/p und alles Uebrige als eine Zeile.
-      const line = inline(el).replace(/\n+$/, '')
-      blocks.push(line.trim() === '' ? '' : line)
+      // div/p und alles Uebrige: eine (oder via <br> mehrere) Textzeile(n).
+      const text = inline(el).replace(/\n+$/, '')
+      if (text.trim() === '') {
+        // Leere Zeile -> Absatzende.
+        flush(b)
+      } else {
+        text.split('\n').forEach((line) => b.lines.push(line))
+      }
     }
   })
 }
@@ -131,11 +154,9 @@ export function htmlToMarkdown(html: string): string {
   const tpl = document.createElement('template')
   tpl.innerHTML = html
 
-  const blocks: string[] = []
-  walk(tpl.content, blocks)
+  const b: Builder = { paragraphs: [], lines: [] }
+  walk(tpl.content, b)
+  flush(b)
 
-  return blocks
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/^\n+|\n+$/g, '')
+  return b.paragraphs.join('\n\n').replace(/^\n+|\n+$/g, '')
 }

@@ -34,8 +34,14 @@ describe('htmlToMarkdown', () => {
     expect(htmlToMarkdown(html)).toBe('- oben\n  - innen')
   })
 
-  it('macht aus <div>-Zeilen Textzeilen und aus leeren Zeilen einen Absatz', () => {
-    expect(htmlToMarkdown('<div>eins</div><div>zwei</div>')).toBe('eins\nzwei')
+  it('trennt aufeinanderfolgende Zeilen mit hartem Umbruch (portabel)', () => {
+    // Zwei Leerzeichen am Zeilenende = Markdown-Hard-Break -> auch in fremden
+    // Renderern (GitHub, VS Code, pandoc) bleiben es getrennte Zeilen.
+    expect(htmlToMarkdown('<div>eins</div><div>zwei</div>')).toBe('eins  \nzwei')
+    expect(htmlToMarkdown('<div>a<br>b</div>')).toBe('a  \nb')
+  })
+
+  it('macht aus leeren Zeilen einen Absatztrenner', () => {
     expect(htmlToMarkdown('<div>a</div><div><br></div><div>b</div>')).toBe('a\n\nb')
   })
 
