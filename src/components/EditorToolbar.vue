@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import TransformMenu from './TransformMenu.vue'
 import type { Transform } from '@/utils/textTransforms'
@@ -7,6 +7,7 @@ import type { EditorApi, SelectionFormat } from '@/types'
 import { useI18n } from '@/i18n'
 import { usePageFormatLabel } from '@/composables/usePageFormatLabel'
 import { useToast } from '@/composables/useToast'
+import { useAnchoredMenu } from '@/composables/useAnchoredMenu'
 
 const store = useEditorStore()
 const { t } = useI18n()
@@ -45,8 +46,18 @@ function toggleSelectAll(): void {
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const imageInput = ref<HTMLInputElement | null>(null)
-const downloadOpen = ref(false)
-const downloadRoot = ref<HTMLElement | null>(null)
+
+// Speichern-Menue: haengt an seinem Knopf und liegt per Teleport im <body>,
+// damit es in der (auf Mobile horizontal scrollenden) Werkzeugleiste nicht
+// abgeschnitten wird.
+const {
+  open: downloadOpen,
+  anchorEl: downloadAnchor,
+  menuEl: downloadMenu,
+  style: downloadStyle,
+  toggle: toggleDownload,
+  close: closeDownload,
+} = useAnchoredMenu(192)
 
 /* ---------- Bild einfuegen ---------- */
 function triggerImage(): void {
@@ -91,12 +102,12 @@ function download(ext: 'txt' | 'md'): void {
   a.download = `${store.activeTitle || t.value.doc.untitled}.${ext}`
   a.click()
   URL.revokeObjectURL(url)
-  downloadOpen.value = false
+  closeDownload()
   showToast(ext === 'md' ? t.value.toast.savedMd : t.value.toast.savedTxt, { key: 'save' })
 }
 
 function exportPdf(): void {
-  downloadOpen.value = false
+  closeDownload()
   emit('exportPdf')
 }
 
@@ -109,20 +120,12 @@ async function copyAll(): Promise<void> {
   }
 }
 
-/* ---------- Outside-Click ---------- */
-function onDocClick(e: MouseEvent): void {
-  const t = e.target as Node
-  if (downloadRoot.value && !downloadRoot.value.contains(t)) downloadOpen.value = false
-}
-onMounted(() => document.addEventListener('click', onDocClick))
-onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
-
 defineExpose({ download, copyAll, triggerImport })
 </script>
 
 <template>
   <div
-    class="flex flex-wrap items-center gap-1 border-b border-zinc-200 bg-white px-2 py-1.5 dark:border-zinc-800 dark:bg-zinc-900"
+    class="hbar-scroll flex flex-wrap items-center gap-1 border-b border-zinc-200 bg-white px-2 py-1.5 dark:border-zinc-800 dark:bg-zinc-900"
   >
     <button type="button" class="tb-btn" :title="t.toolbar.newTitle" @click="newDocument">
       {{ t.toolbar.new }}
@@ -134,18 +137,22 @@ defineExpose({ download, copyAll, triggerImport })
       {{ t.toolbar.image }}
     </button>
 
-    <div ref="downloadRoot" class="relative">
-      <button
-        type="button"
-        class="tb-btn"
-        :title="t.toolbar.saveTitle"
-        @click="downloadOpen = !downloadOpen"
-      >
-        {{ t.toolbar.save }} ▾
-      </button>
+    <button
+      ref="downloadAnchor"
+      type="button"
+      class="tb-btn"
+      :title="t.toolbar.saveTitle"
+      :aria-expanded="downloadOpen"
+      @click="toggleDownload"
+    >
+      {{ t.toolbar.save }} ▾
+    </button>
+    <Teleport to="body">
       <div
         v-if="downloadOpen"
-        class="absolute left-0 z-20 mt-1 w-36 rounded-lg border border-zinc-200 bg-white p-1 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
+        ref="downloadMenu"
+        class="fixed z-50 w-48 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-1 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
+        :style="downloadStyle"
       >
         <button type="button" class="menu-item" @click="download('txt')">
           {{ t.toolbar.asTxt }}
@@ -158,7 +165,7 @@ defineExpose({ download, copyAll, triggerImport })
           <span class="block text-xs text-zinc-400">{{ pageFormatLabel }}</span>
         </button>
       </div>
-    </div>
+    </Teleport>
 
     <button
       type="button"

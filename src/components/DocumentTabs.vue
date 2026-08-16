@@ -30,7 +30,7 @@ function commitEdit(): void {
 
 <template>
   <div
-    class="flex items-center gap-1 overflow-x-auto border-b border-zinc-200 bg-zinc-100 px-2 dark:border-zinc-800 dark:bg-zinc-950"
+    class="hbar-scroll flex items-center gap-1 overflow-x-auto border-b border-zinc-200 bg-zinc-100 px-2 dark:border-zinc-800 dark:bg-zinc-950"
   >
     <button
       v-for="doc in store.documents"
@@ -59,10 +59,11 @@ function commitEdit(): void {
       <span v-else class="max-w-40 truncate" :title="t.tabs.renameTitle">{{
         store.documentTitle(doc)
       }}</span>
-      <!-- Umbenennen: sichtbarer Hinweis (zusaetzlich zum Doppelklick). -->
+      <!-- Umbenennen: sichtbarer Hinweis (zusaetzlich zum Doppelklick).
+           `tab-action`: auf Touch-Geraeten (kein Hover) dauerhaft sichtbar. -->
       <span
         v-if="editingId !== doc.id"
-        class="rounded px-1 text-xs text-zinc-400 opacity-0 hover:bg-zinc-300 hover:text-zinc-700 group-hover:opacity-100 dark:hover:bg-zinc-700"
+        class="tab-action rounded px-1 text-xs text-zinc-400 opacity-0 hover:bg-zinc-300 hover:text-zinc-700 group-hover:opacity-100 dark:hover:bg-zinc-700"
         role="button"
         :title="t.tabs.renameTitle"
         :aria-label="t.tabs.renameTitle"
@@ -71,7 +72,7 @@ function commitEdit(): void {
       >
       <span
         v-if="store.documents.length > 1 && editingId !== doc.id"
-        class="rounded px-1 text-xs text-zinc-400 opacity-0 hover:bg-zinc-300 hover:text-zinc-700 group-hover:opacity-100 dark:hover:bg-zinc-700"
+        class="tab-action rounded px-1 text-xs text-zinc-400 opacity-0 hover:bg-zinc-300 hover:text-zinc-700 group-hover:opacity-100 dark:hover:bg-zinc-700"
         role="button"
         :title="t.tabs.closeTitle"
         :aria-label="t.tabs.closeTitle"
