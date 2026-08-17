@@ -6,9 +6,14 @@
  *
  * Abgedeckt sind die im Editor moeglichen Bloecke/Auszeichnungen:
  *  - Ueberschriften h1-h3        -> `#`, `##`, `###`
+ *  - Zitate <blockquote>          -> `> ` je Zeile
  *  - Listen ul/ol (verschachtelt) -> `- ` bzw. `1. ` (mit Einzug)
  *  - Fett/Kursiv als <b>/<strong>/<i>/<em> ODER als <span style="font-weight/
  *    font-style"> (so, wie execCommand sie erzeugt) -> `**`/`*`/`***`
+ *  - Durchgestrichen <s>/<strike>/<del> -> `~~...~~` (GFM)
+ *  - Unterstrichen <u> und Highlight <mark> -> bleiben als HTML-Tag erhalten
+ *    (kein portables Markdown-Aequivalent; GitHub/marked reichen sie durch)
+ *  - Links <a href> -> `[Text](url)`
  *  - Zeilen <div>/<p>, Umbrueche <br>
  *
  * Reiner Text wird bewusst NICHT maskiert: wer Markdown-Syntax tippt, findet sie
@@ -31,7 +36,35 @@ function isItalic(el: HTMLElement): boolean {
   return el.tagName === 'I' || el.tagName === 'EM' || styleOf(el)?.fontStyle === 'italic'
 }
 
-/** Serialisiert Inline-Inhalt (Text + Fett/Kursiv). Listen werden hier ignoriert. */
+function isStrikethrough(el: HTMLElement): boolean {
+  return el.tagName === 'S' || el.tagName === 'STRIKE' || el.tagName === 'DEL'
+}
+
+/**
+ * Legt die Auszeichnung eines Elements um seinen (bereits serialisierten)
+ * Inhalt. Reihenfolge von innen nach aussen: Link, dann durchgestrichen,
+ * Highlight, unterstrichen, zuletzt Fett/Kursiv -- so steht die Betonung
+ * (`**`/`*`) aussen und bleibt in fremden Renderern zuverlaessig erkennbar.
+ */
+function decorate(el: HTMLElement, inner: string): string {
+  // Link zuerst (umschliesst den reinen Text), auch bei leerer Betonung sinnvoll.
+  if (el.tagName === 'A') {
+    const href = el.getAttribute('href')
+    if (href && inner) return `[${inner}](${href})`
+  }
+  if (!inner.trim()) return inner
+  if (isStrikethrough(el)) inner = `~~${inner}~~`
+  if (el.tagName === 'MARK') inner = `<mark>${inner}</mark>`
+  if (el.tagName === 'U') inner = `<u>${inner}</u>`
+  const bold = isBold(el)
+  const italic = isItalic(el)
+  if (bold && italic) inner = `***${inner}***`
+  else if (bold) inner = `**${inner}**`
+  else if (italic) inner = `*${inner}*`
+  return inner
+}
+
+/** Serialisiert Inline-Inhalt (Text + Auszeichnungen). Listen werden hier ignoriert. */
 function inline(node: Node): string {
   let out = ''
   node.childNodes.forEach((child) => {
@@ -47,15 +80,7 @@ function inline(node: Node): string {
     }
     // Verschachtelte Listen gehoeren auf die Blockebene, nicht hierher.
     if (el.tagName === 'UL' || el.tagName === 'OL') return
-    let inner = inline(el)
-    if (inner.trim()) {
-      const bold = isBold(el)
-      const italic = isItalic(el)
-      if (bold && italic) inner = `***${inner}***`
-      else if (bold) inner = `**${inner}**`
-      else if (italic) inner = `*${inner}*`
-    }
-    out += inner
+    out += decorate(el, inline(el))
   })
   return out
 }
@@ -87,7 +112,7 @@ function listLines(listEl: HTMLElement, ordered: boolean, depth: number): string
 
 /** Enthaelt das Element ein Block-Element? (dann ist es ein Wrapper, keine Zeile) */
 function hasBlockChild(el: HTMLElement): boolean {
-  return el.querySelector('h1,h2,h3,ul,ol,div,p') !== null
+  return el.querySelector('h1,h2,h3,blockquote,ul,ol,div,p') !== null
 }
 
 /**
@@ -133,6 +158,12 @@ function walk(node: Node, b: Builder): void {
         if (list.closest('li')) return // nur oberste Listen; Verschachtelung macht listLines
         b.paragraphs.push(listLines(list as HTMLElement, list.tagName === 'OL', 0).join('\n'))
       })
+    } else if (tag === 'BLOCKQUOTE') {
+      flush(b)
+      // Jede Zeile des Zitats mit '> ' voranstellen (leere Zeilen -> '>').
+      const quote = inline(el).replace(/\n+$/, '')
+      const lines = quote.split('\n').map((line) => (line.trim() ? `> ${line}` : '>'))
+      if (lines.length) b.paragraphs.push(lines.join('\n'))
     } else if (tag === 'UL' || tag === 'OL') {
       flush(b)
       b.paragraphs.push(listLines(el, tag === 'OL', 0).join('\n'))

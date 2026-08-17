@@ -173,6 +173,36 @@ body {
   line-height: var(--editor-step);
 }
 
+/* Zitat (blockquote): der Einzug/Streifen kommt ueber padding + border-left --
+   beides aendert die Zeilenhoehe NICHT, sodass das Grundlinienraster (und damit
+   der zeilengenaue Seitenumbruch) unveraendert bleibt. Kein Aussenabstand. */
+.editor-rich blockquote {
+  margin: 0;
+  padding: 0 0 0 1em;
+  line-height: var(--editor-step);
+  border-left: 3px solid rgb(161 161 170 / 0.6); /* zinc-400 */
+  color: inherit;
+  font-style: italic;
+}
+
+/* Erweiterte Inline-Auszeichnung: Highlight (<mark>) und Links (<a>). Padding nur
+   waagerecht -> keine Aenderung der Zeilenhoehe. */
+.editor-rich mark {
+  background-color: #fde68a; /* amber-200 */
+  color: #111827; /* zinc-900 -- auf dem hellen Marker immer lesbar */
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.editor-rich a {
+  color: rgb(var(--accent));
+  text-decoration: underline;
+  cursor: text; /* im Editor wird getippt, nicht navigiert */
+}
+/* In Vorschau/Export (auch .editor-rich, aber nicht editierbar) sind Links klickbar. */
+.editor-rich:not([contenteditable='true']) a {
+  cursor: pointer;
+}
+
 /* Bildlaufleiste dezent */
 textarea::-webkit-scrollbar,
 .overflow-y-auto::-webkit-scrollbar {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { LIMITS, useEditorStore, type TextAlign } from '@/stores/editor'
 import { findFont, fontList, isKnownFont, loadAllFonts, type EditorFont } from '@/config/fonts'
 import { PAGE_FORMATS, type PageFormatId, type PageOrientation } from '@/utils/pageFormats'
@@ -7,6 +7,7 @@ import { useI18n } from '@/i18n'
 import type { Messages } from '@/i18n/messages'
 import type { BlockType, EditorApi, SelectionFormat } from '@/types'
 import { useToast } from '@/composables/useToast'
+import { useAnchoredMenu } from '@/composables/useAnchoredMenu'
 import NumberStepper from './NumberStepper.vue'
 
 // Design (Hell/Dunkel/Auto) und Sprache steuert die globale Navigation --
@@ -133,6 +134,50 @@ function setColor(value: string): void {
   else store.updateSettings({ textColor: value })
 }
 
+/* ---------- Link-Editor (kleines Popover an der Link-Schaltflaeche) ---------- */
+const {
+  open: linkOpen,
+  anchorEl: linkAnchor,
+  menuEl: linkMenu,
+  style: linkStyle,
+  openMenu: openLinkMenu,
+  close: closeLink,
+} = useAnchoredMenu(280)
+const linkUrl = ref('')
+const linkInput = ref<HTMLInputElement | null>(null)
+
+/** Ein Link laesst sich setzen, sobald Text markiert ist oder der Cursor bereits
+ *  in einem Link steht. */
+const canLink = computed(() => props.selection.hasSelection || props.selection.link)
+
+/**
+ * Oeffnet den Link-Editor. Ohne Auswahl (und nicht in einem Link) gibt es einen
+ * kurzen Hinweis statt eines leeren Popovers. Die zuletzt gueltige Ziel-URL wird
+ * vorbelegt, der Wert im Eingabefeld direkt markiert.
+ */
+function openLinkEditor(): void {
+  if (!canLink.value) {
+    showToast(t.value.toast.linkNeedsSelection, { type: 'info', key: 'linkNeedsSelection' })
+    return
+  }
+  linkUrl.value = props.selection.linkHref
+  openLinkMenu()
+  nextTick(() => {
+    linkInput.value?.focus()
+    linkInput.value?.select()
+  })
+}
+
+function applyLink(): void {
+  props.editor?.createLink(linkUrl.value)
+  closeLink()
+}
+
+function removeLinkAction(): void {
+  props.editor?.removeLink()
+  closeLink()
+}
+
 /**
  * Zuruecksetzen: entfernt Fett/Kursiv/Farbe aus dem Text. Ist Text markiert,
  * nur dort; sonst wird zusaetzlich die Dokument-Formatierung (Schrift, Groesse,
@@ -143,6 +188,9 @@ function onReset(): void {
   if (!props.selection.hasSelection) store.resetFormatting()
   showToast(t.value.toast.formatReset, { type: 'info', key: 'formatReset' })
 }
+
+// mod+K aus EditorView oeffnet denselben Link-Editor.
+defineExpose({ openLinkEditor })
 </script>
 
 <template>
@@ -230,7 +278,7 @@ function onReset(): void {
 
     <span class="fb-divider" />
 
-    <!-- Inline-Stil: Fett/Kursiv fuer die markierte Auswahl -->
+    <!-- Inline-Stil: Fett/Kursiv/Unterstrichen/Durchgestrichen/Highlight/Link -->
     <div class="fb-group">
       <span class="fb-label">{{ t.format.style }}</span>
       <div class="flex gap-1">
@@ -258,6 +306,82 @@ function onReset(): void {
         >
           K
         </button>
+        <button
+          type="button"
+          class="seg-btn flex h-7 w-7 items-center justify-center underline"
+          :class="selection.underline ? 'seg-active' : ''"
+          :title="t.format.underlineTitle"
+          :aria-label="t.format.underline"
+          :aria-pressed="selection.underline"
+          @mousedown.prevent
+          @click="editor?.toggleUnderline()"
+        >
+          U
+        </button>
+        <button
+          type="button"
+          class="seg-btn flex h-7 w-7 items-center justify-center line-through"
+          :class="selection.strikethrough ? 'seg-active' : ''"
+          :title="t.format.strikethroughTitle"
+          :aria-label="t.format.strikethrough"
+          :aria-pressed="selection.strikethrough"
+          @mousedown.prevent
+          @click="editor?.toggleStrikethrough()"
+        >
+          S
+        </button>
+        <button
+          type="button"
+          class="seg-btn flex h-7 w-7 items-center justify-center"
+          :class="selection.highlight ? 'seg-active' : ''"
+          :title="t.format.highlightTitle"
+          :aria-label="t.format.highlight"
+          :aria-pressed="selection.highlight"
+          @mousedown.prevent
+          @click="editor?.toggleHighlight()"
+        >
+          <!-- Textmarker: Stift mit Spitze -->
+          <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" aria-hidden="true">
+            <path
+              d="M9.5 2.5l4 4-6 6H3.5v-4l6-6z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.3"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M2.5 14.5h11"
+              stroke="currentColor"
+              stroke-width="1.4"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        <button
+          ref="linkAnchor"
+          type="button"
+          class="seg-btn flex h-7 w-7 items-center justify-center"
+          :class="selection.link ? 'seg-active' : ''"
+          :title="t.format.linkTitle"
+          :aria-label="t.format.link"
+          :aria-pressed="selection.link"
+          :aria-expanded="linkOpen"
+          :disabled="!canLink"
+          @mousedown.prevent
+          @click="openLinkEditor()"
+        >
+          <!-- Kettenglied -->
+          <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" aria-hidden="true">
+            <path
+              d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 0 1 4.5 9l1-1"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -278,6 +402,28 @@ function onReset(): void {
         <option value="h3">{{ t.format.heading3 }}</option>
       </select>
     </label>
+
+    <!-- Zitat (blockquote) -->
+    <div class="fb-group">
+      <button
+        type="button"
+        class="seg-btn flex h-7 w-7 items-center justify-center"
+        :class="selection.quote ? 'seg-active' : ''"
+        :title="t.format.quoteTitle"
+        :aria-label="t.format.quote"
+        :aria-pressed="selection.quote"
+        @mousedown.prevent
+        @click="editor?.toggleQuote()"
+      >
+        <!-- Anfuehrungszeichen -->
+        <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" aria-hidden="true">
+          <path
+            d="M6 4c-2 0-3.2 1.4-3.2 3.3 0 1.6 1.1 2.7 2.5 2.7 1 0 1.7-.6 1.7-1.5 0-.8-.6-1.4-1.4-1.4-.2 0-.4 0-.5.1.1-.9.9-1.5 1.9-1.6L6 4zm6 0c-2 0-3.2 1.4-3.2 3.3 0 1.6 1.1 2.7 2.5 2.7 1 0 1.7-.6 1.7-1.5 0-.8-.6-1.4-1.4-1.4-.2 0-.4 0-.5.1.1-.9.9-1.5 1.9-1.6L12 4z"
+            fill="currentColor"
+          />
+        </svg>
+      </button>
+    </div>
 
     <!-- Listen -->
     <div class="fb-group">
@@ -514,6 +660,50 @@ function onReset(): void {
       {{ t.format.reset }}
     </button>
   </div>
+
+  <!-- Link-Editor: an der Link-Schaltflaeche verankert, per Teleport im <body>,
+       damit es in der (auf Mobile horizontal scrollenden) Leiste nicht
+       abgeschnitten wird. -->
+  <Teleport to="body">
+    <div
+      v-if="linkOpen"
+      ref="linkMenu"
+      class="fixed z-50 w-72 rounded-lg border border-zinc-200 bg-white p-2 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
+      :style="linkStyle"
+    >
+      <label class="mb-1 block text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+        {{ t.format.link }}
+      </label>
+      <input
+        ref="linkInput"
+        v-model="linkUrl"
+        type="url"
+        inputmode="url"
+        class="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-800 outline-none focus:border-accent dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+        :placeholder="t.format.linkPlaceholder"
+        @keydown.enter.prevent="applyLink"
+        @keydown.esc.prevent="closeLink"
+      />
+      <div class="mt-2 flex items-center justify-between gap-2">
+        <button
+          v-if="selection.link"
+          type="button"
+          class="rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+          @click="removeLinkAction"
+        >
+          {{ t.format.linkRemove }}
+        </button>
+        <span v-else />
+        <button
+          type="button"
+          class="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-white hover:opacity-90"
+          @click="applyLink"
+        >
+          {{ t.format.linkApply }}
+        </button>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>

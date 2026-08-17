@@ -12,10 +12,21 @@ export interface SelectionFormat {
   allSelected: boolean
   bold: boolean
   italic: boolean
+  /** Erweiterte Auszeichnung der Auswahl. */
+  underline: boolean
+  strikethrough: boolean
+  /** Auswahl ist hervorgehoben (<mark>). */
+  highlight: boolean
+  /** Cursor/Auswahl liegt in einem Link (<a>). */
+  link: boolean
+  /** Ziel-URL des Links an der Cursorposition ('' = kein Link). */
+  linkHref: string
   /** Farbe an der Cursor-/Auswahlposition als Hex ('' = keine eigene Farbe). */
   color: string
   /** Blocktyp der aktuellen Zeile (Normal/Ueberschrift). */
   block: BlockType
+  /** Aktuelle Zeile(n) stehen in einem Zitat (<blockquote>). */
+  quote: boolean
   /** Cursor steht in einer Aufzaehlungsliste. */
   bulletList: boolean
   /** Cursor steht in einer nummerierten Liste. */
@@ -36,7 +47,17 @@ export interface EditorApi {
   toggleBold: () => void
   toggleItalic: () => void
   applyColor: (color: string) => void
-  /** Entfernt Fett/Kursiv/Farbe (Auswahl, sonst ganzes Dokument). */
+  /** Erweiterte Auszeichnung der Auswahl (Unterstrichen/Durchgestrichen/Highlight). */
+  toggleUnderline: () => void
+  toggleStrikethrough: () => void
+  toggleHighlight: () => void
+  /** Link auf die Auswahl setzen bzw. aktualisieren. */
+  createLink: (url: string) => void
+  /** Link an der Cursorposition entfernen. */
+  removeLink: () => void
+  /** Zitat (blockquote) fuer die aktuelle Zeile(n) an/aus. */
+  toggleQuote: () => void
+  /** Entfernt Fett/Kursiv/Farbe und die erweiterte Auszeichnung. */
   clearFormatting: () => void
   /** Setzt den Blocktyp der aktuellen Zeile(n) (Normal/Ueberschrift). */
   setBlock: (block: BlockType) => void

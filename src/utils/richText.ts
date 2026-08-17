@@ -16,17 +16,28 @@
 import DOMPurify from 'dompurify'
 
 /**
- * Erlaubte Tags: Absaetze/Zeilen, die drei Inline-Auszeichnungen sowie
- * Ueberschriften (h1-h3) und Listen (ul/ol/li). Die Block-Elemente bekommen ihr
- * rasterkonformes Aussehen ueber globales CSS (siehe style.css), nicht ueber
- * Inline-Styles -- deshalb bleiben die erlaubten Style-Eigenschaften unveraendert
- * (nur Farbe/Gewicht/Stil, die die Zeilenhoehe nicht sprengen).
+ * Erlaubte Tags: Absaetze/Zeilen, die Inline-Auszeichnungen (Fett/Kursiv sowie
+ * die erweiterte Auszeichnung Unterstrichen/Durchgestrichen/Highlight/Link),
+ * Ueberschriften (h1-h3), Zitate (blockquote) und Listen (ul/ol/li). Die
+ * Block-Elemente bekommen ihr rasterkonformes Aussehen ueber globales CSS
+ * (siehe style.css), nicht ueber Inline-Styles -- deshalb bleiben die erlaubten
+ * Style-Eigenschaften unveraendert (nur Farbe/Gewicht/Stil, die die Zeilenhoehe
+ * nicht sprengen). Unterstrichen/Durchgestrichen/Highlight kommen bewusst als
+ * eigene Tags (u/s/mark) und NICHT als text-decoration/background-Style -- so
+ * bleibt die Style-Allowlist minimal und ein Highlight kann kein background:url()
+ * einschleusen.
  */
 const ALLOWED_TAGS = [
   'b',
   'strong',
   'i',
   'em',
+  'u',
+  's',
+  'strike',
+  'del',
+  'mark',
+  'a',
   'span',
   'br',
   'div',
@@ -34,17 +45,18 @@ const ALLOWED_TAGS = [
   'h1',
   'h2',
   'h3',
+  'blockquote',
   'ul',
   'ol',
   'li',
 ]
-/** Nur das style-Attribut -- und darin nur die Eigenschaften unten. */
-const ALLOWED_ATTR = ['style']
+/** style (gefiltert) und href (fuer Links, gegen javascript: durch DOMPurify geschuetzt). */
+const ALLOWED_ATTR = ['style', 'href']
 /** Style-Eigenschaften, die die Zeilenhoehe NICHT veraendern. */
 const ALLOWED_STYLE = new Set(['color', 'font-weight', 'font-style'])
 
 /** Block-Elemente, die im reinen Text zu Zeilenumbruechen werden. */
-const BLOCK_TAGS = new Set(['DIV', 'P', 'H1', 'H2', 'H3', 'LI'])
+const BLOCK_TAGS = new Set(['DIV', 'P', 'H1', 'H2', 'H3', 'BLOCKQUOTE', 'LI'])
 
 function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -86,7 +98,9 @@ export function sanitizeHtml(html: string): string {
 /** Erkennt, ob ein gespeicherter Inhalt bereits HTML ist (neue Dokumente) oder
  *  noch reiner Text (aeltere Staende). */
 export function isHtmlContent(raw: string): boolean {
-  return /<(?:\/?)(?:b|strong|i|em|span|br|div|p|h1|h2|h3|ul|ol|li)\b/i.test(raw)
+  return /<(?:\/?)(?:b|strong|i|em|u|s|strike|del|mark|a|span|br|div|p|h1|h2|h3|blockquote|ul|ol|li)\b/i.test(
+    raw,
+  )
 }
 
 /** Reiner Text -> HTML: je Zeile ein <div>, leere Zeilen als <div><br></div>. */
@@ -104,7 +118,7 @@ export function htmlToPlain(html: string): string {
     // Fallback ohne DOM (Tests): Tags grob entfernen.
     return html
       .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<\/(div|p|h1|h2|h3|li)>/gi, '\n')
+      .replace(/<\/(div|p|h1|h2|h3|blockquote|li)>/gi, '\n')
       .replace(/<[^>]+>/g, '')
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')

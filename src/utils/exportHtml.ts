@@ -92,6 +92,22 @@ export function buildHtmlDocument(opts: HtmlDocOptions): string {
         margin: 0;
         padding: 0;
       }
+      .kodini-doc blockquote {
+        margin: 0.2em 0;
+        padding: 0 0 0 1em;
+        border-left: 3px solid rgba(161, 161, 170, 0.6);
+        font-style: italic;
+      }
+      .kodini-doc mark {
+        background-color: #fde68a;
+        color: #111827;
+        border-radius: 2px;
+        padding: 0 1px;
+      }
+      .kodini-doc a {
+        color: #1d4ed8;
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>

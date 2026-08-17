@@ -57,6 +57,10 @@ const GROUPS: { id: GroupKey; rows: Row[] }[] = [
     rows: [
       { label: 'bold', combos: [['mod', 'B']] },
       { label: 'italic', combos: [['mod', 'I']] },
+      { label: 'underline', combos: [['mod', 'U']] },
+      { label: 'strikethrough', combos: [['mod', 'shift', 'X']] },
+      { label: 'highlight', combos: [['mod', 'shift', 'H']] },
+      { label: 'link', combos: [['mod', 'K']] },
       { label: 'clearFormat', combos: [['mod', '\\']] },
       { label: 'fontBigger', combos: [['mod', 'shift', '.']] },
       { label: 'fontSmaller', combos: [['mod', 'shift', ',']] },
@@ -70,6 +74,7 @@ const GROUPS: { id: GroupKey; rows: Row[] }[] = [
       { label: 'heading1', combos: [['mod', 'alt', '1']] },
       { label: 'heading2', combos: [['mod', 'alt', '2']] },
       { label: 'heading3', combos: [['mod', 'alt', '3']] },
+      { label: 'quote', combos: [['mod', 'shift', '9']] },
       { label: 'bulletList', combos: [['mod', 'shift', '8']] },
       { label: 'numberedList', combos: [['mod', 'shift', '7']] },
     ],

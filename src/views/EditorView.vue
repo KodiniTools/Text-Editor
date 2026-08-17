@@ -30,6 +30,7 @@ const { showToast } = useToast()
 const editorAreaRef = ref<InstanceType<typeof EditorArea> | null>(null)
 const findRef = ref<InstanceType<typeof FindReplace> | null>(null)
 const toolbarRef = ref<InstanceType<typeof EditorToolbar> | null>(null)
+const formatBarRef = ref<InstanceType<typeof FormatBar> | null>(null)
 
 const editorApi = computed<EditorApi | null>(() => editorAreaRef.value)
 
@@ -46,8 +47,14 @@ const selFormat = ref<SelectionFormat>({
   allSelected: false,
   bold: false,
   italic: false,
+  underline: false,
+  strikethrough: false,
+  highlight: false,
+  link: false,
+  linkHref: '',
   color: '',
   block: 'p',
+  quote: false,
   bulletList: false,
   numberedList: false,
 })
@@ -238,6 +245,10 @@ useKeyboardShortcuts({
   // Format
   'mod+b': () => editorApi.value?.toggleBold(),
   'mod+i': () => editorApi.value?.toggleItalic(),
+  'mod+u': () => editorApi.value?.toggleUnderline(),
+  'mod+shift+x': () => editorApi.value?.toggleStrikethrough(),
+  'mod+shift+h': () => editorApi.value?.toggleHighlight(),
+  'mod+k': () => formatBarRef.value?.openLinkEditor(),
   'mod+\\': () => editorApi.value?.clearFormatting(),
   'mod+shift+.': () => nudgeFontSize(1),
   'mod+shift+,': () => nudgeFontSize(-1),
@@ -247,6 +258,7 @@ useKeyboardShortcuts({
   'mod+alt+1': () => editorApi.value?.setBlock('h1'),
   'mod+alt+2': () => editorApi.value?.setBlock('h2'),
   'mod+alt+3': () => editorApi.value?.setBlock('h3'),
+  'mod+shift+9': () => editorApi.value?.toggleQuote(),
   'mod+shift+8': () => editorApi.value?.toggleBulletList(),
   'mod+shift+7': () => editorApi.value?.toggleNumberedList(),
 
@@ -293,7 +305,7 @@ useKeyboardShortcuts({
         @toggle-markdown="showMarkdown = !showMarkdown"
         @help="showHelp = true"
       />
-      <FormatBar :editor="editorApi" :selection="selFormat" />
+      <FormatBar ref="formatBarRef" :editor="editorApi" :selection="selFormat" />
     </template>
 
     <FindReplace v-if="showFind" ref="findRef" :editor="editorApi" @close="toggleFind" />

@@ -77,6 +77,40 @@ describe('htmlToMarkdown', () => {
     expect(htmlToMarkdown('<h1>Titel<ol><li>x</li></ol></h1>')).toBe('# Titel\n\n1. x')
   })
 
+  it('wandelt Durchgestrichen zu ~~ (GFM)', () => {
+    expect(htmlToMarkdown('<div><s>weg</s></div>')).toBe('~~weg~~')
+    expect(htmlToMarkdown('<div><strike>weg</strike></div>')).toBe('~~weg~~')
+    expect(htmlToMarkdown('<div><del>weg</del></div>')).toBe('~~weg~~')
+  })
+
+  it('behaelt Unterstrichen und Highlight als HTML-Tag', () => {
+    expect(htmlToMarkdown('<div><u>unter</u></div>')).toBe('<u>unter</u>')
+    expect(htmlToMarkdown('<div><mark>hervor</mark></div>')).toBe('<mark>hervor</mark>')
+  })
+
+  it('wandelt Links zu [Text](url)', () => {
+    expect(htmlToMarkdown('<div><a href="https://kodini.de">Kodini</a></div>')).toBe(
+      '[Kodini](https://kodini.de)',
+    )
+    expect(htmlToMarkdown('<div>Siehe <a href="/hilfe">Hilfe</a>.</div>')).toBe(
+      'Siehe [Hilfe](/hilfe).',
+    )
+  })
+
+  it('kombiniert Auszeichnung mit Betonung (Fett um durchgestrichen)', () => {
+    expect(htmlToMarkdown('<div><b><s>x</s></b></div>')).toBe('**~~x~~**')
+  })
+
+  it('wandelt Zitate in > Zeilen um', () => {
+    expect(htmlToMarkdown('<blockquote>Ein Zitat</blockquote>')).toBe('> Ein Zitat')
+    expect(htmlToMarkdown('<blockquote>Zeile 1<br>Zeile 2</blockquote>')).toBe(
+      '> Zeile 1\n> Zeile 2',
+    )
+    expect(htmlToMarkdown('<div>vor</div><blockquote>zitat</blockquote><div>nach</div>')).toBe(
+      'vor\n\n> zitat\n\nnach',
+    )
+  })
+
   it('leerer Inhalt -> leerer String', () => {
     expect(htmlToMarkdown('')).toBe('')
     expect(htmlToMarkdown('<div><br></div>')).toBe('')
