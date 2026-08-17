@@ -89,6 +89,40 @@ describe('Ueberschriften & Listen', () => {
   })
 })
 
+describe('Erweiterte Auszeichnung', () => {
+  it('erkennt neue Tags als HTML-Inhalt', () => {
+    expect(isHtmlContent('<u>x</u>')).toBe(true)
+    expect(isHtmlContent('<s>x</s>')).toBe(true)
+    expect(isHtmlContent('<mark>x</mark>')).toBe(true)
+    expect(isHtmlContent('<a href="/x">x</a>')).toBe(true)
+    expect(isHtmlContent('<blockquote>x</blockquote>')).toBe(true)
+  })
+
+  it('behaelt Unterstrichen/Durchgestrichen/Highlight/Zitat beim Bereinigen', () => {
+    const out = sanitizeHtml('<u>u</u><s>s</s><mark>m</mark><blockquote>zitat</blockquote>')
+    expect(out).toContain('<u>u</u>')
+    expect(out).toContain('<s>s</s>')
+    expect(out).toContain('<mark>m</mark>')
+    expect(out).toContain('<blockquote>zitat</blockquote>')
+  })
+
+  it('behaelt sichere Link-Ziele, verwirft aber javascript:', () => {
+    const ok = sanitizeHtml('<a href="https://example.com">Link</a>')
+    expect(ok).toContain('href="https://example.com"')
+    expect(ok).toContain('Link')
+
+    const evil = sanitizeHtml('<a href="javascript:alert(1)">böse</a>')
+    expect(evil).not.toMatch(/javascript:/i)
+    expect(evil).toContain('böse')
+  })
+
+  it('projiziert Zitat und Link-Text in reinen Text', () => {
+    expect(htmlToPlain('<blockquote>Zitat</blockquote><div>Ende</div>')).toBe('Zitat\nEnde')
+    expect(htmlToPlain('<div>Siehe <a href="https://x.de">hier</a>.</div>')).toBe('Siehe hier.')
+    expect(htmlToPlain('<div>Text <mark>hervor</mark></div>')).toBe('Text hervor')
+  })
+})
+
 describe('contentToHtml / contentToPlain', () => {
   it('reiner Text wird zu HTML und wieder zu Text', () => {
     expect(contentToHtml('Hallo\nWelt')).toBe('<div>Hallo</div><div>Welt</div>')

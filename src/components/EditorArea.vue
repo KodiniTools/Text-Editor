@@ -239,6 +239,12 @@ function reportSelection(): void {
   }
   let bold = false
   let italic = false
+  let underline = false
+  let strikethrough = false
+  let highlight = false
+  let link = false
+  let linkHref = ''
+  let quote = false
   let allSelected = false
   let bulletList = false
   let numberedList = false
@@ -247,11 +253,18 @@ function reportSelection(): void {
     try {
       bold = document.queryCommandState('bold')
       italic = document.queryCommandState('italic')
+      underline = document.queryCommandState('underline')
+      strikethrough = document.queryCommandState('strikeThrough')
       bulletList = document.queryCommandState('insertUnorderedList')
       numberedList = document.queryCommandState('insertOrderedList')
     } catch {
       /* queryCommandState evtl. nicht verfuegbar */
     }
+    highlight = ancestorTag(['MARK']) !== null
+    const anchor = ancestorTag(['A']) as HTMLAnchorElement | null
+    link = anchor !== null
+    linkHref = anchor?.getAttribute('href') ?? ''
+    quote = ancestorTag(['BLOCKQUOTE']) !== null
     block = currentBlock()
     if (el && sel && !collapsed) {
       const full = document.createRange()
@@ -267,11 +280,36 @@ function reportSelection(): void {
     allSelected,
     bold,
     italic,
+    underline,
+    strikethrough,
+    highlight,
+    link,
+    linkHref,
     color: '',
     block,
+    quote,
     bulletList,
     numberedList,
   })
+}
+
+/**
+ * Sucht vom Anfang der aktuellen Auswahl aus nach oben das naechste Element mit
+ * einem der angegebenen Tags (innerhalb des Feldes). Fuer die Zustaende der
+ * Format-Leiste (Highlight/Link/Zitat), die queryCommandState nicht kennt.
+ */
+function ancestorTag(tags: string[]): HTMLElement | null {
+  const el = editable.value
+  const sel = window.getSelection()
+  if (!el || !sel || sel.rangeCount === 0) return null
+  let node: Node | null = sel.getRangeAt(0).startContainer
+  while (node && node !== el) {
+    if (node.nodeType === Node.ELEMENT_NODE && tags.includes((node as HTMLElement).tagName)) {
+      return node as HTMLElement
+    }
+    node = node.parentNode
+  }
+  return null
 }
 
 // Letzte echte (nicht leere) Auswahl im Feld -- damit ein Klick auf einen
@@ -358,6 +396,159 @@ function applyColor(color: string): void {
   runCommand(() => document.execCommand('foreColor', false, value))
 }
 
+/* ---------- Erweiterte Auszeichnung (Unterstrichen/Durchgestrichen/Highlight/Link/Zitat) ---------- */
+
+/**
+ * Unterstrichen bzw. durchgestrichen bewusst OHNE styleWithCSS: so erzeugt der
+ * Browser die Tags <u>/<strike> (bzw. <s>) statt eines <span
+ * style="text-decoration">. Der Style wuerde von der Bereinigung entfernt (die
+ * Style-Allowlist kennt nur Farbe/Gewicht/Stil) -- die Tags bleiben dagegen
+ * erhalten und werden auch sauber zu Markdown.
+ */
+function toggleUnderline(): void {
+  runCommand(() => {
+    try {
+      document.execCommand('styleWithCSS', false, 'false')
+    } catch {
+      /* aeltere Engines ignorieren das */
+    }
+    document.execCommand('underline')
+  })
+}
+
+function toggleStrikethrough(): void {
+  runCommand(() => {
+    try {
+      document.execCommand('styleWithCSS', false, 'false')
+    } catch {
+      /* aeltere Engines ignorieren das */
+    }
+    document.execCommand('strikeThrough')
+  })
+}
+
+/**
+ * Highlight (<mark>) hat kein execCommand-Gegenstueck. Liegt die Auswahl bereits
+ * in einer Hervorhebung, wird diese aufgehoben; sonst wird die Auswahl in ein
+ * <mark> verpackt (verschachtelte <mark> werden dabei entfernt).
+ */
+function toggleHighlight(): void {
+  runCommand(() => {
+    const sel = window.getSelection()
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return
+    const existing = ancestorTag(['MARK'])
+    if (existing) {
+      unwrapElement(existing)
+      return
+    }
+    const range = sel.getRangeAt(0)
+    const fragment = range.extractContents()
+    // Bereits enthaltene Hervorhebungen aufloesen, damit kein <mark><mark> entsteht.
+    fragment.querySelectorAll('mark').forEach((m) => {
+      const parent = m.parentNode
+      if (!parent) return
+      while (m.firstChild) parent.insertBefore(m.firstChild, m)
+      parent.removeChild(m)
+    })
+    const mark = document.createElement('mark')
+    mark.appendChild(fragment)
+    range.insertNode(mark)
+    const next = document.createRange()
+    next.selectNodeContents(mark)
+    sel.removeAllRanges()
+    sel.addRange(next)
+  })
+}
+
+/** Ersetzt ein Element durch seinen Inhalt (Highlight/Link aufheben). */
+function unwrapElement(el: HTMLElement): void {
+  const parent = el.parentNode
+  if (!parent) return
+  const sel = window.getSelection()
+  const range = document.createRange()
+  range.setStartBefore(el.firstChild ?? el)
+  while (el.firstChild) parent.insertBefore(el.firstChild, el)
+  range.setEndBefore(el)
+  parent.removeChild(el)
+  if (sel) {
+    sel.removeAllRanges()
+    sel.addRange(range)
+  }
+}
+
+/**
+ * Setzt einen Link auf die Auswahl (oder aktualisiert einen bestehenden). Ein
+ * leerer/ungueltiger Wert entfernt den Link. Die Ziel-URL wird normalisiert
+ * (fehlt ein Schema, wird http(s)/mailto ergaenzt).
+ */
+function createLink(url: string): void {
+  const value = normalizeUrl(url)
+  if (!value) {
+    removeLink()
+    return
+  }
+  runCommand(() => {
+    // Steht der Cursor in einem bestehenden Link, diesen zuerst markieren, damit
+    // createLink die komplette Ziel-URL ersetzt (statt nur einen Teil).
+    const existing = ancestorTag(['A'])
+    if (existing) {
+      const range = document.createRange()
+      range.selectNodeContents(existing)
+      const sel = window.getSelection()
+      sel?.removeAllRanges()
+      sel?.addRange(range)
+    }
+    document.execCommand('createLink', false, value)
+  })
+}
+
+function removeLink(): void {
+  runCommand(() => {
+    const existing = ancestorTag(['A'])
+    // Ohne Auswahl den ganzen Link markieren, damit unlink greift.
+    if (existing) {
+      const range = document.createRange()
+      range.selectNodeContents(existing)
+      const sel = window.getSelection()
+      sel?.removeAllRanges()
+      sel?.addRange(range)
+    }
+    document.execCommand('unlink')
+  })
+}
+
+/** Ergaenzt eine fehlende URL-Kennung; leere Eingabe -> ''. */
+function normalizeUrl(url: string): string {
+  const trimmed = url.trim()
+  if (!trimmed) return ''
+  // Bereits mit Schema, ankerlokal (#), absolut (/) oder mailto/tel -> unveraendert.
+  if (/^([a-z][a-z0-9+.-]*:|#|\/|\.{1,2}\/)/i.test(trimmed)) return trimmed
+  // E-Mail-artig ohne Schema -> mailto:.
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return `mailto:${trimmed}`
+  return `https://${trimmed}`
+}
+
+/**
+ * Zitat (blockquote) fuer die aktuelle Zeile(n) an/aus. Steht die Auswahl bereits
+ * in einem Zitat, wird es wieder in normale Zeilen (<div>) aufgeloest; sonst wird
+ * die Zeile in ein blockquote verpackt. Zuvor wird sie -- wie bei Ueberschriften
+ * -- aus einer eventuellen Liste geloest.
+ */
+function toggleQuote(): void {
+  runCommand(() => {
+    if (ancestorTag(['BLOCKQUOTE'])) {
+      document.execCommand('formatBlock', false, '<div>')
+      return
+    }
+    let guard = 0
+    while (selectionInList() && guard++ < 6) {
+      if (!document.execCommand('outdent')) break
+    }
+    document.execCommand('formatBlock', false, '<blockquote>')
+    normalizeRichBlocks()
+  })
+}
+
 /**
  * Entfernt Fett/Kursiv/Farbe. Ist Text markiert, nur dort; sonst im ganzen
  * Dokument. Eine eigene Undo-Stufe.
@@ -385,7 +576,18 @@ function clearFormatting(): void {
       sel.removeAllRanges()
       sel.addRange(range)
     }
+    // removeFormat entfernt Fett/Kursiv/Farbe/Unterstrichen/Durchgestrichen,
+    // aber weder Links noch Highlights -- diese daher zusaetzlich aufloesen.
     document.execCommand('removeFormat')
+    document.execCommand('unlink')
+    const activeRange = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null
+    el.querySelectorAll('mark').forEach((m) => {
+      if (activeRange && !activeRange.intersectsNode(m)) return
+      const parent = m.parentNode
+      if (!parent) return
+      while (m.firstChild) parent.insertBefore(m.firstChild, m)
+      parent.removeChild(m)
+    })
   } finally {
     suppressInput = false
   }
@@ -884,6 +1086,12 @@ defineExpose({
   toggleBold,
   toggleItalic,
   applyColor,
+  toggleUnderline,
+  toggleStrikethrough,
+  toggleHighlight,
+  createLink,
+  removeLink,
+  toggleQuote,
   clearFormatting,
   setBlock,
   toggleBulletList,
