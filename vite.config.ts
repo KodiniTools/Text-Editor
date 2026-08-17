@@ -37,13 +37,16 @@ export default defineConfig({
      * gebauten Assets vorab cacht -- danach laeuft der Editor vollstaendig
      * offline (Dokumente liegen ohnehin nur lokal). Das vorhandene
      * `public/site.webmanifest` bleibt die Quelle fuers Manifest
-     * (`manifest: false`); registriert wird per Vue-Composable (siehe
-     * components/PwaPrompt.vue), damit Updates dem Nutzer angeboten statt
-     * unbemerkt eingespielt werden.
+     * (`manifest: false`).
+     *
+     * Updates laufen STILL: `injectRegister: 'auto'` registriert den SW ohne
+     * Zutun der App, `registerType: 'prompt'` laesst eine neue Version im
+     * Hintergrund warten (kein erzwungenes Neuladen, keine Hinweismeldung). Sie
+     * wird uebernommen, sobald die App das naechste Mal frisch geoeffnet wird.
      */
     VitePWA({
       registerType: 'prompt',
-      injectRegister: false,
+      injectRegister: 'auto',
       manifest: false,
       workbox: {
         // Alle gebauten Dateien vorab cachen -- auch die faul geladenen
