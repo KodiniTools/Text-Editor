@@ -7,6 +7,7 @@ import { buildSearchRegex, countMatches as countInText, type FindOptions } from 
 import { pageDimensions } from '@/utils/pageFormats'
 import { DEFAULT_MARGIN_MM, mmToPx, lineStepPx, paginateByLines } from '@/utils/renderPages'
 import { htmlToPlain, plainToHtml, sanitizeHtml, sanitizeUrl } from '@/utils/richText'
+import { useAnchoredMenu } from '@/composables/useAnchoredMenu'
 import { useI18n } from '@/i18n'
 
 const store = useEditorStore()
@@ -855,16 +856,30 @@ function deleteImage(id: string): void {
 }
 
 /* ---------- Bild verlinken ---------- */
-// Welches Bild wird gerade verlinkt (null = Editor zu) und der Eingabewert.
+// Kleines Popover direkt an der Link-Schaltflaeche des Bildes (per Teleport im
+// <body>) -- bewusst KEIN Vollbild-Overlay, damit weder der globale Footer
+// verdeckt noch das Scrollen der Seite blockiert wird.
+const {
+  open: imageLinkOpen,
+  anchorEl: imageLinkAnchor,
+  menuEl: imageLinkMenu,
+  style: imageLinkStyle,
+  openMenu: openImageLinkMenu,
+  close: closeImageLinkMenu,
+} = useAnchoredMenu(260)
+// Welches Bild wird gerade verlinkt (null = zu) und der Eingabewert.
 const imageLinkId = ref<string | null>(null)
 const imageLinkUrl = ref('')
 const imageLinkInput = ref<HTMLInputElement | null>(null)
 
 /** Oeffnet den Link-Editor fuer ein Bild (vorbelegt mit dem aktuellen Ziel). */
-function openImageLink(img: ImagePlacement): void {
+function openImageLink(img: ImagePlacement, e: Event): void {
   selectImage(img.id)
+  // Popover an der angeklickten Schaltflaeche verankern.
+  imageLinkAnchor.value = e.currentTarget as HTMLElement
   imageLinkId.value = img.id
   imageLinkUrl.value = img.href ?? ''
+  openImageLinkMenu()
   nextTick(() => {
     imageLinkInput.value?.focus()
     imageLinkInput.value?.select()
@@ -872,6 +887,7 @@ function openImageLink(img: ImagePlacement): void {
 }
 
 function closeImageLink(): void {
+  closeImageLinkMenu()
   imageLinkId.value = null
 }
 
@@ -1186,9 +1202,10 @@ defineExpose({
             @pointerdown.stop="startDrag(img, $event)"
           >
             <img :src="img.src" class="img-el" draggable="false" alt="" />
-            <!-- Kennzeichnet ein verlinktes Bild (auch ohne Auswahl sichtbar). -->
+            <!-- Kennzeichnet ein verlinktes Bild; bei Auswahl zeigt stattdessen
+                 der Link-Knopf den aktiven Zustand (kein Ueberlappen der Griffe). -->
             <span
-              v-if="img.href"
+              v-if="img.href && img.id !== selectedImageId"
               class="img-linkbadge"
               :title="t.editor.imageLinked(img.href)"
               aria-hidden="true"
@@ -1212,8 +1229,9 @@ defineExpose({
                 :class="{ 'img-link-active': img.href }"
                 :title="t.editor.imageLink"
                 :aria-label="t.editor.imageLink"
+                :aria-expanded="imageLinkOpen && imageLinkId === img.id"
                 @pointerdown.stop
-                @click.stop="openImageLink(img)"
+                @click.stop="openImageLink(img, $event)"
               >
                 <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" aria-hidden="true">
                   <path
@@ -1243,64 +1261,51 @@ defineExpose({
     </div>
   </div>
 
-  <!-- Bild verlinken: kleiner, mittiger Dialog (Teleport im <body>). -->
+  <!-- Bild verlinken: kompaktes Popover am Link-Knopf (Teleport im <body>).
+       Bewusst KEIN Vollbild-Overlay -> Footer bleibt sichtbar, Seite scrollbar. -->
   <Teleport to="body">
     <div
-      v-if="imageLinkId"
-      class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
+      v-if="imageLinkOpen"
+      ref="imageLinkMenu"
+      class="fixed z-50 w-64 rounded-lg border border-zinc-200 bg-white p-2 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
+      :style="imageLinkStyle"
       role="dialog"
-      aria-modal="true"
       :aria-label="t.editor.imageLink"
-      @click.self="closeImageLink"
     >
-      <div
-        class="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-4 shadow-2xl dark:border-zinc-700 dark:bg-zinc-900"
+      <label
+        class="mb-1 block text-xs font-semibold text-zinc-500 dark:text-zinc-400"
+        for="img-link-input"
       >
-        <label
-          class="mb-1 block text-sm font-semibold text-zinc-700 dark:text-zinc-200"
-          for="img-link-input"
+        {{ t.editor.imageLink }}
+      </label>
+      <input
+        id="img-link-input"
+        ref="imageLinkInput"
+        v-model="imageLinkUrl"
+        type="url"
+        inputmode="url"
+        class="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-800 outline-none focus:border-accent dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+        :placeholder="t.editor.imageLinkPlaceholder"
+        @keydown.enter.prevent="applyImageLink"
+        @keydown.esc.prevent="closeImageLink"
+      />
+      <div class="mt-2 flex items-center justify-between gap-2">
+        <button
+          v-if="imageLinkUrl"
+          type="button"
+          class="rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+          @click="removeImageLink"
         >
-          {{ t.editor.imageLink }}
-        </label>
-        <p class="mb-2 text-xs text-zinc-500 dark:text-zinc-400">{{ t.editor.imageLinkHint }}</p>
-        <input
-          id="img-link-input"
-          ref="imageLinkInput"
-          v-model="imageLinkUrl"
-          type="url"
-          inputmode="url"
-          class="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-800 outline-none focus:border-accent dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-          :placeholder="t.editor.imageLinkPlaceholder"
-          @keydown.enter.prevent="applyImageLink"
-          @keydown.esc.prevent="closeImageLink"
-        />
-        <div class="mt-3 flex items-center justify-between gap-2">
-          <button
-            v-if="imageLinkUrl"
-            type="button"
-            class="rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
-            @click="removeImageLink"
-          >
-            {{ t.editor.imageLinkRemove }}
-          </button>
-          <span v-else />
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="rounded-md px-3 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-              @click="closeImageLink"
-            >
-              {{ t.editor.imageLinkCancel }}
-            </button>
-            <button
-              type="button"
-              class="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-white hover:opacity-90"
-              @click="applyImageLink"
-            >
-              {{ t.editor.imageLinkApply }}
-            </button>
-          </div>
-        </div>
+          {{ t.editor.imageLinkRemove }}
+        </button>
+        <span v-else />
+        <button
+          type="button"
+          class="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-white hover:opacity-90"
+          @click="applyImageLink"
+        >
+          {{ t.editor.imageLinkApply }}
+        </button>
       </div>
     </div>
   </Teleport>
