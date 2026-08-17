@@ -85,17 +85,36 @@ async function copyMarkdown(): Promise<void> {
 </template>
 
 <style scoped>
+/*
+ * Basistypografie aus dem Editor uebernehmen (visuelle Kontinuitaet): Schriftart,
+ * Groesse, Zeilenabstand und Laufweite kommen aus denselben --editor-*-Variablen
+ * wie der Schreiber. Die Struktur (Ueberschriften, Code ...) skaliert relativ
+ * (em), also bewegt sich die ganze Vorschau mit, wenn die Groesse geaendert wird.
+ * Farbe bleibt bewusst neutral -- Markdown kennt keine Textfarbe.
+ */
+.md-preview {
+  font-family: var(--editor-font);
+  font-size: var(--editor-size);
+  line-height: var(--editor-line-height);
+  letter-spacing: var(--editor-letter-spacing);
+}
 .md-preview :deep(h1) {
-  @apply mb-3 mt-4 text-2xl font-bold text-zinc-900 first:mt-0 dark:text-zinc-50;
+  @apply mb-3 mt-4 font-bold text-zinc-900 first:mt-0 dark:text-zinc-50;
+  font-size: 1.6em;
+  line-height: 1.25;
 }
 .md-preview :deep(h2) {
-  @apply mb-2 mt-4 text-xl font-semibold text-zinc-900 first:mt-0 dark:text-zinc-50;
+  @apply mb-2 mt-4 font-semibold text-zinc-900 first:mt-0 dark:text-zinc-50;
+  font-size: 1.3em;
+  line-height: 1.3;
 }
 .md-preview :deep(h3) {
-  @apply mb-2 mt-3 text-lg font-semibold text-zinc-800 first:mt-0 dark:text-zinc-100;
+  @apply mb-2 mt-3 font-semibold text-zinc-800 first:mt-0 dark:text-zinc-100;
+  font-size: 1.15em;
+  line-height: 1.35;
 }
 .md-preview :deep(p) {
-  @apply mb-3 leading-relaxed text-zinc-700 dark:text-zinc-300;
+  @apply mb-3 text-zinc-700 dark:text-zinc-300;
 }
 .md-preview :deep(ul) {
   @apply mb-3 list-disc pl-6 text-zinc-700 dark:text-zinc-300;
@@ -113,19 +132,23 @@ async function copyMarkdown(): Promise<void> {
   @apply my-4 border-zinc-200 dark:border-zinc-700;
 }
 .md-preview :deep(code) {
-  @apply rounded bg-zinc-100 px-1 py-0.5 font-mono text-sm dark:bg-zinc-800;
+  @apply rounded bg-zinc-100 px-1 py-0.5 font-mono dark:bg-zinc-800;
+  font-size: 0.9em;
 }
 .md-preview :deep(pre) {
-  @apply mb-3 overflow-x-auto rounded-lg bg-zinc-900 p-3 text-sm text-zinc-100;
+  @apply mb-3 overflow-x-auto rounded-lg bg-zinc-900 p-3 text-zinc-100;
+  font-size: 0.9em;
 }
 .md-preview :deep(pre code) {
   @apply bg-transparent p-0;
+  font-size: 1em;
 }
 .md-preview :deep(blockquote) {
   @apply mb-3 border-l-4 border-accent pl-4 italic text-zinc-600 dark:text-zinc-400;
 }
 .md-preview :deep(table) {
-  @apply mb-3 w-full border-collapse text-sm;
+  @apply mb-3 w-full border-collapse;
+  font-size: 0.9em;
 }
 .md-preview :deep(th),
 .md-preview :deep(td) {
