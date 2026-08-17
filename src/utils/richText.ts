@@ -120,6 +120,21 @@ export function sanitizeUrl(url: string): string {
   return SAFE_URL.test(trimmed) ? trimmed : ''
 }
 
+/**
+ * Ergaenzt eine fehlende URL-Kennung, damit Nutzereingaben wie `example.com`
+ * oder `mail@x.de` zu benutzbaren Links werden. Leere Eingabe -> ''. Prueft NICHT
+ * auf Sicherheit -- dafuer anschliessend `sanitizeUrl` verwenden.
+ */
+export function normalizeUrl(url: string): string {
+  const trimmed = url.trim()
+  if (!trimmed) return ''
+  // Bereits mit Schema, ankerlokal (#), absolut (/) oder mailto/tel -> unveraendert.
+  if (/^([a-z][a-z0-9+.-]*:|#|\/|\.{1,2}\/)/i.test(trimmed)) return trimmed
+  // E-Mail-artig ohne Schema -> mailto:.
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return `mailto:${trimmed}`
+  return `https://${trimmed}`
+}
+
 /** Reiner Text -> HTML: je Zeile ein <div>, leere Zeilen als <div><br></div>. */
 export function plainToHtml(text: string): string {
   if (text === '') return ''
