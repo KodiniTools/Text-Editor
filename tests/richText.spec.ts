@@ -4,6 +4,7 @@ import {
   contentToPlain,
   htmlToPlain,
   isHtmlContent,
+  normalizeUrl,
   plainToHtml,
   sanitizeHtml,
   sanitizeUrl,
@@ -146,6 +147,27 @@ describe('sanitizeUrl', () => {
     expect(sanitizeUrl('ftp://x.de')).toBe('')
     expect(sanitizeUrl('')).toBe('')
     expect(sanitizeUrl('   ')).toBe('')
+  })
+})
+
+describe('normalizeUrl', () => {
+  it('laesst URLs mit Schema/Anker/Pfad unveraendert', () => {
+    expect(normalizeUrl('https://kodini.de')).toBe('https://kodini.de')
+    expect(normalizeUrl('mailto:a@b.de')).toBe('mailto:a@b.de')
+    expect(normalizeUrl('#anker')).toBe('#anker')
+    expect(normalizeUrl('/pfad')).toBe('/pfad')
+    expect(normalizeUrl('./rel')).toBe('./rel')
+  })
+
+  it('ergaenzt fehlendes Schema', () => {
+    expect(normalizeUrl('kodini.de')).toBe('https://kodini.de')
+    expect(normalizeUrl('  example.com/x  ')).toBe('https://example.com/x')
+    expect(normalizeUrl('mail@x.de')).toBe('mailto:mail@x.de')
+  })
+
+  it('leere Eingabe -> leerer String', () => {
+    expect(normalizeUrl('')).toBe('')
+    expect(normalizeUrl('   ')).toBe('')
   })
 })
 
