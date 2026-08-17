@@ -64,11 +64,9 @@ export const de = {
     placeholder: 'Hier schreiben ...',
     imageDelete: 'Bild löschen',
     imageLink: 'Bild verlinken',
-    imageLinkHint: 'Im HTML-Export und in der Vorschau wird das Bild damit anklickbar.',
     imageLinkPlaceholder: 'https://…',
     imageLinkApply: 'Übernehmen',
     imageLinkRemove: 'Link entfernen',
-    imageLinkCancel: 'Abbrechen',
     imageLinked: (href: string): string => `Verlinkt: ${href}`,
   },
   seo: {
@@ -380,11 +378,9 @@ export const en: Messages = {
     placeholder: 'Write here ...',
     imageDelete: 'Delete image',
     imageLink: 'Link image',
-    imageLinkHint: 'Makes the image clickable in the HTML export and preview.',
     imageLinkPlaceholder: 'https://…',
     imageLinkApply: 'Apply',
     imageLinkRemove: 'Remove link',
-    imageLinkCancel: 'Cancel',
     imageLinked: (href: string): string => `Linked: ${href}`,
   },
   seo: {
