@@ -56,11 +56,19 @@ export function buildHtmlDocument(opts: HtmlDocOptions): string {
     (maxImgBottom > 0 ? `;min-height:${maxImgBottom}px` : '')
 
   const imgHtml = images
-    .map(
-      (im) =>
-        `<img alt="" src="${esc(im.src)}" style="position:absolute;left:${im.x}px;top:${im.y}px;` +
-        `width:${im.w}px;height:${im.h}px;object-fit:fill" />`,
-    )
+    .map((im) => {
+      const pos = `position:absolute;left:${im.x}px;top:${im.y}px;width:${im.w}px;height:${im.h}px`
+      if (im.href) {
+        // Verlinktes Bild: der Anker traegt die Position, das Bild fuellt ihn.
+        return (
+          `<a href="${esc(im.href)}" target="_blank" rel="noopener noreferrer nofollow" ` +
+          `style="${pos};display:block">` +
+          `<img alt="" src="${esc(im.src)}" style="width:100%;height:100%;object-fit:fill;display:block" />` +
+          `</a>`
+        )
+      }
+      return `<img alt="" src="${esc(im.src)}" style="${pos};object-fit:fill" />`
+    })
     .join('\n    ')
 
   //   statt <br> nicht noetig -- leerer Inhalt bekommt einen Zeilenumbruch.

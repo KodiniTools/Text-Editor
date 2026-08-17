@@ -49,6 +49,28 @@ describe('buildHtmlDocument', () => {
     expect(html).toContain('min-height:70px')
   })
 
+  it('verpackt ein verlinktes Bild in einen Anker (klickbar, sicher)', () => {
+    const src = 'data:image/png;base64,AAAA'
+    const html = buildHtmlDocument(
+      opts({ images: [{ src, x: 10, y: 20, w: 100, h: 50, href: 'https://kodini.de' }] }),
+    )
+    expect(html).toContain('<a href="https://kodini.de"')
+    expect(html).toContain('rel="noopener noreferrer nofollow"')
+    expect(html).toContain('target="_blank"')
+    // Der Anker traegt die Position, das Bild fuellt ihn.
+    expect(html).toMatch(/<a href="https:\/\/kodini\.de"[^>]*left:10px;top:20px/)
+    expect(html).toContain(`<img alt="" src="${src}"`)
+  })
+
+  it('maskiert das Link-Ziel eines Bildes (kein Attribut-Ausbruch)', () => {
+    const src = 'data:image/png;base64,AAAA'
+    const html = buildHtmlDocument(
+      opts({ images: [{ src, x: 0, y: 0, w: 10, h: 10, href: 'https://x.de/"onload="alert(1)' }] }),
+    )
+    expect(html).not.toContain('onload="alert(1)"')
+    expect(html).toContain('&quot;onload=')
+  })
+
   it('nutzt pre statt pre-wrap, wenn Umbruch aus ist', () => {
     const html = buildHtmlDocument(opts({ typography: { ...opts().typography, wrap: false } }))
     expect(html).toContain('white-space:pre;')

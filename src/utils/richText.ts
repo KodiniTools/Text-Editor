@@ -103,6 +103,23 @@ export function isHtmlContent(raw: string): boolean {
   )
 }
 
+/**
+ * Erlaubte URL-Schemata fuer selbst gebaute Links (z. B. verlinkte Bilder, deren
+ * Anker nicht durch DOMPurify laeuft). Zugelassen: http(s), mailto, tel, absolute
+ * Pfade (`/`), Anker (`#`) und relative Pfade (`./`, `../`). Alles andere --
+ * insbesondere `javascript:` -- ergibt einen leeren String (kein Link).
+ */
+const SAFE_URL = /^(?:https?:|mailto:|tel:|#|\/|\.{1,2}\/)/i
+
+/** Liefert die URL zurueck, wenn ihr Schema sicher ist -- sonst ''. */
+export function sanitizeUrl(url: string): string {
+  const trimmed = (url ?? '').trim()
+  if (!trimmed) return ''
+  // Schema-relativ (//host/...) -> auf https anheben.
+  if (/^\/\//.test(trimmed)) return `https:${trimmed}`
+  return SAFE_URL.test(trimmed) ? trimmed : ''
+}
+
 /** Reiner Text -> HTML: je Zeile ein <div>, leere Zeilen als <div><br></div>. */
 export function plainToHtml(text: string): string {
   if (text === '') return ''

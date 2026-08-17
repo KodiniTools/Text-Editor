@@ -6,7 +6,7 @@ import type { BlockType, SelectionFormat } from '@/types'
 import { buildSearchRegex, countMatches as countInText, type FindOptions } from '@/utils/find'
 import { pageDimensions } from '@/utils/pageFormats'
 import { DEFAULT_MARGIN_MM, mmToPx, lineStepPx, paginateByLines } from '@/utils/renderPages'
-import { htmlToPlain, plainToHtml, sanitizeHtml } from '@/utils/richText'
+import { htmlToPlain, plainToHtml, sanitizeHtml, sanitizeUrl } from '@/utils/richText'
 import { useI18n } from '@/i18n'
 
 const store = useEditorStore()
@@ -854,6 +854,47 @@ function deleteImage(id: string): void {
   if (selectedImageId.value === id) selectedImageId.value = null
 }
 
+/* ---------- Bild verlinken ---------- */
+// Welches Bild wird gerade verlinkt (null = Editor zu) und der Eingabewert.
+const imageLinkId = ref<string | null>(null)
+const imageLinkUrl = ref('')
+const imageLinkInput = ref<HTMLInputElement | null>(null)
+
+/** Oeffnet den Link-Editor fuer ein Bild (vorbelegt mit dem aktuellen Ziel). */
+function openImageLink(img: ImagePlacement): void {
+  selectImage(img.id)
+  imageLinkId.value = img.id
+  imageLinkUrl.value = img.href ?? ''
+  nextTick(() => {
+    imageLinkInput.value?.focus()
+    imageLinkInput.value?.select()
+  })
+}
+
+function closeImageLink(): void {
+  imageLinkId.value = null
+}
+
+/**
+ * Uebernimmt das Link-Ziel des Bildes. Die URL wird normalisiert (fehlendes
+ * Schema ergaenzt) und auf ein sicheres Schema geprueft; ein leerer/ungueltiger
+ * Wert entfernt den Link. Als EINE Undo-Stufe (begin/commitImageChange).
+ */
+function applyImageLink(): void {
+  const id = imageLinkId.value
+  if (!id) return
+  const href = sanitizeUrl(normalizeUrl(imageLinkUrl.value))
+  store.beginImageChange()
+  store.updateImage(id, { href })
+  store.commitImageChange()
+  closeImageLink()
+}
+
+function removeImageLink(): void {
+  imageLinkUrl.value = ''
+  applyImageLink()
+}
+
 /** Ziehen zum Verschieben. Bildschirm-Delta wird durch den Zoom geteilt. */
 function startDrag(img: ImagePlacement, e: PointerEvent): void {
   selectImage(img.id)
@@ -1145,8 +1186,46 @@ defineExpose({
             @pointerdown.stop="startDrag(img, $event)"
           >
             <img :src="img.src" class="img-el" draggable="false" alt="" />
+            <!-- Kennzeichnet ein verlinktes Bild (auch ohne Auswahl sichtbar). -->
+            <span
+              v-if="img.href"
+              class="img-linkbadge"
+              :title="t.editor.imageLinked(img.href)"
+              aria-hidden="true"
+            >
+              <svg viewBox="0 0 16 16" class="h-3 w-3" aria-hidden="true">
+                <path
+                  d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 0 1 4.5 9l1-1"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
             <template v-if="img.id === selectedImageId">
               <span class="img-handle" @pointerdown.stop="startResize(img, $event)" />
+              <button
+                type="button"
+                class="img-link-btn"
+                :class="{ 'img-link-active': img.href }"
+                :title="t.editor.imageLink"
+                :aria-label="t.editor.imageLink"
+                @pointerdown.stop
+                @click.stop="openImageLink(img)"
+              >
+                <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" aria-hidden="true">
+                  <path
+                    d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 0 1 4.5 9l1-1"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
               <button
                 type="button"
                 class="img-del"
@@ -1163,6 +1242,68 @@ defineExpose({
       </div>
     </div>
   </div>
+
+  <!-- Bild verlinken: kleiner, mittiger Dialog (Teleport im <body>). -->
+  <Teleport to="body">
+    <div
+      v-if="imageLinkId"
+      class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="t.editor.imageLink"
+      @click.self="closeImageLink"
+    >
+      <div
+        class="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-4 shadow-2xl dark:border-zinc-700 dark:bg-zinc-900"
+      >
+        <label
+          class="mb-1 block text-sm font-semibold text-zinc-700 dark:text-zinc-200"
+          for="img-link-input"
+        >
+          {{ t.editor.imageLink }}
+        </label>
+        <p class="mb-2 text-xs text-zinc-500 dark:text-zinc-400">{{ t.editor.imageLinkHint }}</p>
+        <input
+          id="img-link-input"
+          ref="imageLinkInput"
+          v-model="imageLinkUrl"
+          type="url"
+          inputmode="url"
+          class="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-800 outline-none focus:border-accent dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+          :placeholder="t.editor.imageLinkPlaceholder"
+          @keydown.enter.prevent="applyImageLink"
+          @keydown.esc.prevent="closeImageLink"
+        />
+        <div class="mt-3 flex items-center justify-between gap-2">
+          <button
+            v-if="imageLinkUrl"
+            type="button"
+            class="rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+            @click="removeImageLink"
+          >
+            {{ t.editor.imageLinkRemove }}
+          </button>
+          <span v-else />
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="rounded-md px-3 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              @click="closeImageLink"
+            >
+              {{ t.editor.imageLinkCancel }}
+            </button>
+            <button
+              type="button"
+              class="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-white hover:opacity-90"
+              @click="applyImageLink"
+            >
+              {{ t.editor.imageLinkApply }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -1239,8 +1380,44 @@ defineExpose({
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
   cursor: pointer;
 }
+/* Verlinken oben links. */
+.img-link-btn {
+  position: absolute;
+  left: -10px;
+  top: -10px;
+  display: flex;
+  height: 20px;
+  width: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: #fff;
+  color: rgb(63 63 70); /* zinc-700 */
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  cursor: pointer;
+}
+.img-link-btn.img-link-active {
+  background: rgb(var(--accent));
+  color: #fff;
+}
+/* Badge unten links: markiert ein verlinktes Bild auch ohne Auswahl. */
+.img-linkbadge {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  display: flex;
+  height: 18px;
+  width: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: rgb(var(--accent));
+  color: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+  pointer-events: none;
+}
 
-/* Touch: Skalier-Griff und Loeschen-Knopf groesser antippbar machen. */
+/* Touch: Skalier-Griff und Knoepfe groesser antippbar machen. */
 @media (pointer: coarse) {
   .img-handle {
     right: -11px;
@@ -1255,6 +1432,12 @@ defineExpose({
     height: 30px;
     width: 30px;
     font-size: 18px;
+  }
+  .img-link-btn {
+    left: -14px;
+    top: -14px;
+    height: 30px;
+    width: 30px;
   }
 }
 
