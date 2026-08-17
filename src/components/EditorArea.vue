@@ -1160,7 +1160,10 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="host" :class="pageActive ? 'page-backdrop' : 'plain-scroll flex h-full min-h-0 w-full'">
+  <div
+    ref="host"
+    :class="pageActive ? 'page-backdrop h-full min-h-0' : 'plain-scroll flex h-full min-h-0 w-full'"
+  >
     <div :class="pageActive ? 'page-canvas' : 'flex h-full min-h-0 w-full'" :style="canvasStyle">
       <div :class="pageActive ? 'page-sheet' : 'flex h-full min-h-0 w-full'" :style="sheetStyle">
         <div
@@ -1259,56 +1262,59 @@ defineExpose({
         </template>
       </div>
     </div>
-  </div>
 
-  <!-- Bild verlinken: kompaktes Popover am Link-Knopf (Teleport im <body>).
-       Bewusst KEIN Vollbild-Overlay -> Footer bleibt sichtbar, Seite scrollbar. -->
-  <Teleport to="body">
-    <div
-      v-if="imageLinkOpen"
-      ref="imageLinkMenu"
-      class="fixed z-50 w-64 rounded-lg border border-zinc-200 bg-white p-2 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
-      :style="imageLinkStyle"
-      role="dialog"
-      :aria-label="t.editor.imageLink"
-    >
-      <label
-        class="mb-1 block text-xs font-semibold text-zinc-500 dark:text-zinc-400"
-        for="img-link-input"
+    <!-- Bild verlinken: kompaktes Popover am Link-Knopf (Teleport im <body>).
+         Als Kind des Wurzel-<div> gehalten, damit EditorArea EINEN Wurzelknoten
+         hat und das von aussen gesetzte class="h-full" (Hoehenbegrenzung der
+         Seiten-Ansicht) zuverlaessig geerbt wird. Bewusst KEIN Vollbild-Overlay
+         -> Footer bleibt sichtbar, Seite scrollbar. -->
+    <Teleport to="body">
+      <div
+        v-if="imageLinkOpen"
+        ref="imageLinkMenu"
+        class="fixed z-50 w-64 rounded-lg border border-zinc-200 bg-white p-2 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
+        :style="imageLinkStyle"
+        role="dialog"
+        :aria-label="t.editor.imageLink"
       >
-        {{ t.editor.imageLink }}
-      </label>
-      <input
-        id="img-link-input"
-        ref="imageLinkInput"
-        v-model="imageLinkUrl"
-        type="url"
-        inputmode="url"
-        class="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-800 outline-none focus:border-accent dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
-        :placeholder="t.editor.imageLinkPlaceholder"
-        @keydown.enter.prevent="applyImageLink"
-        @keydown.esc.prevent="closeImageLink"
-      />
-      <div class="mt-2 flex items-center justify-between gap-2">
-        <button
-          v-if="imageLinkUrl"
-          type="button"
-          class="rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
-          @click="removeImageLink"
+        <label
+          class="mb-1 block text-xs font-semibold text-zinc-500 dark:text-zinc-400"
+          for="img-link-input"
         >
-          {{ t.editor.imageLinkRemove }}
-        </button>
-        <span v-else />
-        <button
-          type="button"
-          class="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-white hover:opacity-90"
-          @click="applyImageLink"
-        >
-          {{ t.editor.imageLinkApply }}
-        </button>
+          {{ t.editor.imageLink }}
+        </label>
+        <input
+          id="img-link-input"
+          ref="imageLinkInput"
+          v-model="imageLinkUrl"
+          type="url"
+          inputmode="url"
+          class="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-800 outline-none focus:border-accent dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+          :placeholder="t.editor.imageLinkPlaceholder"
+          @keydown.enter.prevent="applyImageLink"
+          @keydown.esc.prevent="closeImageLink"
+        />
+        <div class="mt-2 flex items-center justify-between gap-2">
+          <button
+            v-if="imageLinkUrl"
+            type="button"
+            class="rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+            @click="removeImageLink"
+          >
+            {{ t.editor.imageLinkRemove }}
+          </button>
+          <span v-else />
+          <button
+            type="button"
+            class="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-white hover:opacity-90"
+            @click="applyImageLink"
+          >
+            {{ t.editor.imageLinkApply }}
+          </button>
+        </div>
       </div>
-    </div>
-  </Teleport>
+    </Teleport>
+  </div>
 </template>
 
 <style scoped>
