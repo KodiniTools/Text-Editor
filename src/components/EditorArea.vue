@@ -286,7 +286,12 @@ function onSelectionChange(): void {
   if (!el || !sel || sel.rangeCount === 0) return
   const range = sel.getRangeAt(0)
   if (!el.contains(range.commonAncestorContainer)) return
-  if (!sel.isCollapsed) savedRange = range.cloneRange()
+  // Eine echte Auswahl merken; ein bewusst IM Feld gesetzter Cursor (kollabiert)
+  // verwirft die alte Auswahl -- sonst wuerde ein spaeterer Befehl (z. B. Absatz/
+  // Ueberschrift ueber das Auswahlfeld) faelschlich auf die alte, laengst
+  // ueberholte Markierung wirken. Ein Klick auf ein Leisten-Control laesst die
+  // Auswahl das Feld verlassen -> onSelectionChange greift hier gar nicht.
+  savedRange = sel.isCollapsed ? null : range.cloneRange()
   reportSelection()
   reportCursor()
 }
@@ -426,12 +431,38 @@ function normalizeRichBlocks(): void {
   })
 }
 
+/** Liegt die aktuelle Auswahl in einer Liste (li/ul/ol)? */
+function selectionInList(): boolean {
+  const el = editable.value
+  const sel = window.getSelection()
+  if (!el || !sel || sel.rangeCount === 0) return false
+  let node: Node | null = sel.getRangeAt(0).startContainer
+  while (node && node !== el) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const tag = (node as HTMLElement).tagName
+      if (tag === 'LI' || tag === 'UL' || tag === 'OL') return true
+    }
+    node = node.parentNode
+  }
+  return false
+}
+
 /**
  * Setzt den Blocktyp der aktuellen Zeile(n). 'p' = normale Zeile (wieder ein
  * <div>, wie der Editor sie sonst nutzt). Eine eigene Undo-Stufe.
+ *
+ * Steht die Zeile in einer Liste, wird sie zuerst per `outdent` aus der Liste
+ * geloest -- so wird die Ueberschrift (bzw. der Absatz) NICHT Teil der Liste,
+ * sondern steht davor/dahinter. (Ohne dies verpackt der Browser die Liste in die
+ * Ueberschrift; hier "gewinnt" bewusst die Ueberschrift, beim Listen-Knopf die
+ * Liste.)
  */
 function setBlock(block: BlockType): void {
   runCommand(() => {
+    let guard = 0
+    while (selectionInList() && guard++ < 6) {
+      if (!document.execCommand('outdent')) break
+    }
     // Bracket-Form ('<h1>') ist die breit kompatible Schreibweise fuer
     // formatBlock. Normal -> <div> (der Editor arbeitet mit <div>-Zeilen).
     document.execCommand('formatBlock', false, block === 'p' ? '<div>' : `<${block}>`)
