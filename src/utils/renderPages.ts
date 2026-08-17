@@ -85,6 +85,8 @@ export interface PageImage {
   y: number
   w: number
   h: number
+  /** Optionales Link-Ziel -- macht das Bild in Vorschau/Export klickbar. */
+  href?: string
 }
 
 export interface PageRenderOptions {
@@ -224,13 +226,25 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
       const el = document.createElement('img')
       el.src = img.src
       el.draggable = false
-      el.style.position = 'absolute'
-      el.style.left = `${img.x}px`
-      el.style.top = `${img.y - pageTop}px`
       el.style.width = `${img.w}px`
       el.style.height = `${img.h}px`
       el.style.objectFit = 'fill'
-      windowEl.appendChild(el)
+      el.style.display = 'block'
+      // Positioniert wird der Rahmen (Bild oder umschliessender Link).
+      const frame = img.href ? document.createElement('a') : el
+      if (img.href) {
+        const a = frame as HTMLAnchorElement
+        a.href = img.href
+        a.target = '_blank'
+        a.rel = 'noopener noreferrer nofollow'
+        a.appendChild(el)
+      }
+      frame.style.position = 'absolute'
+      frame.style.left = `${img.x}px`
+      frame.style.top = `${img.y - pageTop}px`
+      frame.style.width = `${img.w}px`
+      frame.style.height = `${img.h}px`
+      windowEl.appendChild(frame)
     }
 
     page.appendChild(windowEl)

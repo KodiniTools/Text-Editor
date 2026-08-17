@@ -6,6 +6,7 @@ import {
   isHtmlContent,
   plainToHtml,
   sanitizeHtml,
+  sanitizeUrl,
 } from '@/utils/richText'
 
 describe('isHtmlContent', () => {
@@ -120,6 +121,31 @@ describe('Erweiterte Auszeichnung', () => {
     expect(htmlToPlain('<blockquote>Zitat</blockquote><div>Ende</div>')).toBe('Zitat\nEnde')
     expect(htmlToPlain('<div>Siehe <a href="https://x.de">hier</a>.</div>')).toBe('Siehe hier.')
     expect(htmlToPlain('<div>Text <mark>hervor</mark></div>')).toBe('Text hervor')
+  })
+})
+
+describe('sanitizeUrl', () => {
+  it('erlaubt sichere Schemata und Pfade', () => {
+    expect(sanitizeUrl('https://kodini.de')).toBe('https://kodini.de')
+    expect(sanitizeUrl('http://x.de')).toBe('http://x.de')
+    expect(sanitizeUrl('mailto:a@b.de')).toBe('mailto:a@b.de')
+    expect(sanitizeUrl('tel:+49123')).toBe('tel:+49123')
+    expect(sanitizeUrl('/pfad/seite')).toBe('/pfad/seite')
+    expect(sanitizeUrl('#anker')).toBe('#anker')
+    expect(sanitizeUrl('./rel')).toBe('./rel')
+  })
+
+  it('hebt schema-relative URLs auf https', () => {
+    expect(sanitizeUrl('//cdn.example.com/x')).toBe('https://cdn.example.com/x')
+  })
+
+  it('verwirft gefaehrliche/unbekannte Schemata', () => {
+    expect(sanitizeUrl('javascript:alert(1)')).toBe('')
+    expect(sanitizeUrl(' JavaScript:alert(1)')).toBe('')
+    expect(sanitizeUrl('data:text/html,<script>')).toBe('')
+    expect(sanitizeUrl('ftp://x.de')).toBe('')
+    expect(sanitizeUrl('')).toBe('')
+    expect(sanitizeUrl('   ')).toBe('')
   })
 })
 

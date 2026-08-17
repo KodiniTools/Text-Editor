@@ -24,7 +24,14 @@ export function pageRenderOptions(
 ): PageRenderOptions {
   const font = findFont(settings.fontFamily)
   const dims = pageDimensions(settings.pageFormat, settings.pageOrientation) ?? FALLBACK
-  const pageImages: PageImage[] = images.map(({ src, x, y, w, h }) => ({ src, x, y, w, h }))
+  const pageImages: PageImage[] = images.map(({ src, x, y, w, h, href }) => ({
+    src,
+    x,
+    y,
+    w,
+    h,
+    ...(href ? { href } : {}),
+  }))
   return {
     html: contentToHtml(content),
     images: pageImages,

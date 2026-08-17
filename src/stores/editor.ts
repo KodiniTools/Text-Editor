@@ -3,7 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { DEFAULT_FONT_ID } from '@/config/fonts'
 import { messages } from '@/i18n'
 import { MESSAGES } from '@/i18n/messages'
-import { contentToHtml, contentToPlain } from '@/utils/richText'
+import { contentToHtml, contentToPlain, sanitizeUrl } from '@/utils/richText'
 import {
   isOrientation,
   isPageFormatId,
@@ -25,6 +25,9 @@ export interface ImagePlacement {
   y: number
   w: number
   h: number
+  /** Optionales Link-Ziel; im HTML-Export/der Vorschau wird das Bild damit
+   *  klickbar (in ein <a href> verpackt). Leer/undefiniert = kein Link. */
+  href?: string
 }
 
 export interface EditorDocument {
@@ -108,12 +111,19 @@ function cloneImages(images?: ImagePlacement[]): ImagePlacement[] {
   return (images ?? []).map((i) => ({ ...i }))
 }
 
-/** Vergleicht zwei Bildlisten nach Position/Groesse (nicht der Quelle). */
+/** Vergleicht zwei Bildlisten nach Position/Groesse/Link (nicht der Quelle). */
 function sameImages(a: ImagePlacement[], b: ImagePlacement[]): boolean {
   if (a.length !== b.length) return false
   return a.every((img, i) => {
     const o = b[i]!
-    return img.id === o.id && img.x === o.x && img.y === o.y && img.w === o.w && img.h === o.h
+    return (
+      img.id === o.id &&
+      img.x === o.x &&
+      img.y === o.y &&
+      img.w === o.w &&
+      img.h === o.h &&
+      (img.href ?? '') === (o.href ?? '')
+    )
   })
 }
 
@@ -725,14 +735,18 @@ export const useEditorStore = defineStore('editor', () => {
     const images = Array.isArray(d.images)
       ? d.images
           .filter((im) => im && DATA_IMAGE.test(String(im.src)))
-          .map((im) => ({
-            id: `img_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
-            src: String(im.src),
-            x: Number.isFinite(im.x) ? Math.round(im.x) : 0,
-            y: Number.isFinite(im.y) ? Math.round(im.y) : 0,
-            w: Number.isFinite(im.w) ? Math.max(1, Math.round(im.w)) : 1,
-            h: Number.isFinite(im.h) ? Math.max(1, Math.round(im.h)) : 1,
-          }))
+          .map((im) => {
+            const href = typeof im.href === 'string' ? sanitizeUrl(im.href) : ''
+            return {
+              id: `img_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+              src: String(im.src),
+              x: Number.isFinite(im.x) ? Math.round(im.x) : 0,
+              y: Number.isFinite(im.y) ? Math.round(im.y) : 0,
+              w: Number.isFinite(im.w) ? Math.max(1, Math.round(im.w)) : 1,
+              h: Number.isFinite(im.h) ? Math.max(1, Math.round(im.h)) : 1,
+              ...(href ? { href } : {}),
+            }
+          })
       : []
     return {
       id: uid(),

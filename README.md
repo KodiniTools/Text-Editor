@@ -68,6 +68,11 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   verloren). Wichtig, weil die Daten sonst nur im `localStorage` liegen
 - **Drag & Drop**: Text (`.txt`/`.md`), Bilder oder eine Sicherung (`.json`) einfach ins Fenster
   ziehen -- Text wird als neues Dokument geoeffnet, Bilder werden platziert, Sicherungen importiert
+- **Frei platzierte Bilder -- optional verlinkbar**: eingefuegte Bilder lassen sich frei
+  verschieben/skalieren und ueber den Link-Knopf am ausgewaehlten Bild mit einer Ziel-URL versehen.
+  Im HTML-Export und in der Vorschau/PDF wird das Bild dann in ein `<a href>` (mit
+  `target="_blank" rel="noopener noreferrer nofollow"`) verpackt -- also anklickbar. Das Ziel wird
+  auf ein sicheres Schema geprueft (`javascript:` u. a. wird verworfen)
 - **PWA / Offline**: installierbar (App-Symbol, eigenes Fenster) und **komplett offline** nutzbar –
   ein Service Worker cacht die App-Shell und alle Assets (auch die PDF-Export-Bausteine). Updates
   laufen **still im Hintergrund** und werden beim naechsten Oeffnen uebernommen (kein Neuladen-
