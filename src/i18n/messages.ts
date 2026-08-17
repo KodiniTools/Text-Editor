@@ -170,12 +170,6 @@ export const de = {
     close: 'Vorschau schließen',
     copy: 'Markdown kopieren',
   },
-  pwa: {
-    offlineReady: 'App ist jetzt offline verfügbar',
-    updateAvailable: 'Neue Version verfügbar.',
-    reload: 'Neu laden',
-    dismiss: 'Später',
-  },
   shortcuts: {
     title: 'Tastenkürzel',
     intro: 'Schneller arbeiten mit der Tastatur. Unter macOS steht „Strg" für „Cmd".',
@@ -463,12 +457,6 @@ export const en: Messages = {
       'Write Markdown (e.g. “# Title”, “- item”, “**bold**”) or format via the bar – the preview shows up here live.',
     close: 'Close preview',
     copy: 'Copy Markdown',
-  },
-  pwa: {
-    offlineReady: 'App is ready to work offline',
-    updateAvailable: 'A new version is available.',
-    reload: 'Reload',
-    dismiss: 'Later',
   },
   shortcuts: {
     title: 'Keyboard shortcuts',
