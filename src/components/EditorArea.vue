@@ -12,6 +12,17 @@ import { useI18n } from '@/i18n'
 const store = useEditorStore()
 const { t } = useI18n()
 
+const props = withDefaults(
+  defineProps<{
+    /** Zoomfaktor fuer den Fließtext (nur im Modus ohne Seitenformat, z. B. im
+     *  Fokus). CSS `zoom` vergroessert die Darstellung, ohne das Feld aus dem
+     *  Bearbeitungsfluss zu nehmen -- der Text bleibt also editierbar (anders als
+     *  bei transform: scale). Standard 1 = keine Vergroesserung. */
+    contentZoom?: number
+  }>(),
+  { contentZoom: 1 },
+)
+
 const emit = defineEmits<{
   cursor: [line: number, col: number]
   selchange: [state: SelectionFormat]
@@ -29,6 +40,9 @@ const editable = ref<HTMLElement | null>(null)
  */
 const editorStyle = computed(() => ({
   whiteSpace: store.settings.wordWrap ? ('pre-wrap' as const) : ('pre' as const),
+  // Zoom nur ohne Seitenformat -- im Seiten-Modus uebernimmt das Blatt (page-sheet)
+  // die Skalierung ueber store.pageZoom. `zoom` haelt das contenteditable editierbar.
+  ...(!pageActive.value && props.contentZoom !== 1 ? { zoom: props.contentZoom } : {}),
 }))
 
 /* ---------- Inhalt <-> Store synchronisieren ---------- */
