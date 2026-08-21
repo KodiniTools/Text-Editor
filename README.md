@@ -37,7 +37,8 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   klappt neben dem Editor eine Live-Vorschau auf (auf schmalen Schirmen darunter). Der Dokument-
   inhalt wird zu **echtem Markdown** umgewandelt (`utils/htmlToMarkdown.ts`) und daraus gerendert –
   so spiegelt die Vorschau **sowohl** getippte Markdown-Syntax (`# Titel`, `- Punkt`, `**fett**`)
-  **als auch** die WYSIWYG-Formatierung der Werkzeugleiste (Ueberschriften, Fett/Kursiv, Listen).
+  **als auch** die WYSIWYG-Formatierung der Werkzeugleiste (Ueberschriften, Fett/Kursiv,
+  Unterstrichen/Durchgestrichen/Highlight, Links, Zitate, Listen).
   Genau dieses Markdown liefert der `.md`-Export (`Speichern -> Als .md`, formatierungstreu statt
   nur reiner Text) und der Knopf `Markdown kopieren` im Kopf der Vorschau. Das Rendern (`marked`)
   wird per `DOMPurify` bereinigt (kein XSS)
@@ -67,6 +68,11 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
   verloren). Wichtig, weil die Daten sonst nur im `localStorage` liegen
 - **Drag & Drop**: Text (`.txt`/`.md`), Bilder oder eine Sicherung (`.json`) einfach ins Fenster
   ziehen -- Text wird als neues Dokument geoeffnet, Bilder werden platziert, Sicherungen importiert
+- **Frei platzierte Bilder -- optional verlinkbar**: eingefuegte Bilder lassen sich frei
+  verschieben/skalieren und ueber den Link-Knopf am ausgewaehlten Bild mit einer Ziel-URL versehen.
+  Im HTML-Export und in der Vorschau/PDF wird das Bild dann in ein `<a href>` (mit
+  `target="_blank" rel="noopener noreferrer nofollow"`) verpackt -- also anklickbar. Das Ziel wird
+  auf ein sicheres Schema geprueft (`javascript:` u. a. wird verworfen)
 - **PWA / Offline**: installierbar (App-Symbol, eigenes Fenster) und **komplett offline** nutzbar –
   ein Service Worker cacht die App-Shell und alle Assets (auch die PDF-Export-Bausteine). Updates
   laufen **still im Hintergrund** und werden beim naechsten Oeffnen uebernommen (kein Neuladen-
@@ -108,6 +114,10 @@ damit z. B. `Alt + 1` und `Strg + Shift + .` auch auf macOS und anderen Tastatur
 |---|---|
 | `Strg + B` | Fett |
 | `Strg + I` | Kursiv |
+| `Strg + U` | Unterstrichen |
+| `Strg + Shift + X` | Durchgestrichen |
+| `Strg + Shift + H` | Hervorheben (Highlight) |
+| `Strg + K` | Link einfuegen/bearbeiten |
 | `Strg + \` | Formatierung entfernen |
 | `Strg + Shift + .` / `Strg + Shift + ,` | Schrift vergroessern / verkleinern |
 | `Tab` | 2 Leerzeichen einfuegen |
@@ -118,6 +128,7 @@ damit z. B. `Alt + 1` und `Strg + Shift + .` auch auf macOS und anderen Tastatur
 |---|---|
 | `Strg + Alt + 0` | Normaler Text |
 | `Strg + Alt + 1` / `2` / `3` | Ueberschrift 1 / 2 / 3 |
+| `Strg + Shift + 9` | Zitat (blockquote) |
 | `Strg + Shift + 8` | Aufzaehlungsliste |
 | `Strg + Shift + 7` | Nummerierte Liste |
 
@@ -395,10 +406,12 @@ curl -I https://kodinitools.com/texteditor/assets/  # 403/404 (kein Directory-Li
 
 - Der Editor ist ein `contenteditable`-Feld (fuer Inline-Auszeichnung, Ueberschriften, Listen und
   frei platzierte Bilder); kein Syntax-Highlighting.
-- Ueberschriften/Listen sitzen auf dem Grundlinienraster – dadurch ist die Ueberschriftengroesse
-  auf ~einen Zeilenschritt gedeckelt (bei sehr enger Zeilenhoehe fallen die Ueberschriften daher
-  kleiner aus). Weitere Editor-Blocktypen (Zitat, Code, Links per Werkzeugleiste) sind moegliche
-  Follow-ups. Der Markdown-Export deckt Ueberschriften, Fett/Kursiv und Listen ab; frei platzierte
-  Bilder liegen ausserhalb des Textflusses und sind nicht Teil der `.md`-Ausgabe.
+- Ueberschriften/Listen/Zitate sitzen auf dem Grundlinienraster – dadurch ist die
+  Ueberschriftengroesse auf ~einen Zeilenschritt gedeckelt (bei sehr enger Zeilenhoehe fallen die
+  Ueberschriften daher kleiner aus). Ein moeglicher Follow-up sind Code-Bloecke. Der Markdown-Export
+  deckt Ueberschriften, Fett/Kursiv, Durchgestrichen (`~~`), Links (`[…](…)`), Zitate (`>`) und
+  Listen ab; Unterstrichen/Highlight bleiben als HTML-Tag (`<u>`/`<mark>`) erhalten, da es dafuer
+  kein portables Markdown gibt. Frei platzierte Bilder liegen ausserhalb des Textflusses und sind
+  nicht Teil der `.md`-Ausgabe.
 - Undo-History ist pro Session (nicht persistiert) und auf 200 Stufen begrenzt.
 - Regex im Suchfeld nutzt Nutzereingaben; ungueltige Muster werden abgefangen (kein Absturz).

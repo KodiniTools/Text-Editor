@@ -4,8 +4,10 @@ import {
   contentToPlain,
   htmlToPlain,
   isHtmlContent,
+  normalizeUrl,
   plainToHtml,
   sanitizeHtml,
+  sanitizeUrl,
 } from '@/utils/richText'
 
 describe('isHtmlContent', () => {
@@ -86,6 +88,86 @@ describe('Ueberschriften & Listen', () => {
     expect(out).toContain('<h2>')
     expect(out).toContain('<b>Fett</b>')
     expect(out.toLowerCase()).toContain('color')
+  })
+})
+
+describe('Erweiterte Auszeichnung', () => {
+  it('erkennt neue Tags als HTML-Inhalt', () => {
+    expect(isHtmlContent('<u>x</u>')).toBe(true)
+    expect(isHtmlContent('<s>x</s>')).toBe(true)
+    expect(isHtmlContent('<mark>x</mark>')).toBe(true)
+    expect(isHtmlContent('<a href="/x">x</a>')).toBe(true)
+    expect(isHtmlContent('<blockquote>x</blockquote>')).toBe(true)
+  })
+
+  it('behaelt Unterstrichen/Durchgestrichen/Highlight/Zitat beim Bereinigen', () => {
+    const out = sanitizeHtml('<u>u</u><s>s</s><mark>m</mark><blockquote>zitat</blockquote>')
+    expect(out).toContain('<u>u</u>')
+    expect(out).toContain('<s>s</s>')
+    expect(out).toContain('<mark>m</mark>')
+    expect(out).toContain('<blockquote>zitat</blockquote>')
+  })
+
+  it('behaelt sichere Link-Ziele, verwirft aber javascript:', () => {
+    const ok = sanitizeHtml('<a href="https://example.com">Link</a>')
+    expect(ok).toContain('href="https://example.com"')
+    expect(ok).toContain('Link')
+
+    const evil = sanitizeHtml('<a href="javascript:alert(1)">böse</a>')
+    expect(evil).not.toMatch(/javascript:/i)
+    expect(evil).toContain('böse')
+  })
+
+  it('projiziert Zitat und Link-Text in reinen Text', () => {
+    expect(htmlToPlain('<blockquote>Zitat</blockquote><div>Ende</div>')).toBe('Zitat\nEnde')
+    expect(htmlToPlain('<div>Siehe <a href="https://x.de">hier</a>.</div>')).toBe('Siehe hier.')
+    expect(htmlToPlain('<div>Text <mark>hervor</mark></div>')).toBe('Text hervor')
+  })
+})
+
+describe('sanitizeUrl', () => {
+  it('erlaubt sichere Schemata und Pfade', () => {
+    expect(sanitizeUrl('https://kodini.de')).toBe('https://kodini.de')
+    expect(sanitizeUrl('http://x.de')).toBe('http://x.de')
+    expect(sanitizeUrl('mailto:a@b.de')).toBe('mailto:a@b.de')
+    expect(sanitizeUrl('tel:+49123')).toBe('tel:+49123')
+    expect(sanitizeUrl('/pfad/seite')).toBe('/pfad/seite')
+    expect(sanitizeUrl('#anker')).toBe('#anker')
+    expect(sanitizeUrl('./rel')).toBe('./rel')
+  })
+
+  it('hebt schema-relative URLs auf https', () => {
+    expect(sanitizeUrl('//cdn.example.com/x')).toBe('https://cdn.example.com/x')
+  })
+
+  it('verwirft gefaehrliche/unbekannte Schemata', () => {
+    expect(sanitizeUrl('javascript:alert(1)')).toBe('')
+    expect(sanitizeUrl(' JavaScript:alert(1)')).toBe('')
+    expect(sanitizeUrl('data:text/html,<script>')).toBe('')
+    expect(sanitizeUrl('ftp://x.de')).toBe('')
+    expect(sanitizeUrl('')).toBe('')
+    expect(sanitizeUrl('   ')).toBe('')
+  })
+})
+
+describe('normalizeUrl', () => {
+  it('laesst URLs mit Schema/Anker/Pfad unveraendert', () => {
+    expect(normalizeUrl('https://kodini.de')).toBe('https://kodini.de')
+    expect(normalizeUrl('mailto:a@b.de')).toBe('mailto:a@b.de')
+    expect(normalizeUrl('#anker')).toBe('#anker')
+    expect(normalizeUrl('/pfad')).toBe('/pfad')
+    expect(normalizeUrl('./rel')).toBe('./rel')
+  })
+
+  it('ergaenzt fehlendes Schema', () => {
+    expect(normalizeUrl('kodini.de')).toBe('https://kodini.de')
+    expect(normalizeUrl('  example.com/x  ')).toBe('https://example.com/x')
+    expect(normalizeUrl('mail@x.de')).toBe('mailto:mail@x.de')
+  })
+
+  it('leere Eingabe -> leerer String', () => {
+    expect(normalizeUrl('')).toBe('')
+    expect(normalizeUrl('   ')).toBe('')
   })
 })
 
