@@ -81,6 +81,13 @@ const contentZoom = computed<number>(() =>
   store.settings.focusMode && !pageActive.value ? plainFocusZoom.value : 1,
 )
 
+// Scroll-Freiraum unten, solange die schwebende Zoom-Leiste sichtbar ist (nur im
+// Fokus). So laesst sich die letzte Zeile ueber die Leiste scrollen und bleibt
+// bearbeitbar, statt von ihr verdeckt zu werden. Wert = Hoehe der Leiste (~44 px)
+// + Abstand nach unten (16 px) + etwas Luft.
+const FOCUS_BAR_INSET = 84
+const contentBottomInset = computed<number>(() => (store.settings.focusMode ? FOCUS_BAR_INSET : 0))
+
 // Aktueller Formatzustand der Auswahl -- fuer die Fett/Kursiv-Knoepfe und die
 // Entscheidung, ob Farbe auf die Auswahl oder das ganze Dokument wirkt.
 const selFormat = ref<SelectionFormat>({
@@ -359,6 +366,7 @@ useKeyboardShortcuts({
           ref="editorAreaRef"
           class="h-full"
           :content-zoom="contentZoom"
+          :bottom-inset="contentBottomInset"
           @cursor="onCursor"
           @selchange="onSelFormat"
         />

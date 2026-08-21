@@ -24,8 +24,12 @@ const props = withDefaults(
      *  Bearbeitungsfluss zu nehmen -- der Text bleibt also editierbar (anders als
      *  bei transform: scale). Standard 1 = keine Vergroesserung. */
     contentZoom?: number
+    /** Zusaetzlicher Scroll-Freiraum am unteren Rand (px). Im Fokus haelt er die
+     *  Flaeche unter der schwebenden Zoom-Leiste frei, damit die letzte Zeile
+     *  darueber gescrollt und bearbeitet werden kann. Standard 0. */
+    bottomInset?: number
   }>(),
-  { contentZoom: 1 },
+  { contentZoom: 1, bottomInset: 0 },
 )
 
 const emit = defineEmits<{
@@ -62,11 +66,26 @@ const find = useEditorFind({
 const { host, pageActive, canvasStyle, sheetStyle, textStyle, pageBreaks } = page
 const { editorStyle, onInput, onTab, onPaste, reportCursor, reportSelection } = rich
 
-// Zoom nur ohne Seitenformat -- im Seiten-Modus uebernimmt das Blatt (page-sheet)
-// die Skalierung ueber store.pageZoom. CSS `zoom` vergroessert die Darstellung,
-// ohne das contenteditable aus dem Bearbeitungsfluss zu nehmen (Text editierbar).
-const zoomStyle = computed(() =>
-  !pageActive.value && props.contentZoom !== 1 ? { zoom: props.contentZoom } : undefined,
+// Zusatz-Style fuer das contenteditable (nur ohne Seitenformat):
+//  - Zoom: CSS `zoom` vergroessert die Darstellung, ohne das Feld aus dem
+//    Bearbeitungsfluss zu nehmen (Text bleibt editierbar). Im Seiten-Modus
+//    uebernimmt das Blatt die Skalierung ueber store.pageZoom.
+//  - bottomInset: Scroll-Freiraum, damit die letzte Zeile ueber der schwebenden
+//    Zoom-Leiste liegt und nicht von ihr verdeckt wird.
+const zoomStyle = computed<Record<string, string | number> | undefined>(() => {
+  if (pageActive.value) return undefined
+  const style: Record<string, string | number> = {}
+  if (props.contentZoom !== 1) style.zoom = props.contentZoom
+  // Der Freiraum sitzt IM gezoomten Feld -- durch die Division bleibt die
+  // freigehaltene Bildschirmhoehe unabhaengig vom Zoomfaktor konstant.
+  if (props.bottomInset) style.paddingBottom = `${props.bottomInset / props.contentZoom}px`
+  return Object.keys(style).length > 0 ? style : undefined
+})
+
+// Im Seiten-Modus scrollt der Hintergrund (.page-backdrop). Denselben Freiraum
+// dort unten reservieren, damit auch das Blatt nicht hinter der Leiste endet.
+const hostStyle = computed<Record<string, string> | undefined>(() =>
+  pageActive.value && props.bottomInset ? { paddingBottom: `${props.bottomInset}px` } : undefined,
 )
 const {
   selectedImageId,
@@ -119,6 +138,7 @@ defineExpose({
   <div
     ref="host"
     :class="pageActive ? 'page-backdrop h-full min-h-0' : 'plain-scroll flex h-full min-h-0 w-full'"
+    :style="hostStyle"
   >
     <div :class="pageActive ? 'page-canvas' : 'flex h-full min-h-0 w-full'" :style="canvasStyle">
       <div :class="pageActive ? 'page-sheet' : 'flex h-full min-h-0 w-full'" :style="sheetStyle">
