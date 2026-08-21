@@ -177,6 +177,10 @@ export const de = {
   },
   focusOverlay: {
     exit: 'Fokus beenden',
+    zoomOut: 'Verkleinern',
+    zoomIn: 'Vergrößern',
+    zoomReset: 'Zurücksetzen',
+    zoomLabel: 'Zoom',
   },
   drop: {
     title: 'Zum Öffnen hier ablegen',
@@ -490,6 +494,10 @@ export const en: Messages = {
   },
   focusOverlay: {
     exit: 'Exit focus',
+    zoomOut: 'Zoom out',
+    zoomIn: 'Zoom in',
+    zoomReset: 'Reset',
+    zoomLabel: 'Zoom',
   },
   drop: {
     title: 'Drop here to open',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import type { SelectionFormat } from '@/types'
 import { usePageView } from '@/composables/usePageView'
@@ -16,6 +16,17 @@ import { useI18n } from '@/i18n'
 // Diese Komponente verdrahtet die Teile und stellt die öffentliche API bereit.
 const store = useEditorStore()
 const { t } = useI18n()
+
+const props = withDefaults(
+  defineProps<{
+    /** Zoomfaktor fuer den Fließtext (nur im Modus ohne Seitenformat, z. B. im
+     *  Fokus). CSS `zoom` vergroessert die Darstellung, ohne das Feld aus dem
+     *  Bearbeitungsfluss zu nehmen -- der Text bleibt also editierbar (anders als
+     *  bei transform: scale). Standard 1 = keine Vergroesserung. */
+    contentZoom?: number
+  }>(),
+  { contentZoom: 1 },
+)
 
 const emit = defineEmits<{
   cursor: [line: number, col: number]
@@ -50,6 +61,13 @@ const find = useEditorFind({
 // Für die Vorlage benötigte Bindungen (Refs/Computed behalten ihre Reaktivität).
 const { host, pageActive, canvasStyle, sheetStyle, textStyle, pageBreaks } = page
 const { editorStyle, onInput, onTab, onPaste, reportCursor, reportSelection } = rich
+
+// Zoom nur ohne Seitenformat -- im Seiten-Modus uebernimmt das Blatt (page-sheet)
+// die Skalierung ueber store.pageZoom. CSS `zoom` vergroessert die Darstellung,
+// ohne das contenteditable aus dem Bearbeitungsfluss zu nehmen (Text editierbar).
+const zoomStyle = computed(() =>
+  !pageActive.value && props.contentZoom !== 1 ? { zoom: props.contentZoom } : undefined,
+)
 const {
   selectedImageId,
   imageStyle,
@@ -117,7 +135,7 @@ defineExpose({
           :class="
             pageActive ? 'relative block w-full' : 'plain-pad min-h-0 w-full flex-1 overflow-auto'
           "
-          :style="[editorStyle, textStyle]"
+          :style="[editorStyle, textStyle, zoomStyle]"
           contenteditable="true"
           role="textbox"
           aria-multiline="true"

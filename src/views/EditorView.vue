@@ -40,6 +40,47 @@ const showMarkdown = ref(false)
 const cursorLine = ref(1)
 const cursorCol = ref(1)
 
+/* ---------- Fokus-Zoom ---------- */
+// Ob eine feste Seitengroesse aktiv ist (A4/A3/...). Dann skaliert das Blatt
+// ueber store.pageZoom; ohne Seitenformat zoomt der Fließtext direkt.
+const pageActive = computed(() => store.settings.pageFormat !== 'none')
+
+// Zoomfaktor fuer den Fließtext im Fokus (nur ohne Seitenformat). Bewusst
+// sitzungslokal, nicht in den Einstellungen -- der Zoom ist eine Lesehilfe fuer
+// den Moment und soll den gespeicherten Editorzustand nicht veraendern.
+const plainFocusZoom = ref(1)
+
+// Gemeinsamer Zoomwert fuer die Fokus-Bedienleiste: im Seiten-Modus der
+// persistente Seiten-Zoom, sonst der sitzungslokale Fließtext-Zoom.
+const focusZoom = computed<number>(() =>
+  pageActive.value ? store.settings.pageZoom : plainFocusZoom.value,
+)
+
+function setFocusZoom(value: number): void {
+  const clamped = Math.min(
+    LIMITS.zoom.max,
+    Math.max(LIMITS.zoom.min, Math.round(value * 100) / 100),
+  )
+  if (pageActive.value) store.updateSettings({ pageZoom: clamped })
+  else plainFocusZoom.value = clamped
+}
+
+function zoomIn(): void {
+  setFocusZoom(focusZoom.value + LIMITS.zoom.step)
+}
+function zoomOut(): void {
+  setFocusZoom(focusZoom.value - LIMITS.zoom.step)
+}
+function resetZoom(): void {
+  setFocusZoom(1)
+}
+
+// An die Editorflaeche gereichter Zoom: nur im Fokus OHNE Seitenformat wirkt der
+// Fließtext-Zoom (im Seiten-Modus macht das Blatt die Skalierung selbst).
+const contentZoom = computed<number>(() =>
+  store.settings.focusMode && !pageActive.value ? plainFocusZoom.value : 1,
+)
+
 // Aktueller Formatzustand der Auswahl -- fuer die Fett/Kursiv-Knoepfe und die
 // Entscheidung, ob Farbe auf die Auswahl oder das ganze Dokument wirkt.
 const selFormat = ref<SelectionFormat>({
@@ -317,6 +358,7 @@ useKeyboardShortcuts({
         <EditorArea
           ref="editorAreaRef"
           class="h-full"
+          :content-zoom="contentZoom"
           @cursor="onCursor"
           @selchange="onSelFormat"
         />
@@ -382,6 +424,79 @@ useKeyboardShortcuts({
       {{ t.focusOverlay.exit }}
       <span class="rounded bg-white/20 px-1.5 py-0.5 text-xs">Esc</span>
     </button>
+
+    <!--
+      Zoom-Bedienleiste im Fokus: unten mittig schwebend. Verkleinern / aktueller
+      Prozentwert / Vergroessern und ein eigener "Zuruecksetzen"-Knopf. Der Zoom
+      vergroessert nur die Darstellung (CSS zoom bzw. Seiten-Zoom) -- der Text
+      bleibt dabei vollstaendig bearbeitbar.
+    -->
+    <div
+      v-if="store.settings.focusMode"
+      class="absolute bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full bg-zinc-800/90 px-2 py-1.5 text-white shadow-lg backdrop-blur"
+    >
+      <button
+        type="button"
+        class="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/15 disabled:opacity-40 disabled:hover:bg-transparent"
+        :title="t.focusOverlay.zoomOut"
+        :aria-label="t.focusOverlay.zoomOut"
+        :disabled="focusZoom <= LIMITS.zoom.min + 0.001"
+        @click="zoomOut"
+      >
+        <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true">
+          <path
+            d="M3 8h10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+      <span
+        class="min-w-[3.25rem] select-none text-center text-sm font-medium tabular-nums"
+        :aria-label="t.focusOverlay.zoomLabel"
+        >{{ Math.round(focusZoom * 100) }} %</span
+      >
+      <button
+        type="button"
+        class="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/15 disabled:opacity-40 disabled:hover:bg-transparent"
+        :title="t.focusOverlay.zoomIn"
+        :aria-label="t.focusOverlay.zoomIn"
+        :disabled="focusZoom >= LIMITS.zoom.max - 0.001"
+        @click="zoomIn"
+      >
+        <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true">
+          <path
+            d="M8 3v10M3 8h10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+      <span class="mx-0.5 h-5 w-px bg-white/20" aria-hidden="true" />
+      <button
+        type="button"
+        class="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium hover:bg-white/15 disabled:opacity-40 disabled:hover:bg-transparent"
+        :title="t.focusOverlay.zoomReset"
+        :disabled="Math.abs(focusZoom - 1) < 0.001"
+        @click="resetZoom"
+      >
+        <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true">
+          <path
+            d="M3.5 8a4.5 4.5 0 106-4.24M3.5 3.5v2.2h2.2"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        {{ t.focusOverlay.zoomReset }}
+      </button>
+    </div>
 
     <!--
       Druck-/PDF-Ausgabe: am Bildschirm ausgeblendet, beim Drucken das einzig
