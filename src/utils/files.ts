@@ -18,8 +18,22 @@ export function isBackupFile(file: File): boolean {
   return /\.json$/i.test(file.name) || file.type === 'application/json'
 }
 
-/** Als Text oeffenbare Datei? (Text-MIME oder bekannte Endung). */
+/** HTML-Datei? (nach MIME-Typ oder Endung). */
+export function isHtmlFile(file: File): boolean {
+  return (
+    file.type === 'text/html' ||
+    file.type === 'application/xhtml+xml' ||
+    /\.(html?|xhtml)$/i.test(file.name)
+  )
+}
+
+/**
+ * Als reiner Text oeffenbare Datei? (Text-MIME oder bekannte Endung).
+ * HTML ist bewusst ausgenommen -- es wird ueber den eigenen HTML-Pfad geoeffnet
+ * (Rumpf extrahieren + bereinigen), nicht als maskierter Quelltext.
+ */
 export function isTextFile(file: File): boolean {
+  if (isHtmlFile(file)) return false
   return file.type.startsWith('text/') || /\.(txt|md|markdown|csv|log|tsv|text)$/i.test(file.name)
 }
 

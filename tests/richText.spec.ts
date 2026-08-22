@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   contentToHtml,
   contentToPlain,
+  htmlDocumentToContent,
   htmlToPlain,
   isHtmlContent,
   normalizeUrl,
@@ -60,6 +61,52 @@ describe('sanitizeHtml', () => {
     const out = sanitizeHtml('<span style="font-size: 40px; color: #00ff00">x</span>')
     expect(out).not.toMatch(/font-size/i)
     expect(out.toLowerCase()).toContain('color')
+  })
+})
+
+describe('htmlDocumentToContent', () => {
+  it('nimmt den <body> und laesst Kopfdaten/CSS weg', () => {
+    const doc = `<!doctype html><html><head><title>Titel</title>
+      <style>body{color:red}</style><meta charset="utf-8"></head>
+      <body><h1>Ueberschrift</h1><p>Ein <b>fetter</b> Absatz.</p></body></html>`
+    const out = htmlDocumentToContent(doc)
+    expect(out).toContain('Ueberschrift')
+    expect(out).toContain('fetter')
+    // Kopfdaten duerfen nicht als Text durchsickern.
+    expect(out).not.toContain('color:red')
+    expect(out).not.toContain('Titel')
+    expect(out).not.toMatch(/<style/i)
+    expect(out).not.toMatch(/<title/i)
+  })
+
+  it('nimmt bei einem eigenen Export nur den Textkoerper (.kodini-doc)', () => {
+    const doc = `<!doctype html><html><head><title>Doc</title></head><body>
+      <main class="kodini-wrap"><article class="kodini-doc"><h2>Kapitel</h2><p>Inhalt</p></article>
+      <img alt="" src="data:image/png;base64,AAAA" style="position:absolute;left:0;top:0" /></main>
+      </body></html>`
+    const out = htmlDocumentToContent(doc)
+    expect(out).toContain('Kapitel')
+    expect(out).toContain('Inhalt')
+    // Bild-Overlay ist nicht Teil des editierbaren Textkoerpers.
+    expect(out).not.toMatch(/<img/i)
+  })
+
+  it('entfernt gefaehrliche Inhalte aus dem Rumpf', () => {
+    const doc = `<html><body><p>Hallo</p><script>alert(1)</script>
+      <a href="javascript:alert(1)">x</a></body></html>`
+    const out = htmlDocumentToContent(doc)
+    expect(out).toContain('Hallo')
+    expect(out).not.toMatch(/script/i)
+    expect(out).not.toMatch(/javascript:/i)
+  })
+
+  it('behaelt erlaubte Formatierung (Links, Listen, Highlight)', () => {
+    const doc = `<html><body><ul><li>Eins</li><li>Zwei</li></ul>
+      <p><a href="https://example.com">Link</a> und <mark>markiert</mark></p></body></html>`
+    const out = htmlDocumentToContent(doc)
+    expect(out).toMatch(/<li>\s*Eins/i)
+    expect(out).toContain('href="https://example.com"')
+    expect(out).toMatch(/<mark/i)
   })
 })
 
