@@ -184,7 +184,7 @@ export const de = {
   },
   drop: {
     title: 'Zum Öffnen hier ablegen',
-    hint: 'Text (.txt/.md), Bild oder Sicherung (.json)',
+    hint: 'Text (.txt/.md/.html), Bild oder Sicherung (.json)',
   },
   markdownPreview: {
     title: 'Markdown-Vorschau',
@@ -501,7 +501,7 @@ export const en: Messages = {
   },
   drop: {
     title: 'Drop here to open',
-    hint: 'Text (.txt/.md), image or backup (.json)',
+    hint: 'Text (.txt/.md/.html), image or backup (.json)',
   },
   markdownPreview: {
     title: 'Markdown preview',

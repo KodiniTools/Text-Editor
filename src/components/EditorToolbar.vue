@@ -12,7 +12,8 @@ import { pageRenderOptions } from '@/utils/pageRenderOptions'
 import { buildHtmlDocument } from '@/utils/exportHtml'
 import { htmlToMarkdown } from '@/utils/htmlToMarkdown'
 import { safeFileName } from '@/utils/exportPdf'
-import { downloadBlob, readFileAsText } from '@/utils/files'
+import { downloadBlob, isHtmlFile, readFileAsText } from '@/utils/files'
+import { htmlDocumentToContent } from '@/utils/richText'
 
 const store = useEditorStore()
 const { t } = useI18n()
@@ -93,10 +94,14 @@ function onFileChosen(e: Event): void {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
+  const html = isHtmlFile(file)
   const reader = new FileReader()
   reader.onload = () => {
     const name = file.name.replace(/\.[^.]+$/, '')
-    store.openDocument(name, String(reader.result ?? ''))
+    const raw = String(reader.result ?? '')
+    // HTML-Dateien ueber den HTML-Pfad oeffnen (Rumpf extrahieren + bereinigen),
+    // damit Kopfdaten/CSS nicht als Text im Editor landen.
+    store.openDocument(name, html ? htmlDocumentToContent(raw) : raw)
     showToast(t.value.toast.opened(name), { key: 'open' })
   }
   reader.readAsText(file)
@@ -361,7 +366,7 @@ defineExpose({ download, copyAll, triggerImport })
     <input
       ref="fileInput"
       type="file"
-      accept=".txt,.md,.markdown,text/*"
+      accept=".txt,.md,.markdown,.html,.htm,text/*"
       class="hidden"
       @change="onFileChosen"
     />
