@@ -142,6 +142,23 @@ function exportHtml(): void {
   showToast(t.value.toast.savedHtml, { key: 'save' })
 }
 
+/**
+ * HTML-Quelltext: speichert den Editor-Inhalt UNVERAENDERT als .html -- also den
+ * Text 1:1, ohne den WYSIWYG-Wrapper (kein <head>, kein Kodini-CSS). Gedacht fuer
+ * HTML-Fragmente/Partials, die als Quelltext geoeffnet und bearbeitet wurden.
+ */
+function exportHtmlSource(): void {
+  const doc = store.activeDoc
+  if (!doc) return
+  downloadBlob(
+    store.activePlain,
+    `${safeFileName(store.activeTitle || 'dokument')}.html`,
+    'text/html;charset=utf-8',
+  )
+  closeDownload()
+  showToast(t.value.toast.savedHtmlSource, { key: 'save' })
+}
+
 function exportPdf(): void {
   closeDownload()
   emit('exportPdf')
@@ -228,8 +245,13 @@ defineExpose({ download, copyAll, triggerImport })
         <button type="button" class="menu-item" @click="download('md')">
           {{ t.toolbar.asMd }}
         </button>
-        <button type="button" class="menu-item" @click="exportHtml">
+        <button type="button" class="menu-item leading-tight" @click="exportHtml">
           {{ t.toolbar.asHtml }}
+          <span class="block text-xs text-zinc-400">{{ t.toolbar.asHtmlHint }}</span>
+        </button>
+        <button type="button" class="menu-item leading-tight" @click="exportHtmlSource">
+          {{ t.toolbar.asHtmlSource }}
+          <span class="block text-xs text-zinc-400">{{ t.toolbar.asHtmlSourceHint }}</span>
         </button>
         <button type="button" class="menu-item leading-tight" @click="exportPdf">
           {{ t.toolbar.asPdf }}
