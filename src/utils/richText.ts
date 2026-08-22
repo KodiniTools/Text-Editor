@@ -184,29 +184,19 @@ function walkPlain(node: Node, ctx: { text: string }): void {
 }
 
 /**
- * Wandelt eine ganze HTML-DATEI in bearbeitbaren Editor-Inhalt um. Anders als
- * `contentToHtml` (das einen bereits vorhandenen Editor-Wert bereinigt) bekommt
- * diese Funktion ein komplettes Dokument (`<!doctype><html><head>...<body>...`).
- * Sie schneidet den Rumpf heraus -- bei einem eigenen Export den reinen
- * Textkoerper (`.kodini-doc`), sonst den `<body>` -- und bereinigt ihn auf die
- * erlaubten Auszeichnungen. So landen Kopfdaten wie `<title>`, `<meta>` oder das
- * CSS aus `<style>` NICHT als sichtbarer Text im Editor.
- *
- * Hinweis: Der Editor kennt Bilder nur als frei platzierte Overlays (Seiten-
- * Modus), nicht als Inline-`<img>` im Fliesstext -- eingebettete Bilder gehen
- * beim Oeffnen daher verloren (bleiben aber in der Originaldatei erhalten).
+ * Bereitet eine HTML-DATEI zum Bearbeiten als QUELLTEXT auf. Der Editor ist ein
+ * Rich-Text-Feld; damit das Markup (`<a href=...>`, `<div>` ...) sichtbar und
+ * editierbar bleibt statt gerendert zu werden, wird die Datei wie reiner Text
+ * behandelt: jede Zeile ein `<div>`, Sonderzeichen maskiert. So sieht man den
+ * echten Code und kann ihn Zeile fuer Zeile aendern; `contentToPlain` liefert
+ * spaeter wieder exakt den Quelltext (fuer Statistik, Kopieren, .txt-Export).
  */
-export function htmlDocumentToContent(raw: string): string {
-  if (typeof DOMParser === 'undefined') {
-    // Fallback ohne DOM: grob den <body> ausschneiden, sonst das Ganze.
-    const body = raw.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
-    return sanitizeHtml(body ? body[1]! : raw)
-  }
-  const doc = new DOMParser().parseFromString(raw, 'text/html')
-  // Von diesem Editor exportiert -> nur der Textkoerper (ohne Bild-Overlays).
-  const article = doc.querySelector('.kodini-doc')
-  const root = article ?? doc.body ?? doc.documentElement
-  return sanitizeHtml(root ? root.innerHTML : raw)
+export function htmlFileToSource(raw: string): string {
+  // Umschliessende Leerzeilen der Datei nicht mitschleppen, die Einrueckung der
+  // Zeilen aber 1:1 erhalten (nur \n am Anfang/Ende entfernen, keine Spaces).
+  return plainToHtml(
+    raw.replace(/^﻿/, '').replace(/\r\n/g, '\n').replace(/^\n+/, '').replace(/\n+$/, ''),
+  )
 }
 
 /** Liefert immer bereinigtes HTML -- egal ob der Inhalt HTML oder reiner Text ist. */

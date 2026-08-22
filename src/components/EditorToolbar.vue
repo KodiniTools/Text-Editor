@@ -13,7 +13,7 @@ import { buildHtmlDocument } from '@/utils/exportHtml'
 import { htmlToMarkdown } from '@/utils/htmlToMarkdown'
 import { safeFileName } from '@/utils/exportPdf'
 import { downloadBlob, isHtmlFile, readFileAsText } from '@/utils/files'
-import { htmlDocumentToContent } from '@/utils/richText'
+import { htmlFileToSource } from '@/utils/richText'
 
 const store = useEditorStore()
 const { t } = useI18n()
@@ -99,9 +99,9 @@ function onFileChosen(e: Event): void {
   reader.onload = () => {
     const name = file.name.replace(/\.[^.]+$/, '')
     const raw = String(reader.result ?? '')
-    // HTML-Dateien ueber den HTML-Pfad oeffnen (Rumpf extrahieren + bereinigen),
-    // damit Kopfdaten/CSS nicht als Text im Editor landen.
-    store.openDocument(name, html ? htmlDocumentToContent(raw) : raw)
+    // HTML als QUELLTEXT oeffnen: das Markup bleibt als Text sichtbar und
+    // editierbar (kein Rendern). Andere Dateien wie bisher.
+    store.openDocument(name, html ? htmlFileToSource(raw) : raw)
     showToast(t.value.toast.opened(name), { key: 'open' })
   }
   reader.readAsText(file)

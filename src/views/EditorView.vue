@@ -8,7 +8,7 @@ import { pageSizeCss } from '@/utils/pageFormats'
 import { pageRenderOptions } from '@/utils/pageRenderOptions'
 import { exportPdf } from '@/utils/exportPdf'
 import { isBackupFile, isHtmlFile, isImageFile, isTextFile, readFileAsText } from '@/utils/files'
-import { htmlDocumentToContent } from '@/utils/richText'
+import { htmlFileToSource } from '@/utils/richText'
 import { loadFont, findFont } from '@/config/fonts'
 import { useToast } from '@/composables/useToast'
 import type { EditorApi, SelectionFormat } from '@/types'
@@ -185,8 +185,9 @@ async function handleDroppedFiles(files: File[]): Promise<void> {
         showToast(t.value.toast.backupInvalid, { type: 'error' })
       }
     } else if (isHtmlFile(file)) {
+      // HTML als QUELLTEXT oeffnen -- das Markup bleibt sichtbar/editierbar.
       const name = file.name.replace(/\.[^.]+$/, '')
-      store.openDocument(name, htmlDocumentToContent(await readFileAsText(file)))
+      store.openDocument(name, htmlFileToSource(await readFileAsText(file)))
       showToast(t.value.toast.opened(name), { key: 'open' })
     } else if (isTextFile(file)) {
       const name = file.name.replace(/\.[^.]+$/, '')
