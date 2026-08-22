@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   contentToHtml,
   contentToPlain,
-  htmlDocumentToContent,
+  htmlFileToSource,
   htmlToPlain,
   isHtmlContent,
   normalizeUrl,
@@ -64,49 +64,29 @@ describe('sanitizeHtml', () => {
   })
 })
 
-describe('htmlDocumentToContent', () => {
-  it('nimmt den <body> und laesst Kopfdaten/CSS weg', () => {
-    const doc = `<!doctype html><html><head><title>Titel</title>
-      <style>body{color:red}</style><meta charset="utf-8"></head>
-      <body><h1>Ueberschrift</h1><p>Ein <b>fetter</b> Absatz.</p></body></html>`
-    const out = htmlDocumentToContent(doc)
-    expect(out).toContain('Ueberschrift')
-    expect(out).toContain('fetter')
-    // Kopfdaten duerfen nicht als Text durchsickern.
-    expect(out).not.toContain('color:red')
-    expect(out).not.toContain('Titel')
-    expect(out).not.toMatch(/<style/i)
-    expect(out).not.toMatch(/<title/i)
+describe('htmlFileToSource', () => {
+  it('oeffnet HTML als Quelltext -- das Markup bleibt als Text sichtbar', () => {
+    const src = '<a href="https://example.com">MP3 Konverter</a>'
+    const out = htmlFileToSource(src)
+    // Die spitzen Klammern sind maskiert -> werden NICHT als Link gerendert,
+    // sondern als sichtbarer Code angezeigt.
+    expect(out).toContain('&lt;a href=')
+    expect(out).not.toMatch(/<a\s/i)
+    // Zurueckgewandelt kommt exakt der Quelltext wieder heraus.
+    expect(contentToPlain(out)).toBe(src)
   })
 
-  it('nimmt bei einem eigenen Export nur den Textkoerper (.kodini-doc)', () => {
-    const doc = `<!doctype html><html><head><title>Doc</title></head><body>
-      <main class="kodini-wrap"><article class="kodini-doc"><h2>Kapitel</h2><p>Inhalt</p></article>
-      <img alt="" src="data:image/png;base64,AAAA" style="position:absolute;left:0;top:0" /></main>
-      </body></html>`
-    const out = htmlDocumentToContent(doc)
-    expect(out).toContain('Kapitel')
-    expect(out).toContain('Inhalt')
-    // Bild-Overlay ist nicht Teil des editierbaren Textkoerpers.
-    expect(out).not.toMatch(/<img/i)
+  it('behaelt mehrere Zeilen samt Einrueckung', () => {
+    const src = '<ul>\n  <li>Eins</li>\n  <li>Zwei</li>\n</ul>'
+    const out = htmlFileToSource(src)
+    expect(contentToPlain(out)).toBe(src)
+    // Jede Zeile wird ein eigener Block.
+    expect(out.match(/<div>/g)?.length).toBe(4)
   })
 
-  it('entfernt gefaehrliche Inhalte aus dem Rumpf', () => {
-    const doc = `<html><body><p>Hallo</p><script>alert(1)</script>
-      <a href="javascript:alert(1)">x</a></body></html>`
-    const out = htmlDocumentToContent(doc)
-    expect(out).toContain('Hallo')
-    expect(out).not.toMatch(/script/i)
-    expect(out).not.toMatch(/javascript:/i)
-  })
-
-  it('behaelt erlaubte Formatierung (Links, Listen, Highlight)', () => {
-    const doc = `<html><body><ul><li>Eins</li><li>Zwei</li></ul>
-      <p><a href="https://example.com">Link</a> und <mark>markiert</mark></p></body></html>`
-    const out = htmlDocumentToContent(doc)
-    expect(out).toMatch(/<li>\s*Eins/i)
-    expect(out).toContain('href="https://example.com"')
-    expect(out).toMatch(/<mark/i)
+  it('entfernt umschliessende Leerzeilen und BOM, nicht die inneren', () => {
+    const out = htmlFileToSource('\n\n<p>Hallo</p>\n\n')
+    expect(contentToPlain(out)).toBe('<p>Hallo</p>')
   })
 })
 
