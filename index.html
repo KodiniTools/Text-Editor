@@ -147,8 +147,13 @@
     <!--INJECT:consent-mode-->
   </head>
   <body>
-    <!-- Globale Navigation (vendored aus dem KodiniTools-Partial) -->
-    <!--INJECT:nav-->
+    <!--
+      Globale Navigation. Der eingebackene Partial (vendored) dient als sofort
+      sichtbarer Offline-Fallback; zur Laufzeit ersetzt loadGlobalNav() den Inhalt
+      dieses Slots durch die AKTUELLE /partials/nav.html vom Live-Server, damit die
+      Navigation immer mit der Website uebereinstimmt (siehe src/utils/globalNav.ts).
+    -->
+    <div id="global-nav-slot"><!--INJECT:nav--></div>
 
     <!--
       Statisches Skelett (Prerender): sofort sichtbarer, crawlbarer Inhalt und
