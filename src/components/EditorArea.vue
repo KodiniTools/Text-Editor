@@ -110,6 +110,7 @@ defineExpose({
   focusEditor: rich.focusEditor,
   applyTransform: rich.applyTransform,
   insertText: rich.insertText,
+  insertHtml: rich.insertHtml,
   findNext: find.findNext,
   findPrev: find.findPrev,
   replaceCurrent: find.replaceCurrent,

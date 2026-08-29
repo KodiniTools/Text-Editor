@@ -266,6 +266,15 @@ export function useRichText({ editable, measure, onCursor, onSelection }: RichTe
     syncFromDom()
   }
 
+  /**
+   * Fuegt (bereinigtes) HTML an der Cursorposition ein -- eine eigene Undo-Stufe.
+   * Genutzt vom "Einfuegen"-Knopf, damit formatierter Zwischenablage-Inhalt seine
+   * Auszeichnung behaelt (wie beim normalen Einfuegen ueber onPaste).
+   */
+  function insertHtml(html: string): void {
+    runCommand(() => document.execCommand('insertHTML', false, sanitizeHtml(html)))
+  }
+
   function onPaste(e: ClipboardEvent): void {
     e.preventDefault()
     const data = e.clipboardData
@@ -692,6 +701,7 @@ export function useRichText({ editable, measure, onCursor, onSelection }: RichTe
     focusEditor,
     applyTransform,
     insertText,
+    insertHtml,
     toggleBold,
     toggleItalic,
     applyColor,
