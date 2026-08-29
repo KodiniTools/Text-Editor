@@ -34,6 +34,17 @@ export function lineStepPx(fontSizePx: number, lineHeight: number): number {
   return step > 0 ? step : Math.max(1, fontSizePx)
 }
 
+/**
+ * Zeilenhoehe fuer die Seiten-Darstellung (Vorschau/PDF) -- auf ganze Pixel
+ * gerundet. Vorschau und Export nutzen denselben ganzzahligen Schritt fuer
+ * Zeilenhoehe UND Seitenumbruch, damit sich beim Rastern (html2canvas rundet auf
+ * ganze Pixel) keine gebrochenen Zeilenhoehen aufsummieren und der Schnitt nie
+ * mitten in eine Zeile faellt. Mindestens 1 px.
+ */
+export function pageLineStepPx(fontSizePx: number, lineHeight: number): number {
+  return Math.max(1, Math.round(lineStepPx(fontSizePx, lineHeight)))
+}
+
 export interface LinePagination {
   /** Hoehe je Seite, auf ganze Zeilen abgerundet (<= Inhaltshoehe der Seite). */
   pageStepPx: number
@@ -114,7 +125,15 @@ function applyTypography(el: HTMLElement, t: PageTypography): void {
   el.style.fontWeight = t.fontWeight
   el.style.fontStyle = t.fontStyle
   el.style.fontSize = `${t.fontSizePx}px`
-  el.style.lineHeight = String(t.lineHeight)
+  // Zeilenhoehe bewusst als GANZZAHLIGE px (statt unitless), damit jede Zeile
+  // exakt auf demselben Ganzzahl-Raster sitzt: Der PDF-Export rastert die Seiten
+  // per html2canvas, das Zeilenpositionen auf ganze Pixel rundet. Bei einer
+  // gebrochenen Zeilenhoehe (z. B. 16*1.7 = 27.2 px) sammelt sich diese Rundung
+  // ueber viele Zeilen auf, bis der Seitenschnitt mitten in einer Zeile landet --
+  // genau die Ursache abgeschnittener Rand-Zeilen. Ganze px verhindern das und
+  // halten Vorschau (Bildschirm) und Export deckungsgleich.
+  const step = pageLineStepPx(t.fontSizePx, t.lineHeight)
+  el.style.lineHeight = `${step}px`
   el.style.letterSpacing = `${t.letterSpacingPx}px`
   el.style.textAlign = t.textAlign
   el.style.color = t.color
@@ -124,7 +143,7 @@ function applyTypography(el: HTMLElement, t: PageTypography): void {
   // Damit die globalen Ueberschriften-/Listen-Regeln (.editor-rich ...) auch im
   // Export/der Vorschau greifen -- inkl. des Basis-Zeilenschritts fuers Raster.
   el.classList.add('editor-rich')
-  el.style.setProperty('--editor-step', `${lineStepPx(t.fontSizePx, t.lineHeight)}px`)
+  el.style.setProperty('--editor-step', `${step}px`)
 }
 
 /**
@@ -174,9 +193,20 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
   const totalH = Math.max(textH, imagesBottom)
 
   // An Zeilengrenzen umbrechen, damit keine Zeile zwischen zwei Seiten
-  // zerschnitten wird.
-  const stepPx = lineStepPx(opts.typography.fontSizePx, opts.typography.lineHeight)
+  // zerschnitten wird. Ganzzahliger Schritt (wie die gerenderte Zeilenhoehe),
+  // damit Fenster-Hoehe und Versatz ganze Pixel sind und der Umbruch beim Rastern
+  // exakt auf einer Zeilengrenze liegt.
+  const stepPx = pageLineStepPx(opts.typography.fontSizePx, opts.typography.lineHeight)
   const { pageStepPx, count: n } = paginateByLines(totalH, contentH, stepPx)
+
+  // Der Seitenschnitt liegt genau auf einer Zeilengrenze. Genau dort kann beim
+  // Rastern (html2canvas) die Antialiasing-Kante der Randzeile ein Pixel in die
+  // Nachbarseite "lecken". Deshalb den Inhalt in JEDEM Fenster um wenige Pixel
+  // nach oben schieben, sodass der Schnitt mitten in den (leeren) Zeilendurchschuss
+  // faellt statt auf die Glyphenkante. Gleicher Versatz auf allen Seiten -> der
+  // Inhalt bleibt luecken- UND ueberlappungsfrei; getrimmt werden nur die paar
+  // px leerer Durchschuss, keine Glyphen.
+  const SAFE_INSET = 2
 
   // --- Seiten bauen ---
   const root = document.createElement('div')
@@ -210,7 +240,7 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
 
     const inner = document.createElement('div')
     inner.style.width = `${contentW}px`
-    inner.style.marginTop = `${-i * pageStepPx}px`
+    inner.style.marginTop = `${-(i * pageStepPx + SAFE_INSET)}px`
     applyTypography(inner, opts.typography)
     fillHtml(inner, opts.html)
 
@@ -241,7 +271,9 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
       }
       frame.style.position = 'absolute'
       frame.style.left = `${img.x}px`
-      frame.style.top = `${img.y - pageTop}px`
+      // Gleicher Versatz wie der Text (SAFE_INSET), damit Bild und Text an der
+      // Seitengrenze deckungsgleich bleiben.
+      frame.style.top = `${img.y - pageTop - SAFE_INSET}px`
       frame.style.width = `${img.w}px`
       frame.style.height = `${img.h}px`
       windowEl.appendChild(frame)
