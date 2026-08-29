@@ -42,6 +42,30 @@ export function isImageFile(file: File): boolean {
   return file.type.startsWith('image/')
 }
 
+/**
+ * Sucht in einem DataTransfer (Paste-Event oder Drag&Drop) das erste Bild.
+ * Deckt beide Faelle ab: eine aus dem Datei-Manager kopierte/gezogene Bilddatei
+ * (ueber `files`) und ein aus einer App kopiertes Bitmap wie "Bild kopieren"
+ * (ueber `items` mit kind === 'file'). Liefert null, wenn kein Bild dabei ist.
+ *
+ * Hinweis: Die asynchrone Zwischenablage-API (`navigator.clipboard.read`) sieht
+ * aus dem Datei-Explorer kopierte Dateien NICHT -- solche Bilder kommen nur ueber
+ * das Paste-Event (Strg+V) oder Drag&Drop hier an.
+ */
+export function imageFileFromDataTransfer(dt: DataTransfer | null): File | null {
+  if (!dt) return null
+  for (const file of Array.from(dt.files)) {
+    if (isImageFile(file)) return file
+  }
+  for (const item of Array.from(dt.items)) {
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      const file = item.getAsFile()
+      if (file) return file
+    }
+  }
+  return null
+}
+
 /** Loest einen Datei-Download im Browser aus (Blob -> temporaerer Link). */
 export function downloadBlob(content: BlobPart, fileName: string, type: string): void {
   const blob = new Blob([content], { type })

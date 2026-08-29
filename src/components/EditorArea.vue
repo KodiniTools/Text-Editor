@@ -6,6 +6,7 @@ import { usePageView } from '@/composables/usePageView'
 import { useRichText } from '@/composables/useRichText'
 import { useEditorImages } from '@/composables/useEditorImages'
 import { useEditorFind } from '@/composables/useEditorFind'
+import { imageFileFromDataTransfer } from '@/utils/files'
 import { useI18n } from '@/i18n'
 
 // Der Editor bündelt vier klar getrennte Belange in eigenen Composables:
@@ -64,7 +65,24 @@ const find = useEditorFind({
 
 // Für die Vorlage benötigte Bindungen (Refs/Computed behalten ihre Reaktivität).
 const { host, pageActive, canvasStyle, sheetStyle, textStyle, pageBreaks } = page
-const { editorStyle, onInput, onTab, onPaste, reportCursor, reportSelection } = rich
+const { editorStyle, onInput, onTab, onPaste: richPaste, reportCursor, reportSelection } = rich
+
+/**
+ * Einfuegen (Strg+V): Enthaelt die Zwischenablage ein Bild -- ein aus dem Datei-
+ * Manager kopiertes/gezogenes Bild ODER ein App-Bitmap -- als frei platzierbares
+ * Bild einfuegen. Sonst den normalen Text-/HTML-Pfad von useRichText nutzen. Das
+ * Paste-Event ist der einzige zuverlaessige Weg fuer aus dem Explorer kopierte
+ * Bilddateien (die asynchrone Zwischenablage-API sieht sie nicht).
+ */
+function onPaste(e: ClipboardEvent): void {
+  const file = imageFileFromDataTransfer(e.clipboardData)
+  if (file) {
+    e.preventDefault()
+    void images.insertImageFile(file)
+    return
+  }
+  richPaste(e)
+}
 
 // Zusatz-Style fuer das contenteditable (nur ohne Seitenformat):
 //  - Zoom: CSS `zoom` vergroessert die Darstellung, ohne das Feld aus dem
