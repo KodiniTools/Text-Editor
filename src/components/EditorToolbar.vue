@@ -256,7 +256,11 @@ async function pasteFromClipboard(): Promise<void> {
       editor.insertText(text)
       showToast(t.value.toast.pasted, { key: 'paste' })
     } else {
-      showToast(t.value.toast.pasteEmpty, { type: 'info', key: 'paste' })
+      // Kein Text und kein lesbares Bild. Haeufigster Fall: eine im Datei-
+      // Explorer kopierte Bilddatei -- die sieht der Knopf (asynchrone
+      // Zwischenablage-API) NICHT. Der Nutzer bekommt den Weg gezeigt, der
+      // funktioniert: Strg+V direkt im Text oder die Datei hineinziehen.
+      showToast(t.value.toast.pasteImageHint, { type: 'info', key: 'paste' })
     }
   } catch {
     showToast(t.value.toast.pasteFailed, { type: 'error', key: 'paste' })
