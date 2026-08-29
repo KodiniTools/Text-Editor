@@ -38,6 +38,8 @@ export interface EditorApi {
   focusEditor: () => void
   applyTransform: (fn: Transform) => void
   insertText: (text: string) => void
+  /** Fuegt bereinigtes HTML an der Cursorposition ein (formatiertes Einfuegen). */
+  insertHtml: (html: string) => void
   findNext: (query: string, opts: FindOptions) => boolean
   findPrev: (query: string, opts: FindOptions) => boolean
   replaceCurrent: (query: string, replacement: string, opts: FindOptions) => boolean

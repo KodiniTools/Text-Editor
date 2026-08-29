@@ -205,6 +205,64 @@ async function copyAll(): Promise<void> {
   }
 }
 
+/**
+ * Fuegt den Inhalt der Zwischenablage an der Cursorposition ein: ein Bild als
+ * frei platzierbares Bild, formatierten Text (HTML) mit Auszeichnung, sonst
+ * reinen Text. Ein bewusster Knopf ist vor allem auf Touch-Geraeten hilfreich,
+ * wo Strg+V fehlt. Die Zwischenablage-API ist erlaubnispflichtig und nur im
+ * sicheren Kontext (https) verfuegbar -- schlaegt sie fehl, kommt ein Hinweis.
+ */
+async function pasteFromClipboard(): Promise<void> {
+  const editor = props.editor
+  if (!editor) return
+  editor.focusEditor()
+  // 1) Reichhaltige Zwischenablage (Bild/HTML) -- getType greift auf die echten
+  //    Datenformate zu.
+  try {
+    if (navigator.clipboard?.read) {
+      const items = await navigator.clipboard.read()
+      for (const item of items) {
+        const imageType = item.types.find((ty) => ty.startsWith('image/'))
+        if (imageType) {
+          const blob = await item.getType(imageType)
+          const ext = imageType.split('/')[1] || 'png'
+          const file = new File([blob], `bild.${ext}`, { type: imageType })
+          const ok = await editor.insertImageFile(file)
+          showToast(ok ? t.value.toolbar.imageToast : t.value.toast.pasteFailed, {
+            type: ok ? 'success' : 'error',
+            key: 'paste',
+          })
+          return
+        }
+      }
+      for (const item of items) {
+        if (item.types.includes('text/html')) {
+          const html = await (await item.getType('text/html')).text()
+          if (html.trim()) {
+            editor.insertHtml(html)
+            showToast(t.value.toast.pasted, { key: 'paste' })
+            return
+          }
+        }
+      }
+    }
+  } catch {
+    /* read() nicht erlaubt/unterstuetzt -> Text-Fallback unten */
+  }
+  // 2) Reiner Text (breit unterstuetzt, auch wo read() fehlt).
+  try {
+    const text = await navigator.clipboard.readText()
+    if (text) {
+      editor.insertText(text)
+      showToast(t.value.toast.pasted, { key: 'paste' })
+    } else {
+      showToast(t.value.toast.pasteEmpty, { type: 'info', key: 'paste' })
+    }
+  } catch {
+    showToast(t.value.toast.pasteFailed, { type: 'error', key: 'paste' })
+  }
+}
+
 defineExpose({ download, copyAll, triggerImport })
 </script>
 
@@ -285,6 +343,16 @@ defineExpose({ download, copyAll, triggerImport })
 
     <button type="button" class="tb-btn" :title="t.toolbar.copyTitle" @click="copyAll">
       {{ t.toolbar.copy }}
+    </button>
+
+    <button
+      type="button"
+      class="tb-btn"
+      :title="t.toolbar.pasteTitle"
+      @mousedown.prevent
+      @click="pasteFromClipboard"
+    >
+      {{ t.toolbar.paste }}
     </button>
 
     <button
