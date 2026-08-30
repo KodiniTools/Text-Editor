@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { PX_PER_MM, lineStepPx, mmToPx, pageCount, paginateByLines } from '@/utils/renderPages'
+import {
+  PX_PER_MM,
+  lineStepPx,
+  mmToPx,
+  pageCount,
+  pageLineStepPx,
+  paginateByLines,
+} from '@/utils/renderPages'
 import { safeFileName } from '@/utils/exportPdf'
 
 describe('renderPages Masse', () => {
@@ -37,6 +44,20 @@ describe('lineStepPx', () => {
   it('faengt unsinnige Werte ab', () => {
     expect(lineStepPx(16, 0)).toBe(16)
     expect(lineStepPx(0, 1.7)).toBe(1)
+  })
+})
+
+describe('pageLineStepPx', () => {
+  it('rundet den Zeilenschritt auf ganze Pixel (kein gebrochenes Raster im PDF)', () => {
+    // 16*1.7 = 27.2 -> 27; ganze px verhindern Rundungsdrift beim html2canvas-Raster.
+    expect(pageLineStepPx(16, 1.7)).toBe(27)
+    expect(pageLineStepPx(20, 1.5)).toBe(30)
+    expect(pageLineStepPx(15, 1.7)).toBe(26) // 25.5 -> 26
+  })
+
+  it('bleibt mindestens 1 px', () => {
+    expect(pageLineStepPx(0, 1.7)).toBe(1)
+    expect(pageLineStepPx(16, 0)).toBe(16)
   })
 })
 
