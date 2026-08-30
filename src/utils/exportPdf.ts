@@ -5,7 +5,13 @@
  * eigene Schriften installiert sind.
  */
 
-import { buildPages, type PageRenderOptions } from './renderPages'
+import {
+  buildPages,
+  DEFAULT_MARGIN_MM,
+  mmToPx,
+  pageLineStepPx,
+  type PageRenderOptions,
+} from './renderPages'
 
 export interface PdfExportOptions extends PageRenderOptions {
   /** Dateiname ohne Endung. */
@@ -36,7 +42,26 @@ export async function exportPdf(opts: PdfExportOptions): Promise<number> {
     import('html2canvas'),
   ])
 
-  const { root, pages, widthPx, heightPx } = buildPages(opts)
+  // html2canvas zeichnet die Unterlaengen (g, j, p, ...) der letzten Zeile ein
+  // paar Pixel unter die Zeilengrenze. Ohne Gegenmassnahme entstehen dadurch am
+  // Seitenschnitt zwei Artefakte: unten leicht abgeschnittene Unterlaengen und
+  // oben ein schmales Leck derselben Zeile. Beide werden OHNE Inhaltsverschiebung
+  // behoben, sodass die Zeilenpositionen exakt mit Editor/Vorschau/HTML
+  // uebereinstimmen:
+  //  - Unterer Zuschlag (bleed): das Fenster jeder Zwischenseite zeigt die
+  //    Unterlaengen vollstaendig, ohne die naechste Zeile anzuschneiden.
+  //  - Weisse Blende (mask): der Kopf-Durchschuss der Folgeseite wird NACH dem
+  //    Rastern uebermalt (zuverlaessiger als ein DOM-Overlay, das html2canvas
+  //    beim Stapeln ignoriert).
+  const step = pageLineStepPx(opts.typography.fontSizePx, opts.typography.lineHeight)
+  const leadingHalf = Math.max(0, Math.floor((step - opts.typography.fontSizePx) / 2))
+  const bleedPx = Math.min(5, leadingHalf)
+  const maskPx = Math.min(5, leadingHalf)
+
+  const { root, pages, widthPx, heightPx } = buildPages(opts, bleedPx)
+  const marginMm = opts.marginMm ?? DEFAULT_MARGIN_MM
+  const marginPx = Math.round(mmToPx(marginMm))
+  const contentW = widthPx - 2 * marginPx
 
   // Ausserhalb des sichtbaren Bereichs einhaengen, sonst rendert html2canvas
   // nichts. Volle Groesse (kein Herunterskalieren) -> maximale Schaerfe.
@@ -56,7 +81,7 @@ export async function exportPdf(opts: PdfExportOptions): Promise<number> {
     })
 
     for (let i = 0; i < pages.length; i++) {
-      const canvas = await html2canvas(pages[i]!, {
+      const raster = await html2canvas(pages[i]!, {
         scale,
         backgroundColor: '#ffffff',
         width: widthPx,
@@ -66,8 +91,27 @@ export async function exportPdf(opts: PdfExportOptions): Promise<number> {
         useCORS: true,
         logging: false,
       })
-      // PNG haelt Textkanten scharf (JPEG wuerde sie verwaschen).
-      const img = canvas.toDataURL('image/png')
+      // Ab Seite 2 das Rasterleck der Vorseite (Unterlaengen im Kopf-Durchschuss)
+      // uebermalen. Bewusst ueber eine EIGENE Canvas: ein direkt auf die
+      // html2canvas-Canvas gemaltes Rechteck taucht in deren toDataURL nicht auf.
+      let img: string
+      if (i > 0 && maskPx > 0) {
+        const canvas = document.createElement('canvas')
+        canvas.width = raster.width
+        canvas.height = raster.height
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(raster, 0, 0)
+          ctx.fillStyle = '#ffffff'
+          ctx.fillRect(marginPx * scale, marginPx * scale, contentW * scale, maskPx * scale)
+          img = canvas.toDataURL('image/png')
+        } else {
+          img = raster.toDataURL('image/png')
+        }
+      } else {
+        // PNG haelt Textkanten scharf (JPEG wuerde sie verwaschen).
+        img = raster.toDataURL('image/png')
+      }
       if (i > 0) {
         pdf.addPage(
           [opts.widthMm, opts.heightMm],

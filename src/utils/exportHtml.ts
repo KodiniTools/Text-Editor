@@ -8,7 +8,7 @@
  */
 
 import type { PageRenderOptions } from './renderPages'
-import { DEFAULT_MARGIN_MM, mmToPx } from './renderPages'
+import { DEFAULT_MARGIN_MM, mmToPx, pageLineStepPx } from './renderPages'
 
 export interface HtmlDocOptions extends PageRenderOptions {
   /** Dokumenttitel (fuer <title>). */
@@ -41,7 +41,8 @@ export function buildHtmlDocument(opts: HtmlDocOptions): string {
     `font-weight:${t.fontWeight}`,
     `font-style:${t.fontStyle}`,
     `font-size:${t.fontSizePx}px`,
-    `line-height:${t.lineHeight}`,
+    // Ganzzahlige Zeilenhoehe (wie Editor/Vorschau/PDF) -> deckungsgleiches Raster.
+    `line-height:${pageLineStepPx(t.fontSizePx, t.lineHeight)}px`,
     `letter-spacing:${t.letterSpacingPx}px`,
     `text-align:${t.textAlign}`,
     `color:${t.color}`,

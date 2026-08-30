@@ -1,7 +1,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'
 import { useEditorStore } from '@/stores/editor'
 import { pageDimensions } from '@/utils/pageFormats'
-import { DEFAULT_MARGIN_MM, mmToPx, lineStepPx, paginateByLines } from '@/utils/renderPages'
+import { DEFAULT_MARGIN_MM, mmToPx, pageLineStepPx, paginateByLines } from '@/utils/renderPages'
 
 /** Kennzahlen der aktuellen Seite (in px), abgeleitet vom Papierformat. */
 export interface PageMetrics {
@@ -74,7 +74,9 @@ export function usePageView(editable: Ref<HTMLElement | null>) {
   const pageBreaks = computed<number[]>(() => {
     const m = metrics.value
     if (!m || !pageActive.value) return []
-    const step = lineStepPx(store.settings.fontSize, store.settings.lineHeight)
+    // Gleicher ganzzahliger Schritt wie Vorschau/PDF -> die Umbruch-Fuehrungslinien
+    // im Editor liegen exakt dort, wo auch der Export umbricht.
+    const step = pageLineStepPx(store.settings.fontSize, store.settings.lineHeight)
     const { pageStepPx, count } = paginateByLines(
       Math.max(m.contentH, contentHeight.value),
       m.contentH,
