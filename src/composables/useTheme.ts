@@ -1,6 +1,7 @@
 import { watch } from 'vue'
 import type { EditorSettings } from '@/stores/editor'
 import { findFont, fontList, loadFont } from '@/config/fonts'
+import { pageLineStepPx } from '@/utils/renderPages'
 
 /** Gemeinsamer Theme-Schluessel mit der globalen Navigation. */
 const THEME_KEY = 'theme'
@@ -76,7 +77,14 @@ export function useTheme(settings: EditorSettings) {
     root.style.setProperty('--editor-weight', font.weight ?? '400')
     root.style.setProperty('--editor-style', font.style ?? 'normal')
     root.style.setProperty('--editor-size', `${settings.fontSize}px`)
-    root.style.setProperty('--editor-line-height', String(settings.lineHeight))
+    // Zeilenhoehe als GANZZAHLIGE px -- exakt derselbe Schritt wie Vorschau/PDF
+    // (pageLineStepPx). So sitzen die Zeilen im Editor auf demselben Raster wie in
+    // der Ausgabe: Editor, Vorschau und Export sind pixelgenau deckungsgleich,
+    // unabhaengig vom Papierformat. `--editor-step` (Ueberschriften/Listen/Zitate)
+    // nutzt denselben Wert.
+    const step = pageLineStepPx(settings.fontSize, settings.lineHeight)
+    root.style.setProperty('--editor-line-height', `${step}px`)
+    root.style.setProperty('--editor-step', `${step}px`)
     root.style.setProperty('--editor-letter-spacing', `${settings.letterSpacing}px`)
     root.style.setProperty('--editor-align', settings.textAlign)
     // Leere Farbe -> die Variable wird entfernt, dann greift der Theme-Wert.

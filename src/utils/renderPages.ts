@@ -166,7 +166,16 @@ function fillHtml(el: HTMLElement, html: string): void {
  * entfernt. Der Aufrufer haengt `root` dort ein, wo er es braucht (Vorschau
  * sichtbar, Export ausserhalb des Bildschirms).
  */
-export function buildPages(opts: PageRenderOptions): RenderedPages {
+/**
+ * @param bottomBleedPx Nur fuer den PDF-Export: verlaengert jedes Seitenfenster
+ *   um wenige Pixel nach UNTEN. html2canvas zeichnet die Unterlaengen (g, j, p,
+ *   ...) der letzten Zeile ein paar Pixel unter die Zeilengrenze; der Zusatz laesst
+ *   sie vollstaendig sehen, OHNE die naechste Zeile anzuschneiden (dort steht nur
+ *   der leere Durchschuss). Der Inhalt wird NICHT verschoben -- die Zeilenpositionen
+ *   bleiben identisch mit Editor/Vorschau. Am Bildschirm (Vorschau) ist das nicht
+ *   noetig -> Standard 0.
+ */
+export function buildPages(opts: PageRenderOptions, bottomBleedPx = 0): RenderedPages {
   const marginMm = opts.marginMm ?? DEFAULT_MARGIN_MM
   const widthPx = Math.round(mmToPx(opts.widthMm))
   const heightPx = Math.round(mmToPx(opts.heightMm))
@@ -199,15 +208,6 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
   const stepPx = pageLineStepPx(opts.typography.fontSizePx, opts.typography.lineHeight)
   const { pageStepPx, count: n } = paginateByLines(totalH, contentH, stepPx)
 
-  // Der Seitenschnitt liegt genau auf einer Zeilengrenze. Genau dort kann beim
-  // Rastern (html2canvas) die Antialiasing-Kante der Randzeile ein Pixel in die
-  // Nachbarseite "lecken". Deshalb den Inhalt in JEDEM Fenster um wenige Pixel
-  // nach oben schieben, sodass der Schnitt mitten in den (leeren) Zeilendurchschuss
-  // faellt statt auf die Glyphenkante. Gleicher Versatz auf allen Seiten -> der
-  // Inhalt bleibt luecken- UND ueberlappungsfrei; getrimmt werden nur die paar
-  // px leerer Durchschuss, keine Glyphen.
-  const SAFE_INSET = 2
-
   // --- Seiten bauen ---
   const root = document.createElement('div')
   root.style.display = 'flex'
@@ -234,13 +234,18 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
     windowEl.style.position = 'absolute'
     windowEl.style.left = `${marginPx}px`
     windowEl.style.top = `${marginPx}px`
+    // Sicht-Hoehe des Fensters. Zwischenseiten bekommen einen kleinen unteren
+    // Zuschlag (Unterlaengen der letzten Zeile, siehe bottomBleedPx); die letzte
+    // Seite nicht (dort folgt nichts mehr).
+    const windowH = Math.min(contentH, pageStepPx)
+    const bleed = i < n - 1 ? bottomBleedPx : 0
     windowEl.style.width = `${contentW}px`
-    windowEl.style.height = `${Math.min(contentH, pageStepPx)}px`
+    windowEl.style.height = `${windowH + bleed}px`
     windowEl.style.overflow = 'hidden'
 
     const inner = document.createElement('div')
     inner.style.width = `${contentW}px`
-    inner.style.marginTop = `${-(i * pageStepPx + SAFE_INSET)}px`
+    inner.style.marginTop = `${-i * pageStepPx}px`
     applyTypography(inner, opts.typography)
     fillHtml(inner, opts.html)
 
@@ -249,7 +254,6 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
     // Bilder dieser Seite (content-relativ; gleicher Versatz wie der Text). Nur
     // die, die das Fenster dieser Seite schneiden. Ueberstehende werden vom
     // Fenster (overflow: hidden) beschnitten -- wie ein Bild am Seitenrand.
-    const windowH = Math.min(contentH, pageStepPx)
     const pageTop = i * pageStepPx
     for (const img of images) {
       if (img.y + img.h <= pageTop || img.y >= pageTop + windowH) continue
@@ -271,9 +275,7 @@ export function buildPages(opts: PageRenderOptions): RenderedPages {
       }
       frame.style.position = 'absolute'
       frame.style.left = `${img.x}px`
-      // Gleicher Versatz wie der Text (SAFE_INSET), damit Bild und Text an der
-      // Seitengrenze deckungsgleich bleiben.
-      frame.style.top = `${img.y - pageTop - SAFE_INSET}px`
+      frame.style.top = `${img.y - pageTop}px`
       frame.style.width = `${img.w}px`
       frame.style.height = `${img.h}px`
       windowEl.appendChild(frame)
