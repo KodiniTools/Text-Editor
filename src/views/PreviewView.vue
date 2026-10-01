@@ -109,6 +109,6 @@ function printDocument(): void {
   @apply rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800;
 }
 .pv-btn-primary {
-  @apply border-accent bg-accent text-white hover:bg-accent/90 dark:text-white;
+  @apply border-accent bg-accent text-accent-fg hover:bg-accent/90;
 }
 </style>

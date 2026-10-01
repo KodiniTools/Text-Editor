@@ -696,7 +696,7 @@ defineExpose({ openLinkEditor })
         <span v-else />
         <button
           type="button"
-          class="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-white hover:opacity-90"
+          class="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-fg hover:opacity-90"
           @click="applyLink"
         >
           {{ t.format.linkApply }}

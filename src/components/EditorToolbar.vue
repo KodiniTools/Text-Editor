@@ -457,6 +457,10 @@ defineExpose({ download, copyAll, triggerImport })
       </svg>
     </button>
 
+    <RouterLink :to="{ name: 'landing' }" class="tb-btn tb-start" :title="t.toolbar.startTitle">
+      {{ t.toolbar.start }}
+    </RouterLink>
+
     <input
       ref="fileInput"
       type="file"
@@ -484,6 +488,9 @@ defineExpose({ download, copyAll, triggerImport })
 <style scoped>
 .tb-btn {
   @apply rounded-md px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-zinc-200 dark:hover:bg-zinc-800;
+}
+.tb-start {
+  @apply border border-accent/40 font-semibold text-accent hover:bg-accent-soft dark:text-accent dark:hover:bg-zinc-800;
 }
 .menu-item {
   @apply block w-full rounded-md px-2 py-1.5 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-700;

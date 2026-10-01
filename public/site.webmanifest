@@ -8,8 +8,8 @@
   "scope": "/texteditor/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#fafafa",
-  "theme_color": "#fafafa",
+  "background_color": "#f5f4d6",
+  "theme_color": "#f5f4d6",
   "categories": ["productivity", "utilities"],
   "icons": [
     {
