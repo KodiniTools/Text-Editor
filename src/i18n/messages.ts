@@ -9,6 +9,22 @@
  * Lesezeit), stehen kleine Funktionen.
  */
 
+/** Abschnitt der Funktions-/Blogseite (Aufbau wie Visualizer-BlogPage). */
+export interface BlogSection {
+  id: string
+  icon: string
+  nav: string
+  title: string
+  intro?: string
+  items?: string[]
+  variant?: 'grid' | 'unique'
+  groups?: { title: string; items: string[] }[]
+  tags?: { title: string; items: string[] }
+  categories?: { name: string; items: string[] }[]
+  highlight?: { title: string; items: string[] }
+  shortcuts?: { key: string; action: string }[]
+}
+
 export const de = {
   toolbar: {
     new: 'Neu',
@@ -466,6 +482,254 @@ export const de = {
           url: 'https://kodinitools.com/blog/texteditor-online/',
         },
       ],
+      hero: {
+        badge: 'Funktionen im Überblick',
+        title: 'Alles, was der Kodini Texteditor kann',
+        subtitle:
+          'Schreiben, formatieren, Bilder platzieren, als PDF, Markdown oder HTML exportieren – direkt im Browser, ohne Anmeldung und ohne Upload.',
+      },
+      stats: [
+        { value: '30+', label: 'Textwerkzeuge' },
+        { value: '5', label: 'Seitenformate' },
+        { value: '6', label: 'Exportwege' },
+        { value: '0', label: 'Uploads' },
+      ],
+      overview: [
+        {
+          id: 'formatieren',
+          title: 'Formatieren',
+          desc: 'Schrift, Größe, Farbe, Überschriften und Listen',
+        },
+        {
+          id: 'seiten',
+          title: 'Seiten & Vorschau',
+          desc: 'A3 bis Legal, hoch oder quer, exakte Vorschau',
+        },
+        { id: 'export', title: 'Export & Druck', desc: 'PDF, Markdown, HTML, TXT und Druck' },
+        {
+          id: 'privat',
+          title: 'Lokal & privat',
+          desc: 'Alles bleibt im Browser, auch offline',
+        },
+      ],
+      toc: 'Inhalt',
+      startEditor: 'Editor starten',
+      intro:
+        'Der Kodini Texteditor ist ein schlanker Online-Editor für Notizen, Briefe, Konzepte und Blogbeiträge. Er läuft vollständig im Browser: Du öffnest die Seite und schreibst los – ohne Konto, ohne Installation und ohne dass ein Text deinen Rechner verlässt. Diese Seite zeigt alle Funktionen im Überblick.',
+      sections: <BlogSection[]>[
+        {
+          id: 'schreiben',
+          icon: 'write',
+          nav: 'Schreiben',
+          title: 'Schreiben & Dokumente',
+          intro: 'Mehrere Dokumente gleichzeitig bearbeiten, ohne etwas zu verlieren.',
+          items: [
+            'Mehrere Dokumente als Tabs – anlegen, per Doppelklick umbenennen, schließen',
+            'Automatisches Speichern im Browser nach jeder Änderung',
+            'Rückgängig/Wiederholen für Inhalt und Darstellung auf einer Zeitachse',
+            'Dateien per Drag & Drop oder über „Öffnen“ laden (TXT, Markdown, HTML)',
+            'Fokus-Modus blendet alle Leisten aus',
+            'Statistik: Wörter, Zeichen, Zeilen, Sätze, Absätze und Lesezeit',
+          ],
+          variant: 'grid',
+        },
+        {
+          id: 'formatieren',
+          icon: 'format',
+          nav: 'Formatieren',
+          title: 'Formatieren',
+          intro:
+            'Die Format-Leiste sitzt direkt unter der Werkzeugleiste – jede Änderung ist rückgängig machbar.',
+          groups: [
+            {
+              title: 'Schrift & Darstellung',
+              items: [
+                'Schriftart inklusive aller Schnitte eigener Schriften',
+                'Schriftgröße, Zeilenabstand und Laufweite',
+                'Textfarbe: 8 Schnellfarben und freier Farbwähler',
+                'Ausrichtung links, zentriert, rechts und Blocksatz',
+              ],
+            },
+            {
+              title: 'Absätze & Auszeichnung',
+              items: [
+                'Überschrift 1, 2 und 3',
+                'Aufzählungs- und nummerierte Listen, Zitate',
+                'Fett, kursiv, unterstrichen, durchgestrichen, hervorgehoben',
+                'Links einfügen und Formatierung entfernen',
+              ],
+            },
+          ],
+        },
+        {
+          id: 'seiten',
+          icon: 'page',
+          nav: 'Seiten & Vorschau',
+          title: 'Seitenformate & Vorschau',
+          intro:
+            'Du schreibst auf einem maßstabsgetreuen Blatt – die Vorschau zeigt exakt die spätere Datei.',
+          tags: {
+            title: 'Seitenformate',
+            items: ['A3', 'A4', 'A5', 'Letter', 'Legal', 'Hochformat', 'Querformat'],
+          },
+          items: [
+            'Paginierte Vorschau mit demselben Umbruch wie PDF und Druck',
+            'Zoom für das Blatt und den Fließtext',
+            'Grundlinienraster: Seitenumbrüche zerschneiden keine Überschrift',
+            'Vorschau im eigenen Tab für den großen Bildschirm',
+          ],
+        },
+        {
+          id: 'bilder',
+          icon: 'image',
+          nav: 'Bilder',
+          title: 'Bilder',
+          items: [
+            'Bilder einfügen (PNG, JPEG, GIF, WebP)',
+            'Frei auf dem Blatt verschieben und skalieren',
+            'Text oder Bild direkt aus der Zwischenablage einfügen',
+            'Bilder werden in PDF und Druck mit ausgegeben',
+          ],
+          variant: 'grid',
+        },
+        {
+          id: 'export',
+          icon: 'export',
+          nav: 'Export & Druck',
+          title: 'Export & Druck',
+          intro: 'Mit einem Klick als Datei speichern oder im gewählten Seitenformat drucken.',
+          tags: {
+            title: 'Formate',
+            items: ['PDF', 'TXT', 'Markdown (.md)', 'HTML', 'HTML-Quelltext', 'Sicherung (.json)'],
+          },
+          items: [
+            'PDF-Export übernimmt jede eigene Schrift pixelgenau',
+            'Markdown-Export formatierungstreu statt nur reiner Text',
+            'Drucken im gewählten Papierformat',
+            'Sicherung aller Dokumente exportieren und wiederherstellen',
+          ],
+        },
+        {
+          id: 'markdown',
+          icon: 'markdown',
+          nav: 'Markdown',
+          title: 'Markdown-Live-Vorschau',
+          items: [
+            'Live-Vorschau neben dem Editor (auf schmalen Bildschirmen darunter)',
+            'Erkennt getippte Markdown-Syntax und die Formatierung der Werkzeugleiste',
+            'Markdown mit einem Klick kopieren',
+            'Sicheres Rendern ohne Skriptausführung',
+          ],
+          variant: 'grid',
+        },
+        {
+          id: 'werkzeuge',
+          icon: 'tools',
+          nav: 'Textwerkzeuge',
+          title: 'Über 30 Textwerkzeuge',
+          intro: 'Jedes Werkzeug wirkt auf die Auswahl oder den ganzen Text.',
+          categories: [
+            {
+              name: 'Schreibweise',
+              items: ['GROSS', 'klein', 'Titel', 'Satz', 'camelCase', 'snake_case', 'kebab-case'],
+            },
+            {
+              name: 'Leerzeichen',
+              items: [
+                'Trimmen',
+                'Leerzeilen entfernen',
+                'Mehrfach-Leerzeichen',
+                'Tabs ↔ Leerzeichen',
+              ],
+            },
+            {
+              name: 'Zeilen',
+              items: [
+                'Sortieren A–Z / Z–A',
+                'Numerisch',
+                'Umkehren',
+                'Mischen',
+                'Duplikate entfernen',
+                'Nummerieren',
+              ],
+            },
+            {
+              name: 'Kodierung',
+              items: ['Base64', 'URL', 'HTML', 'Zeichen/Wörter umkehren'],
+            },
+          ],
+          highlight: {
+            title: 'Suchen & Ersetzen',
+            items: [
+              'Groß-/Kleinschreibung beachten',
+              'Nur ganze Wörter',
+              'Reguläre Ausdrücke',
+              'Weiter/Zurück, einzeln oder alle ersetzen, Trefferzahl',
+            ],
+          },
+        },
+        {
+          id: 'tastenkuerzel',
+          icon: 'keyboard',
+          nav: 'Tastenkürzel',
+          title: 'Tastenkürzel',
+          intro:
+            'Unter macOS steht „Strg“ für „Cmd“. Alle Kürzel zeigt die Übersicht im Editor (Strg + /).',
+          shortcuts: [
+            { key: 'Strg + M', action: 'Neues Dokument' },
+            { key: 'Strg + O', action: 'Datei öffnen' },
+            { key: 'Strg + S', action: 'Als .txt speichern' },
+            { key: 'Strg + Umschalt + S', action: 'Als PDF exportieren' },
+            { key: 'Strg + P', action: 'Drucken' },
+            { key: 'Strg + Z', action: 'Rückgängig' },
+            { key: 'Strg + Y', action: 'Wiederholen' },
+            { key: 'Strg + F', action: 'Suchen & Ersetzen' },
+            { key: 'Strg + B', action: 'Fett' },
+            { key: 'Strg + I', action: 'Kursiv' },
+            { key: 'Strg + K', action: 'Link einfügen' },
+            { key: 'Strg + Alt + 1', action: 'Überschrift 1' },
+            { key: 'Strg + Umschalt + 8', action: 'Aufzählungsliste' },
+            { key: 'Strg + Umschalt + F', action: 'Fokus-Modus' },
+          ],
+        },
+        {
+          id: 'privat',
+          icon: 'lock',
+          nav: 'Lokal & privat',
+          title: 'Lokal, privat & offline',
+          items: [
+            'Alle Verarbeitung passiert lokal im Browser',
+            'Keine Anmeldung, kein Upload, keine Server-Kommunikation für Texte',
+            'Nach dem ersten Aufruf auch offline nutzbar',
+            'Für Smartphone und Tablet optimiert',
+            'Oberfläche auf Deutsch und Englisch',
+            'Helles und dunkles Design',
+          ],
+          variant: 'unique',
+        },
+      ],
+      articleSection: {
+        nav: 'Blogbeitrag',
+        title: 'Blogbeitrag',
+      },
+      summary: {
+        title: 'Zusammenfassung',
+        text: 'Der Kodini Texteditor verbindet einen einfachen Einstieg mit den Werkzeugen, die beim Schreiben wirklich zählen.',
+        items: [
+          'Kostenlos und ohne Anmeldung',
+          'Formatieren mit Schrift, Farbe, Überschriften und Listen',
+          'Seitenformate mit exakter Vorschau',
+          'Export als PDF, Markdown, HTML und TXT',
+          'Über 30 Textwerkzeuge und Suchen & Ersetzen',
+          'Texte bleiben lokal auf deinem Gerät',
+        ],
+        cta: 'Probiere es aus – der Editor ist sofort startklar.',
+      },
+      cta: {
+        title: 'Bereit zum Schreiben?',
+        subtitle: 'Öffne den Editor und leg los – kostenlos, ohne Anmeldung, direkt im Browser.',
+        button: 'Editor öffnen',
+      },
     },
   },
 }
@@ -931,6 +1195,251 @@ export const en: Messages = {
           url: 'https://kodinitools.com/blog/texteditor-online/',
         },
       ],
+      hero: {
+        badge: 'Features at a glance',
+        title: 'Everything the Kodini Text Editor can do',
+        subtitle:
+          'Write, format, place images, export as PDF, Markdown or HTML – right in your browser, no sign-up and no upload.',
+      },
+      stats: [
+        { value: '30+', label: 'Text tools' },
+        { value: '5', label: 'Page sizes' },
+        { value: '6', label: 'Export options' },
+        { value: '0', label: 'Uploads' },
+      ],
+      overview: [
+        { id: 'formatieren', title: 'Formatting', desc: 'Font, size, color, headings and lists' },
+        {
+          id: 'seiten',
+          title: 'Pages & preview',
+          desc: 'A3 to Legal, portrait or landscape, exact preview',
+        },
+        { id: 'export', title: 'Export & print', desc: 'PDF, Markdown, HTML, TXT and print' },
+        {
+          id: 'privat',
+          title: 'Local & private',
+          desc: 'Everything stays in the browser, even offline',
+        },
+      ],
+      toc: 'Contents',
+      startEditor: 'Start editor',
+      intro:
+        'The Kodini Text Editor is a lean online editor for notes, letters, drafts and blog posts. It runs entirely in your browser: open the page and start writing – no account, no installation, and no text ever leaves your device. This page gives an overview of all features.',
+      sections: [
+        {
+          id: 'schreiben',
+          icon: 'write',
+          nav: 'Writing',
+          title: 'Writing & documents',
+          intro: 'Work on several documents at once without losing anything.',
+          items: [
+            'Multiple documents as tabs – create, rename by double-click, close',
+            'Automatic saving in the browser after every change',
+            'Undo/redo for content and appearance on a single timeline',
+            'Load files via drag & drop or “Open” (TXT, Markdown, HTML)',
+            'Focus mode hides all toolbars',
+            'Statistics: words, characters, lines, sentences, paragraphs and reading time',
+          ],
+          variant: 'grid',
+        },
+        {
+          id: 'formatieren',
+          icon: 'format',
+          nav: 'Formatting',
+          title: 'Formatting',
+          intro: 'The format bar sits right below the toolbar – every change can be undone.',
+          groups: [
+            {
+              title: 'Font & appearance',
+              items: [
+                'Font family including all weights of custom fonts',
+                'Font size, line spacing and letter spacing',
+                'Text color: 8 quick colors and a free color picker',
+                'Alignment left, centered, right and justified',
+              ],
+            },
+            {
+              title: 'Paragraphs & markup',
+              items: [
+                'Heading 1, 2 and 3',
+                'Bulleted and numbered lists, quotes',
+                'Bold, italic, underline, strikethrough, highlight',
+                'Insert links and clear formatting',
+              ],
+            },
+          ],
+        },
+        {
+          id: 'seiten',
+          icon: 'page',
+          nav: 'Pages & preview',
+          title: 'Page sizes & preview',
+          intro:
+            'You write on a true-to-scale sheet – the preview shows exactly the resulting file.',
+          tags: {
+            title: 'Page sizes',
+            items: ['A3', 'A4', 'A5', 'Letter', 'Legal', 'Portrait', 'Landscape'],
+          },
+          items: [
+            'Paginated preview with the same breaks as PDF and print',
+            'Zoom for the sheet and for flowing text',
+            'Baseline grid: page breaks never cut through a heading',
+            'Preview in its own tab for a large screen',
+          ],
+        },
+        {
+          id: 'bilder',
+          icon: 'image',
+          nav: 'Images',
+          title: 'Images',
+          items: [
+            'Insert images (PNG, JPEG, GIF, WebP)',
+            'Move and resize freely on the sheet',
+            'Paste text or images straight from the clipboard',
+            'Images are included in PDF and print',
+          ],
+          variant: 'grid',
+        },
+        {
+          id: 'export',
+          icon: 'export',
+          nav: 'Export & print',
+          title: 'Export & print',
+          intro: 'Save as a file with one click or print in the chosen page size.',
+          tags: {
+            title: 'Formats',
+            items: ['PDF', 'TXT', 'Markdown (.md)', 'HTML', 'HTML source', 'Backup (.json)'],
+          },
+          items: [
+            'PDF export reproduces every custom font pixel-perfectly',
+            'Markdown export keeps the formatting instead of plain text only',
+            'Print in the chosen paper size',
+            'Export and restore a backup of all documents',
+          ],
+        },
+        {
+          id: 'markdown',
+          icon: 'markdown',
+          nav: 'Markdown',
+          title: 'Markdown live preview',
+          items: [
+            'Live preview next to the editor (below it on narrow screens)',
+            'Understands typed Markdown syntax and toolbar formatting',
+            'Copy Markdown with one click',
+            'Safe rendering without script execution',
+          ],
+          variant: 'grid',
+        },
+        {
+          id: 'werkzeuge',
+          icon: 'tools',
+          nav: 'Text tools',
+          title: '30+ text tools',
+          intro: 'Every tool works on the selection or the whole text.',
+          categories: [
+            {
+              name: 'Case',
+              items: [
+                'UPPER',
+                'lower',
+                'Title',
+                'Sentence',
+                'camelCase',
+                'snake_case',
+                'kebab-case',
+              ],
+            },
+            {
+              name: 'Whitespace',
+              items: ['Trim', 'Remove empty lines', 'Collapse spaces', 'Tabs ↔ spaces'],
+            },
+            {
+              name: 'Lines',
+              items: [
+                'Sort A–Z / Z–A',
+                'Numeric',
+                'Reverse',
+                'Shuffle',
+                'Remove duplicates',
+                'Number lines',
+              ],
+            },
+            {
+              name: 'Encoding',
+              items: ['Base64', 'URL', 'HTML', 'Reverse characters/words'],
+            },
+          ],
+          highlight: {
+            title: 'Find & replace',
+            items: [
+              'Match case',
+              'Whole words only',
+              'Regular expressions',
+              'Next/previous, replace one or all, match count',
+            ],
+          },
+        },
+        {
+          id: 'tastenkuerzel',
+          icon: 'keyboard',
+          nav: 'Shortcuts',
+          title: 'Keyboard shortcuts',
+          intro: 'On macOS “Ctrl” means “Cmd”. The editor shows all shortcuts via Ctrl + /.',
+          shortcuts: [
+            { key: 'Ctrl + M', action: 'New document' },
+            { key: 'Ctrl + O', action: 'Open file' },
+            { key: 'Ctrl + S', action: 'Save as .txt' },
+            { key: 'Ctrl + Shift + S', action: 'Export as PDF' },
+            { key: 'Ctrl + P', action: 'Print' },
+            { key: 'Ctrl + Z', action: 'Undo' },
+            { key: 'Ctrl + Y', action: 'Redo' },
+            { key: 'Ctrl + F', action: 'Find & replace' },
+            { key: 'Ctrl + B', action: 'Bold' },
+            { key: 'Ctrl + I', action: 'Italic' },
+            { key: 'Ctrl + K', action: 'Insert link' },
+            { key: 'Ctrl + Alt + 1', action: 'Heading 1' },
+            { key: 'Ctrl + Shift + 8', action: 'Bulleted list' },
+            { key: 'Ctrl + Shift + F', action: 'Focus mode' },
+          ],
+        },
+        {
+          id: 'privat',
+          icon: 'lock',
+          nav: 'Local & private',
+          title: 'Local, private & offline',
+          items: [
+            'All processing happens locally in the browser',
+            'No sign-up, no upload, no server communication for your texts',
+            'Works offline after the first visit',
+            'Optimized for smartphones and tablets',
+            'Interface in German and English',
+            'Light and dark design',
+          ],
+          variant: 'unique',
+        },
+      ],
+      articleSection: {
+        nav: 'Blog post',
+        title: 'Blog post',
+      },
+      summary: {
+        title: 'Summary',
+        text: 'The Kodini Text Editor combines an easy start with the tools that really matter when writing.',
+        items: [
+          'Free and without sign-up',
+          'Formatting with fonts, colors, headings and lists',
+          'Page sizes with an exact preview',
+          'Export as PDF, Markdown, HTML and TXT',
+          '30+ text tools plus find & replace',
+          'Texts stay local on your device',
+        ],
+        cta: 'Give it a try – the editor is ready to go.',
+      },
+      cta: {
+        title: 'Ready to write?',
+        subtitle: 'Open the editor and get started – free, no sign-up, right in your browser.',
+        button: 'Open editor',
+      },
     },
   },
 }
