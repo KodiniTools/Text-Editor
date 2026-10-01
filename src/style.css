@@ -52,6 +52,19 @@ body {
   flex-direction: column;
 }
 
+/*
+ * Landing-/Blog-Seiten (Klasse vom Router gesetzt): hier scrollt die Seite als
+ * Ganzes. #app waechst mit dem Inhalt, der Footer folgt darunter.
+ */
+html.ktx-scroll,
+html.ktx-scroll body {
+  height: auto;
+  min-height: 100%;
+}
+html.ktx-scroll #app {
+  flex: 1 0 auto;
+}
+
 /* Der Footer soll nicht schrumpfen; die Navigation nimmt ihre Eigenhoehe. */
 .site-footer {
   flex: 0 0 auto;

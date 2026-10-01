@@ -4,7 +4,7 @@
   "description": "Kostenloser Online-Texteditor: schreiben, formatieren, als PDF speichern oder drucken – direkt im Browser, ohne Anmeldung.",
   "lang": "de",
   "id": "/texteditor/",
-  "start_url": "/texteditor/",
+  "start_url": "/texteditor/app",
   "scope": "/texteditor/",
   "display": "standalone",
   "orientation": "any",

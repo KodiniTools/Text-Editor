@@ -329,6 +329,142 @@ export const de = {
   doc: {
     untitled: 'Unbenannt',
   },
+  landing: {
+    meta: {
+      start: {
+        title: 'Kodini Texteditor – kostenloser Online-Texteditor ohne Anmeldung',
+        description:
+          'Kostenloser Online-Texteditor: schreiben, formatieren, Bilder einfügen, als PDF speichern oder drucken – im Browser, ohne Anmeldung. Texte bleiben lokal.',
+      },
+      app: {
+        title: 'Editor – Kodini Texteditor',
+        description:
+          'Kodini Texteditor – schreiben, formatieren und exportieren direkt im Browser.',
+      },
+      blog: {
+        title: 'Blog – Kodini Texteditor',
+        description:
+          'Beiträge rund um den Kodini Texteditor: Tipps zum Schreiben, Formatieren und Exportieren im Browser.',
+      },
+    },
+    nav: {
+      label: 'Seitennavigation',
+      start: 'Start',
+      app: 'Anwendung',
+      faq: 'FAQ',
+      guide: 'Anleitung',
+      blog: 'Blog',
+    },
+    hero: {
+      title: 'Schreiben, formatieren und exportieren',
+      highlight: 'direkt im Browser',
+      subtitle:
+        'Der kostenlose Online-Texteditor ohne Anmeldung: formatieren, Bilder einfügen, als PDF speichern oder drucken – deine Texte bleiben lokal auf deinem Gerät.',
+      cta: 'Editor öffnen',
+      learnMore: 'Mehr erfahren',
+    },
+    features: {
+      title: 'Alles, was du zum Schreiben brauchst',
+      subtitle: 'Ein schlanker Editor mit den Werkzeugen, die im Alltag wirklich zählen.',
+      cards: [
+        {
+          title: 'Formatieren & Seitenformate',
+          description:
+            'Schriftart, Größe, Zeilenabstand, Farbe, Überschriften und Listen – auf einem maßstabsgetreuen Blatt in A3, A4, A5, Letter oder Legal.',
+        },
+        {
+          title: 'PDF, Druck & Markdown',
+          description:
+            'Als PDF, TXT, Markdown oder HTML speichern oder drucken. Die Vorschau zeigt exakt, wie die Datei aussehen wird.',
+        },
+        {
+          title: 'Über 30 Textwerkzeuge',
+          description:
+            'Suchen & Ersetzen mit Regex, Groß- und Kleinschreibung, Zeilen sortieren, Duplikate entfernen, Base64- und URL-Kodierung, Statistik.',
+        },
+        {
+          title: 'Lokal & privat',
+          description:
+            'Keine Anmeldung, kein Upload: Alle Texte bleiben im Browser auf deinem Gerät – auch offline nutzbar.',
+        },
+      ],
+    },
+    guide: {
+      title: 'Anleitung',
+      subtitle: 'In vier Schritten vom ersten Wort zur fertigen Datei.',
+      steps: [
+        {
+          title: 'Editor öffnen',
+          description:
+            'Klicke auf „Editor öffnen“. Eine Anmeldung ist nicht nötig – schreib sofort los oder lade über „Öffnen“ eine vorhandene Datei.',
+        },
+        {
+          title: 'Text schreiben und formatieren',
+          description:
+            'In der Format-Leiste wählst du Schrift, Größe, Zeilenabstand und Farbe. Überschriften, Listen und Bilder fügst du über die Werkzeugleiste ein.',
+        },
+        {
+          title: 'Seitenformat und Vorschau',
+          description:
+            'Wähle ein Seitenformat wie A4 hoch oder quer. Die Vorschau zeigt die Seiten genau so, wie sie gespeichert und gedruckt werden.',
+        },
+        {
+          title: 'Speichern, exportieren, drucken',
+          description:
+            'Unter „Speichern“ exportierst du als PDF, TXT, Markdown oder HTML. Mit Strg/Cmd + P druckst du direkt im gewählten Format.',
+        },
+      ],
+    },
+    faq: {
+      title: 'Häufige Fragen',
+      subtitle: 'Kurze Antworten auf die wichtigsten Fragen zum Texteditor.',
+      items: [
+        {
+          question: 'Ist der Texteditor kostenlos?',
+          answer: 'Ja. Der Kodini Texteditor ist vollständig kostenlos und ohne Anmeldung nutzbar.',
+        },
+        {
+          question: 'Werden meine Texte hochgeladen?',
+          answer:
+            'Nein. Die gesamte Verarbeitung passiert lokal im Browser. Dokumente werden ausschließlich im Speicher deines Browsers abgelegt.',
+        },
+        {
+          question: 'Kann ich meine Texte als PDF speichern?',
+          answer:
+            'Ja. Über „Speichern → Als PDF“ entsteht mit einem Klick eine PDF im gewählten Seitenformat – mit derselben Schrift und demselben Umbruch wie in der Vorschau.',
+        },
+        {
+          question: 'Funktioniert der Editor auch offline?',
+          answer:
+            'Ja. Nach dem ersten Aufruf werden alle Bestandteile zwischengespeichert. Danach läuft der Editor auch ohne Internetverbindung.',
+        },
+        {
+          question: 'Wie sichere ich meine Dokumente?',
+          answer:
+            'Über „Speichern → Sicherung exportieren“ lädst du alle Dokumente als .json herunter und stellst sie später wieder her – auch auf einem anderen Gerät.',
+        },
+      ],
+    },
+    cta: {
+      title: 'Bereit zum Schreiben?',
+      subtitle: 'Öffne den Editor und leg los – kostenlos, ohne Anmeldung, direkt im Browser.',
+      button: 'Editor öffnen',
+    },
+    blog: {
+      title: 'Blog',
+      subtitle: 'Beiträge rund um den Kodini Texteditor auf kodinitools.com.',
+      readMore: 'Weiterlesen',
+      articles: [
+        {
+          tag: 'Ratgeber',
+          title: 'Texteditor online: kostenlos schreiben, formatieren und als PDF speichern',
+          description:
+            'Wie du mit dem Kodini Texteditor Texte im Browser schreibst, formatierst und als PDF, Markdown oder HTML exportierst – ohne Anmeldung und ohne Upload.',
+          url: 'https://kodinitools.com/blog/texteditor-online/',
+        },
+      ],
+    },
+  },
 }
 
 // Kein `as const`: die Werte sollen als `string` (bzw. Funktion) typisiert sein,
@@ -655,6 +791,141 @@ export const en: Messages = {
   },
   doc: {
     untitled: 'Untitled',
+  },
+  landing: {
+    meta: {
+      start: {
+        title: 'Kodini Text Editor – free online text editor, no sign-up',
+        description:
+          'Free online text editor: write, format, insert images, save as PDF or print – in your browser, no sign-up. Your texts stay local.',
+      },
+      app: {
+        title: 'Editor – Kodini Text Editor',
+        description: 'Kodini Text Editor – write, format and export right in your browser.',
+      },
+      blog: {
+        title: 'Blog – Kodini Text Editor',
+        description:
+          'Articles about the Kodini Text Editor: tips on writing, formatting and exporting in your browser.',
+      },
+    },
+    nav: {
+      label: 'Page navigation',
+      start: 'Home',
+      app: 'App',
+      faq: 'FAQ',
+      guide: 'Guide',
+      blog: 'Blog',
+    },
+    hero: {
+      title: 'Write, format and export',
+      highlight: 'right in your browser',
+      subtitle:
+        'The free online text editor without sign-up: format, insert images, save as PDF or print – your texts stay local on your device.',
+      cta: 'Open editor',
+      learnMore: 'Learn more',
+    },
+    features: {
+      title: 'Everything you need to write',
+      subtitle: 'A lean editor with the tools that really matter day to day.',
+      cards: [
+        {
+          title: 'Formatting & page sizes',
+          description:
+            'Font, size, line spacing, color, headings and lists – on a true-to-scale sheet in A3, A4, A5, Letter or Legal.',
+        },
+        {
+          title: 'PDF, print & Markdown',
+          description:
+            'Save as PDF, TXT, Markdown or HTML, or print. The preview shows exactly what the file will look like.',
+        },
+        {
+          title: '30+ text tools',
+          description:
+            'Find & replace with regex, upper and lower case, sort lines, remove duplicates, Base64 and URL encoding, statistics.',
+        },
+        {
+          title: 'Local & private',
+          description:
+            'No sign-up, no upload: all texts stay in the browser on your device – works offline too.',
+        },
+      ],
+    },
+    guide: {
+      title: 'Guide',
+      subtitle: 'From the first word to the finished file in four steps.',
+      steps: [
+        {
+          title: 'Open the editor',
+          description:
+            'Click “Open editor”. No sign-up needed – start writing right away or load an existing file via “Open”.',
+        },
+        {
+          title: 'Write and format',
+          description:
+            'Pick font, size, line spacing and color in the format bar. Insert headings, lists and images from the toolbar.',
+        },
+        {
+          title: 'Page size and preview',
+          description:
+            'Choose a page size such as A4 portrait or landscape. The preview shows the pages exactly as they will be saved and printed.',
+        },
+        {
+          title: 'Save, export, print',
+          description:
+            'Under “Save” you export as PDF, TXT, Markdown or HTML. Press Ctrl/Cmd + P to print in the chosen format.',
+        },
+      ],
+    },
+    faq: {
+      title: 'Frequently asked questions',
+      subtitle: 'Short answers to the most important questions about the text editor.',
+      items: [
+        {
+          question: 'Is the text editor free?',
+          answer: 'Yes. The Kodini Text Editor is completely free and works without sign-up.',
+        },
+        {
+          question: 'Are my texts uploaded?',
+          answer:
+            'No. All processing happens locally in your browser. Documents are stored only in your browser’s storage.',
+        },
+        {
+          question: 'Can I save my texts as PDF?',
+          answer:
+            'Yes. “Save → As PDF” creates a PDF in the chosen page size with one click – with the same font and line breaks as the preview.',
+        },
+        {
+          question: 'Does the editor work offline?',
+          answer:
+            'Yes. After the first visit all parts are cached. From then on the editor also runs without an internet connection.',
+        },
+        {
+          question: 'How do I back up my documents?',
+          answer:
+            '“Save → Export backup” downloads all documents as .json, which you can restore later – even on another device.',
+        },
+      ],
+    },
+    cta: {
+      title: 'Ready to write?',
+      subtitle: 'Open the editor and get started – free, no sign-up, right in your browser.',
+      button: 'Open editor',
+    },
+    blog: {
+      title: 'Blog',
+      subtitle: 'Articles about the Kodini Text Editor on kodinitools.com.',
+      readMore: 'Read more',
+      articles: [
+        {
+          tag: 'Guide',
+          title: 'Online text editor: write, format and save as PDF for free',
+          description:
+            'How to write and format texts in your browser with the Kodini Text Editor and export them as PDF, Markdown or HTML – no sign-up, no upload.',
+          url: 'https://kodinitools.com/blog/texteditor-online/',
+        },
+      ],
+    },
   },
 }
 

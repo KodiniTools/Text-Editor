@@ -6,6 +6,18 @@ keine Uploads, keine Server-Kommunikation, keine Cookies. Dokumente werden nur i
 
 Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite + Pinia + Vue Router + Tailwind + Vitest**.
 
+## Landingpage & Routen
+
+- `/` – Landingpage (Hero, Funktionen, Anleitung, FAQ, CTA) mit klebender Hero-Navigation
+  **Start · Anwendung · FAQ · Anleitung · Blog**
+- `/app` – der Editor (lazy geladen; PWA startet direkt hier)
+- `/blog` – Blogseite mit Beitrag `https://kodinitools.com/blog/texteditor-online/`
+- `/preview` – Vollbild-Vorschau
+
+Farbschema (hell/dunkel), Abstaende, Karten, Buttons und FAQ sind 1:1 aus der Visualizer-Landingpage
+uebernommen (`src/styles/landing.css`, gekapselt unter `.landing-page`). Hell/Dunkel folgt `data-theme`
+der globalen Navigation. Keine Icon-Fonts, nur Inline-SVG (`components/landing/LandingIcon.vue`).
+
 ## Funktionen
 
 - **Mehrere Dokumente** als Tabs (anlegen, umbenennen per Doppelklick, schliessen), Auto-Save im `localStorage`
