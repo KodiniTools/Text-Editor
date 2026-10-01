@@ -364,6 +364,7 @@ export const de = {
         'Der kostenlose Online-Texteditor ohne Anmeldung: formatieren, Bilder einfügen, als PDF speichern oder drucken – deine Texte bleiben lokal auf deinem Gerät.',
       cta: 'Editor öffnen',
       learnMore: 'Mehr erfahren',
+      imageAlt: 'Kodini Texteditor: Dokument als TXT, Markdown, HTML oder PDF speichern',
     },
     features: {
       title: 'Alles, was du zum Schreiben brauchst',
@@ -828,6 +829,7 @@ export const en: Messages = {
         'The free online text editor without sign-up: format, insert images, save as PDF or print – your texts stay local on your device.',
       cta: 'Open editor',
       learnMore: 'Learn more',
+      imageAlt: 'Kodini Text Editor: save documents as TXT, Markdown, HTML or PDF',
     },
     features: {
       title: 'Everything you need to write',

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/i18n'
 import LandingLayout from '@/components/landing/LandingLayout.vue'
 import LandingIcon, { type LandingIconName } from '@/components/landing/LandingIcon.vue'
+import { useDocumentTheme } from '@/composables/useDocumentTheme'
 
 const { t } = useI18n()
 
@@ -31,8 +32,14 @@ const guideSteps = computed(() =>
   })),
 )
 
-// Zeilen der animierten Dokument-Vorschau im Hero (Breite in %).
-const PREVIEW_LINES = [62, 94, 88, 97, 54, 0, 91, 85, 96, 70]
+// Hero-Bild je Theme aus public/image (zum Austauschen nur die Dateien ersetzen).
+// Fehlt eine Datei, wird der Bildbereich ausgeblendet statt ein kaputtes Bild zu zeigen.
+const { isDark } = useDocumentTheme()
+const heroSrc = computed(
+  () => `${import.meta.env.BASE_URL}image/hero-${isDark.value ? 'dark' : 'light'}.webp`,
+)
+const heroFailed = ref(false)
+watch(heroSrc, () => (heroFailed.value = false))
 
 const activeFaq = ref<number | null>(null)
 function toggleFaq(index: number): void {
@@ -58,19 +65,19 @@ function toggleFaq(index: number): void {
           <a href="#features" class="btn-secondary">{{ t.landing.hero.learnMore }}</a>
         </div>
       </div>
-      <div class="hero-visual" aria-hidden="true">
-        <div class="doc-preview">
-          <div class="doc-sheet">
-            <div class="doc-heading"></div>
-            <div
-              v-for="(width, n) in PREVIEW_LINES"
-              :key="n"
-              class="doc-line"
-              :class="{ 'doc-gap': width === 0 }"
-              :style="{ '--line-width': `${width}%`, animationDelay: `${n * 0.12}s` }"
-            ></div>
-            <div class="doc-caret"></div>
-          </div>
+      <div v-if="!heroFailed" class="hero-visual">
+        <div class="hero-image-frame">
+          <img
+            :key="heroSrc"
+            :src="heroSrc"
+            :alt="t.landing.hero.imageAlt"
+            class="hero-image"
+            width="832"
+            height="1248"
+            fetchpriority="high"
+            decoding="async"
+            @error="heroFailed = true"
+          />
         </div>
       </div>
     </section>

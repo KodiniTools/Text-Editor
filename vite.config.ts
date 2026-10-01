@@ -51,7 +51,7 @@ export default defineConfig({
       workbox: {
         // Alle gebauten Dateien vorab cachen -- auch die faul geladenen
         // PDF-Chunks (jspdf/html2canvas), damit der Export offline funktioniert.
-        globPatterns: ['**/*.{js,css,html,ico,svg,woff,woff2,json}'],
+        globPatterns: ['**/*.{js,css,html,ico,svg,woff,woff2,json,webp}'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,

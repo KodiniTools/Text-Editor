@@ -119,3 +119,22 @@ describe('EditorToolbar', () => {
     expect(start.attributes('title')).toBe('Zur Startseite')
   })
 })
+
+describe('Hero-Bild', () => {
+  it('waehlt das Bild passend zum Theme und wechselt mit', async () => {
+    document.documentElement.setAttribute('data-theme', 'light')
+    const wrapper = await mountAt('/', LandingView)
+    const img = () => wrapper.find('img.hero-image')
+    expect(img().attributes('src')).toBe('/texteditor/image/hero-light.webp')
+    document.documentElement.setAttribute('data-theme', 'dark')
+    await flushPromises()
+    expect(img().attributes('src')).toBe('/texteditor/image/hero-dark.webp')
+    wrapper.unmount()
+  })
+
+  it('blendet den Bildbereich aus, wenn die Datei fehlt', async () => {
+    const wrapper = await mountAt('/', LandingView)
+    await wrapper.find('img.hero-image').trigger('error')
+    expect(wrapper.find('.hero-visual').exists()).toBe(false)
+  })
+})
