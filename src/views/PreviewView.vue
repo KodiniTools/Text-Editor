@@ -33,10 +33,10 @@ function backToEditor(): void {
   if (window.location.hash.includes('from=editor')) {
     window.close()
     window.setTimeout(() => {
-      if (!window.closed) router.push('/')
+      if (!window.closed) router.push({ name: 'editor' })
     }, 150)
   } else {
-    router.push('/')
+    router.push({ name: 'editor' })
   }
 }
 
