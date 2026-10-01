@@ -3,7 +3,23 @@
  * Inline-SVG-Icons der Landingpage (Strichstil wie im Visualizer, 24er-Raster).
  * Bewusst ohne Icon-Font: keine zusaetzliche Abhaengigkeit, Farbe ueber currentColor.
  */
-export type LandingIconName = 'type' | 'file' | 'tools' | 'lock' | 'play' | 'chevron' | 'arrow'
+export type LandingIconName =
+  | 'type'
+  | 'file'
+  | 'tools'
+  | 'lock'
+  | 'play'
+  | 'chevron'
+  | 'arrow'
+  | 'write'
+  | 'format'
+  | 'page'
+  | 'image'
+  | 'export'
+  | 'markdown'
+  | 'keyboard'
+  | 'check'
+  | 'article'
 
 withDefaults(defineProps<{ name: LandingIconName; size?: number; strokeWidth?: number }>(), {
   size: 24,
@@ -49,6 +65,49 @@ withDefaults(defineProps<{ name: LandingIconName; size?: number; strokeWidth?: n
     </template>
     <template v-else-if="name === 'chevron'">
       <polyline points="6 9 12 15 18 9" />
+    </template>
+    <template v-else-if="name === 'write'">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+    </template>
+    <template v-else-if="name === 'format'">
+      <path d="M6 4h8a4 4 0 0 1 0 8H6z" />
+      <path d="M6 12h9a4 4 0 0 1 0 8H6z" />
+    </template>
+    <template v-else-if="name === 'page'">
+      <rect x="5" y="2" width="14" height="20" rx="2" />
+      <line x1="9" y1="7" x2="15" y2="7" />
+      <line x1="9" y1="11" x2="15" y2="11" />
+      <line x1="9" y1="15" x2="13" y2="15" />
+    </template>
+    <template v-else-if="name === 'image'">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </template>
+    <template v-else-if="name === 'export'">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </template>
+    <template v-else-if="name === 'markdown'">
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <path d="M6 15V9l3 3 3-3v6" />
+      <path d="M16 9v6" />
+      <polyline points="14 13 16 15 18 13" />
+    </template>
+    <template v-else-if="name === 'keyboard'">
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <path d="M6 10h0M10 10h0M14 10h0M18 10h0M8 14h8" />
+    </template>
+    <template v-else-if="name === 'check'">
+      <polyline points="20 6 9 17 4 12" />
+    </template>
+    <template v-else-if="name === 'article'">
+      <path
+        d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"
+      />
+      <path d="M18 14h-8M15 18h-5M10 6h8v4h-8z" />
     </template>
     <template v-else>
       <path d="M5 12h14" />

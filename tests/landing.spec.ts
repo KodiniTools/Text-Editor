@@ -98,6 +98,22 @@ describe('BlogView', () => {
     expect(card.attributes('rel')).toContain('noopener')
     expect(wrapper.find('.header-nav a.active').text()).toBe('Blog')
   })
+
+  it('folgt dem Aufbau der Visualizer-Blogseite (Hero, Uebersicht, TOC, Abschnitte)', async () => {
+    const wrapper = await mountAt('/blog', BlogView)
+    expect(wrapper.find('.blog-hero h1').text()).toBe('Alles, was der Kodini Texteditor kann')
+    expect(wrapper.findAll('.stat-item')).toHaveLength(4)
+    expect(wrapper.findAll('.overview-card')).toHaveLength(4)
+    // Jeder TOC-Eintrag zeigt auf einen vorhandenen Abschnitt
+    const tocIds = wrapper.findAll('.toc-link').map((a) => a.attributes('href')!.slice(1))
+    expect(tocIds.length).toBeGreaterThan(5)
+    for (const id of tocIds) expect(wrapper.find(`section#${id}`).exists()).toBe(true)
+    // Uebersichtskarten verlinken ebenfalls auf vorhandene Abschnitte
+    for (const card of wrapper.findAll('.overview-card')) {
+      expect(wrapper.find(`section${card.attributes('href')}`).exists()).toBe(true)
+    }
+    expect(wrapper.find('.toc-cta').attributes('href')).toBe('/app')
+  })
 })
 
 describe('EditorToolbar', () => {
