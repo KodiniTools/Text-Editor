@@ -8,17 +8,6 @@
  * Alle Regeln sind unter .landing-page gekapselt -- der Editor bleibt unberuehrt.
  */
 
-@font-face {
-  font-family: 'Supreme';
-  /* Gemeinsamer Font-Ordner der Domain (Visualizer: /fonts, Editor: /public/fonts). */
-  src:
-    url('/fonts/Supreme-Regular.woff2') format('woff2'),
-    url('/public/fonts/Supreme-Regular.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 .landing-page {
   flex: 1;
   display: flex;

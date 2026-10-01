@@ -301,7 +301,7 @@ defineExpose({
           <span v-else />
           <button
             type="button"
-            class="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-white hover:opacity-90"
+            class="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-fg hover:opacity-90"
             @click="applyImageLink"
           >
             {{ t.editor.imageLinkApply }}
@@ -476,10 +476,12 @@ defineExpose({
   justify-content: center;
   overflow: auto;
   padding: 1rem;
-  background: rgb(228 228 231); /* zinc-200 */
+  background: rgb(var(--zinc-200));
 }
-:global(.dark) .page-backdrop {
-  background: rgb(9 9 11); /* zinc-950 */
+/* `html.dark` statt `:global(.dark)`: Letzteres kompiliert Vue in scoped
+   Styles zu einem nackten `.dark { ... }` -- die Regel traf nie das Blatt. */
+html.dark .page-backdrop {
+  background: rgb(var(--zinc-950));
 }
 
 .page-canvas {
@@ -494,8 +496,8 @@ defineExpose({
   box-shadow: 0 4px 24px rgb(0 0 0 / 0.18);
   border-radius: 2px;
 }
-:global(.dark) .page-sheet {
-  background: rgb(24 24 27); /* zinc-900 */
+html.dark .page-sheet {
+  background: rgb(var(--zinc-900));
 }
 
 .page-break-guide {
@@ -506,7 +508,7 @@ defineExpose({
   border-top: 1px dashed rgb(161 161 170); /* zinc-400 */
   pointer-events: none;
 }
-:global(.dark) .page-break-guide {
-  border-top-color: rgb(82 82 91); /* zinc-600 */
+html.dark .page-break-guide {
+  border-top-color: rgb(var(--zinc-600));
 }
 </style>

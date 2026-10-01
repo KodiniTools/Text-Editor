@@ -3,9 +3,23 @@
 @tailwind utilities;
 
 :root {
-  /* Akzentfarbe (Smaragd) - fuer KodiniTools-Branding hier anpassen */
-  --accent: 16 185 129;
-  --accent-soft: 209 250 229;
+  /* KodiniTools-/Visualizer-Farbschema (hell). RGB-Tripel, damit Tailwind
+     Deckkraft-Modifikatoren (bg-zinc-900/80) weiter funktionieren. */
+  --accent: 1 79 153; /* #014f99 */
+  --accent-soft: 248 225 169; /* #f8e1a9 */
+  --accent-fg: 245 244 214; /* #f5f4d6 */
+
+  --zinc-50: 245 244 214; /* #f5f4d6 Seitenhintergrund */
+  --zinc-100: 249 242 213; /* #f9f2d5 */
+  --zinc-200: 240 228 190; /* #f0e4be */
+  --zinc-300: 226 207 157; /* #e2cf9d Rahmen */
+  --zinc-400: 122 141 160; /* #7a8da0 */
+  --zinc-500: 77 109 142; /* #4d6d8e gedaempfter Text */
+  --zinc-600: 46 90 134; /* #2e5a86 */
+  --zinc-700: 11 70 127; /* #0b467f */
+  --zinc-800: 0 57 113; /* #003971 Haupttext */
+  --zinc-900: 0 43 87; /* #002b57 */
+  --zinc-950: 0 29 61; /* #001d3d */
 
   /* Textdarstellung - wird von useTheme aus den Settings gesetzt */
   --editor-font: ui-sans-serif, system-ui, sans-serif;
@@ -24,9 +38,62 @@
   color-scheme: light;
 }
 
+/* KodiniTools-/Visualizer-Farbschema (dunkel). */
 .dark {
-  --accent-soft: 6 78 59;
+  --accent: 201 152 77; /* #c9984d */
+  --accent-soft: 60 48 30;
+  --accent-fg: 9 20 40; /* #091428 */
+
+  --zinc-50: 253 248 228;
+  --zinc-100: 249 242 213; /* #f9f2d5 Haupttext */
+  --zinc-200: 248 225 169; /* #f8e1a9 */
+  --zinc-300: 227 207 160;
+  --zinc-400: 122 141 160; /* #7a8da0 gedaempfter Text */
+  --zinc-500: 92 111 134;
+  --zinc-600: 52 70 94; /* Eingabe-Rahmen */
+  --zinc-700: 29 51 84; /* Hover/aktiv */
+  --zinc-800: 20 38 64; /* #142640 Karten */
+  --zinc-900: 14 28 50; /* #0e1c32 Leisten */
+  --zinc-950: 9 20 40; /* #091428 Hintergrund */
+
   color-scheme: dark;
+}
+
+/* UI-Schrift der KodiniTools-Seiten (gemeinsamer Font-Ordner der Domain). */
+@font-face {
+  font-family: 'Supreme';
+  src:
+    url('/fonts/Supreme-Regular.woff2') format('woff2'),
+    url('/public/fonts/Supreme-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Scrollleisten wie im Visualizer */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(1, 79, 153, 0.05);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(1, 79, 153, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(1, 79, 153, 0.4);
+}
+.dark ::-webkit-scrollbar-track {
+  background: rgba(201, 152, 77, 0.1);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(201, 152, 77, 0.4);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 152, 77, 0.6);
 }
 
 html,
@@ -43,6 +110,8 @@ body {
 body {
   display: flex;
   flex-direction: column;
+  /* Theme-Hintergrund auch zwischen App und Footer (Creme / Navy). */
+  @apply bg-zinc-50 dark:bg-zinc-950;
 }
 
 #app {

@@ -13,6 +13,8 @@ export const de = {
   toolbar: {
     new: 'Neu',
     newTitle: 'Neu (Strg+M)',
+    start: 'Start',
+    startTitle: 'Zur Startseite',
     open: 'Öffnen',
     openTitle: 'Datei öffnen',
     image: 'Bild',
@@ -476,6 +478,8 @@ export const en: Messages = {
   toolbar: {
     new: 'New',
     newTitle: 'New (Ctrl+M)',
+    start: 'Home',
+    startTitle: 'Back to the home page',
     open: 'Open',
     openTitle: 'Open file',
     image: 'Image',

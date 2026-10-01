@@ -99,3 +99,23 @@ describe('BlogView', () => {
     expect(wrapper.find('.header-nav a.active').text()).toBe('Blog')
   })
 })
+
+describe('EditorToolbar', () => {
+  it('verlinkt mit "Start" zur Startseite', async () => {
+    const { createPinia, setActivePinia } = await import('pinia')
+    const { default: EditorToolbar } = await import('@/components/EditorToolbar.vue')
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const router = makeRouter()
+    await router.push('/app')
+    await router.isReady()
+    const wrapper = mount(EditorToolbar, {
+      props: { editor: null, selection: {} as never },
+      global: { plugins: [router, pinia] },
+    })
+    const start = wrapper.find('a.tb-start')
+    expect(start.text()).toBe('Start')
+    expect(start.attributes('href')).toBe('/')
+    expect(start.attributes('title')).toBe('Zur Startseite')
+  })
+})
