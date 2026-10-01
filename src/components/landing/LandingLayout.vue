@@ -5,17 +5,18 @@ import { useI18n } from '@/i18n'
 import '@/styles/landing.css'
 
 /**
- * Rahmen fuer Startseite und Blog: klebende Hero-Navigation (Start, Anwendung,
- * FAQ, Anleitung, Blog) + Seiteninhalt. Optik 1:1 aus der Visualizer-Landingpage.
+ * Rahmen fuer Startseite, Funktionen und Blog: klebende Hero-Navigation (Start,
+ * Anwendung, Funktionen, FAQ, Anleitung, Blog) + Seiteninhalt. Optik 1:1 aus der Visualizer-Landingpage.
  */
 const { t } = useI18n()
 const route = useRoute()
 
-type NavKey = 'start' | 'app' | 'faq' | 'guide' | 'blog'
+type NavKey = 'start' | 'app' | 'features' | 'faq' | 'guide' | 'blog'
 
 const items = computed<{ key: NavKey; to: RouteLocationRaw }[]>(() => [
   { key: 'start', to: { name: 'landing' } },
   { key: 'app', to: { name: 'editor' } },
+  { key: 'features', to: { name: 'features' } },
   { key: 'faq', to: { name: 'landing', hash: '#faq' } },
   { key: 'guide', to: { name: 'landing', hash: '#anleitung' } },
   { key: 'blog', to: { name: 'blog' } },
@@ -23,6 +24,7 @@ const items = computed<{ key: NavKey; to: RouteLocationRaw }[]>(() => [
 
 const activeKey = computed<NavKey | null>(() => {
   if (route.name === 'blog') return 'blog'
+  if (route.name === 'features') return 'features'
   if (route.name !== 'landing') return null
   if (route.hash === '#faq') return 'faq'
   if (route.hash === '#anleitung') return 'guide'

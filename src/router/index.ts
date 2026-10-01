@@ -7,7 +7,7 @@ declare module 'vue-router' {
     /** Seite scrollt als Ganzes (Landing/Blog) statt der festen App-Shell. */
     scroll?: boolean
     /** Schluessel in `messages().landing.meta` fuer Titel/Beschreibung. */
-    metaKey?: 'start' | 'app' | 'blog'
+    metaKey?: 'start' | 'app' | 'features' | 'blog'
     /** Pfad relativ zu SITE_URL fuer das Canonical. */
     canonical?: string
     robots?: string
@@ -30,6 +30,12 @@ export const routes: RouteRecordRaw[] = [
     name: 'editor',
     component: () => import('@/views/EditorView.vue'),
     meta: { metaKey: 'app', canonical: 'app', robots: 'noindex, follow' },
+  },
+  {
+    path: '/funktionen',
+    name: 'features',
+    component: () => import('@/views/FeaturesView.vue'),
+    meta: { scroll: true, metaKey: 'features', canonical: 'funktionen', robots: 'index, follow' },
   },
   {
     path: '/blog',

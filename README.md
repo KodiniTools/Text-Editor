@@ -9,9 +9,11 @@ Stack: **Vue 3 (Composition API, `<script setup>`) + TypeScript (strict) + Vite 
 ## Landingpage & Routen
 
 - `/` – Landingpage (Hero, Funktionen, Anleitung, FAQ, CTA) mit klebender Hero-Navigation
-  **Start · Anwendung · FAQ · Anleitung · Blog**
+  **Start · Anwendung · Funktionen · FAQ · Anleitung · Blog**
 - `/app` – der Editor (lazy geladen; PWA startet direkt hier)
-- `/blog` – Blogseite mit Beitrag `https://kodinitools.com/blog/texteditor-online/`
+- `/funktionen` – ausfuehrliche Funktionsseite (Muster: Visualizer `BlogPage.vue`)
+- `/blog` – „Aus dem Blog“ (Muster: Blog-Abschnitt der Visualizer-Landingpage). Beitraege in
+  `src/data/blogArticles.ts`; optional `date`, `minutes` und `image` (16:9) je Beitrag
 - `/preview` – Vollbild-Vorschau
 
 Farbschema (hell/dunkel), Abstaende, Karten, Buttons und FAQ sind 1:1 aus der Visualizer-Landingpage

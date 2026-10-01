@@ -5,6 +5,7 @@ import { router as appRouter, routes } from '@/router'
 import { setLocale } from '@/i18n'
 import LandingView from '@/views/LandingView.vue'
 import BlogView from '@/views/BlogView.vue'
+import FeaturesView from '@/views/FeaturesView.vue'
 
 const BLOG_URL = 'https://kodinitools.com/blog/texteditor-online/'
 
@@ -34,6 +35,7 @@ describe('Routen', () => {
     const byName = Object.fromEntries(routes.map((r) => [r.name, r.path]))
     expect(byName.landing).toBe('/')
     expect(byName.editor).toBe('/app')
+    expect(byName.features).toBe('/funktionen')
     expect(byName.blog).toBe('/blog')
     expect(byName.preview).toBe('/preview')
   })
@@ -48,13 +50,21 @@ describe('Routen', () => {
 })
 
 describe('LandingView', () => {
-  it('zeigt die Hero-Navigation mit Start, Anwendung, FAQ, Anleitung, Blog', async () => {
+  it('zeigt die Hero-Navigation mit Start, Anwendung, Funktionen, FAQ, Anleitung, Blog', async () => {
     const wrapper = await mountAt('/', LandingView)
     const links = wrapper.findAll('.header-nav a')
-    expect(links.map((a) => a.text())).toEqual(['Start', 'Anwendung', 'FAQ', 'Anleitung', 'Blog'])
+    expect(links.map((a) => a.text())).toEqual([
+      'Start',
+      'Anwendung',
+      'Funktionen',
+      'FAQ',
+      'Anleitung',
+      'Blog',
+    ])
     expect(links.map((a) => a.attributes('href'))).toEqual([
       '/',
       '/app',
+      '/funktionen',
       '/#faq',
       '/#anleitung',
       '/blog',
@@ -99,16 +109,28 @@ describe('BlogView', () => {
     expect(wrapper.find('.header-nav a.active').text()).toBe('Blog')
   })
 
-  it('folgt dem Aufbau der Visualizer-Blogseite (Hero, Uebersicht, TOC, Abschnitte)', async () => {
+  it('zeigt "Aus dem Blog" mit Karte (Kategorie, Titel, Artikel lesen)', async () => {
     const wrapper = await mountAt('/blog', BlogView)
+    expect(wrapper.find('h1.section-title').text()).toBe('Aus dem Blog')
+    const card = wrapper.find('a.blog-card')
+    expect(card.find('.blog-card-tag').text()).toBe('Ratgeber')
+    expect(card.find('.blog-card-link').text()).toBe('Artikel lesen')
+    // Ohne Vorschaubild: stilisierte Seite statt kaputtem <img>
+    expect(card.find('.blog-card-media img').exists()).toBe(false)
+    expect(card.find('.blog-card-sheet').exists()).toBe(true)
+  })
+})
+
+describe('FeaturesView', () => {
+  it('folgt dem Aufbau der Visualizer-Funktionsseite (Hero, Uebersicht, TOC, Abschnitte)', async () => {
+    const wrapper = await mountAt('/funktionen', FeaturesView)
+    expect(wrapper.find('.header-nav a.active').text()).toBe('Funktionen')
     expect(wrapper.find('.blog-hero h1').text()).toBe('Alles, was der Kodini Texteditor kann')
     expect(wrapper.findAll('.stat-item')).toHaveLength(4)
     expect(wrapper.findAll('.overview-card')).toHaveLength(4)
-    // Jeder TOC-Eintrag zeigt auf einen vorhandenen Abschnitt
     const tocIds = wrapper.findAll('.toc-link').map((a) => a.attributes('href')!.slice(1))
     expect(tocIds.length).toBeGreaterThan(5)
     for (const id of tocIds) expect(wrapper.find(`section#${id}`).exists()).toBe(true)
-    // Uebersichtskarten verlinken ebenfalls auf vorhandene Abschnitte
     for (const card of wrapper.findAll('.overview-card')) {
       expect(wrapper.find(`section${card.attributes('href')}`).exists()).toBe(true)
     }
@@ -152,5 +174,15 @@ describe('Hero-Bild', () => {
     const wrapper = await mountAt('/', LandingView)
     await wrapper.find('img.hero-image').trigger('error')
     expect(wrapper.find('.hero-visual').exists()).toBe(false)
+  })
+})
+
+describe('blogArticles', () => {
+  it('formatiert Datum je Sprache und sortiert neueste zuerst', async () => {
+    const { formatBlogDate, getBlogArticlesNewestFirst } = await import('@/data/blogArticles')
+    expect(formatBlogDate('2026-09-21', 'de')).toBe('21. September 2026')
+    expect(formatBlogDate('2026-09-21', 'en')).toBe('September 21, 2026')
+    expect(formatBlogDate('kein-datum', 'de')).toBe('kein-datum')
+    expect(getBlogArticlesNewestFirst()[0]!.url.de).toBe(BLOG_URL)
   })
 })
