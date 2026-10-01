@@ -26,21 +26,29 @@ export interface BlogArticle {
   description: LocalizedText
 }
 
+// Daten 1:1 aus KodiniTools/Kodinitools-Home (src/pages/blog/index.astro bzw.
+// src/pages/en/blog/index.astro). Bilder liegen im Web-Root der Domain.
 export const blogArticles: BlogArticle[] = [
   {
     id: 'texteditor-online',
-    tag: { de: 'Ratgeber', en: 'Guide' },
+    date: '2026-09-16',
+    minutes: 5,
+    tag: { de: 'Text', en: 'Text' },
     url: {
       de: 'https://kodinitools.com/blog/texteditor-online/',
-      en: 'https://kodinitools.com/blog/texteditor-online/',
+      en: 'https://kodinitools.com/en/blog/online-text-editor/',
+    },
+    image: {
+      de: 'https://kodinitools.com/image/texteditor-de.png',
+      en: 'https://kodinitools.com/image/texteditor-en.png',
     },
     title: {
-      de: 'Texteditor online: kostenlos schreiben, formatieren und als PDF speichern',
-      en: 'Online text editor: write, format and save as PDF for free',
+      de: 'Texteditor online: Texte schreiben, formatieren & exportieren ohne Installation',
+      en: 'Online Text Editor: Write, Format & Export Text Without Installing Anything',
     },
     description: {
-      de: 'Wie du mit dem Kodini Texteditor Texte im Browser schreibst, formatierst und als PDF, Markdown oder HTML exportierst – ohne Anmeldung und ohne Upload.',
-      en: 'How to write and format texts in your browser with the Kodini Text Editor and export them as PDF, Markdown or HTML – no sign-up, no upload.',
+      de: 'Schreiben, formatieren, Bilder einfügen, Markdown-Vorschau, Wortzähler, Drucken und Speichern – kostenlos im Browser, ohne Upload.',
+      en: 'Write, format, insert images, Markdown preview, word counter, print and save — free in your browser, no upload.',
     },
   },
 ]

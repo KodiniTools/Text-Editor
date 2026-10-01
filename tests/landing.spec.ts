@@ -109,15 +109,28 @@ describe('BlogView', () => {
     expect(wrapper.find('.header-nav a.active').text()).toBe('Blog')
   })
 
-  it('zeigt "Aus dem Blog" mit Karte (Kategorie, Titel, Artikel lesen)', async () => {
+  it('zeigt "Aus dem Blog" mit Karte (Bild, Kategorie, Datum, Titel, Artikel lesen)', async () => {
     const wrapper = await mountAt('/blog', BlogView)
     expect(wrapper.find('h1.section-title').text()).toBe('Aus dem Blog')
     const card = wrapper.find('a.blog-card')
-    expect(card.find('.blog-card-tag').text()).toBe('Ratgeber')
+    expect(card.find('.blog-card-media img').attributes('src')).toBe(
+      'https://kodinitools.com/image/texteditor-de.png',
+    )
+    expect(card.find('.blog-card-tag').text()).toBe('Text')
+    expect(card.find('.blog-card-meta').text()).toBe('16. September 2026 · 5 Min.')
     expect(card.find('.blog-card-link').text()).toBe('Artikel lesen')
-    // Ohne Vorschaubild: stilisierte Seite statt kaputtem <img>
-    expect(card.find('.blog-card-media img').exists()).toBe(false)
-    expect(card.find('.blog-card-sheet').exists()).toBe(true)
+  })
+
+  it('nutzt auf Englisch den englischen Artikel und das englische Bild', async () => {
+    const wrapper = await mountAt('/blog', BlogView)
+    setLocale('en')
+    await flushPromises()
+    const card = wrapper.find('a.blog-card')
+    expect(card.attributes('href')).toBe('https://kodinitools.com/en/blog/online-text-editor/')
+    expect(card.find('img').attributes('src')).toBe(
+      'https://kodinitools.com/image/texteditor-en.png',
+    )
+    expect(card.find('.blog-card-meta').text()).toBe('September 16, 2026 · 5 min')
   })
 })
 
