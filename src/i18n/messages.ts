@@ -359,6 +359,11 @@ export const de = {
         description:
           'Kodini Texteditor – schreiben, formatieren und exportieren direkt im Browser.',
       },
+      features: {
+        title: 'Funktionen – Kodini Texteditor',
+        description:
+          'Alle Funktionen des Kodini Texteditors im Überblick: Formatieren, Seitenformate, PDF-/Markdown-/HTML-Export, über 30 Textwerkzeuge und Tastenkürzel.',
+      },
       blog: {
         title: 'Blog – Kodini Texteditor',
         description:
@@ -370,6 +375,7 @@ export const de = {
       start: 'Start',
       app: 'Anwendung',
       faq: 'FAQ',
+      features: 'Funktionen',
       guide: 'Anleitung',
       blog: 'Blog',
     },
@@ -470,18 +476,12 @@ export const de = {
       button: 'Editor öffnen',
     },
     blog: {
-      title: 'Blog',
-      subtitle: 'Beiträge rund um den Kodini Texteditor auf kodinitools.com.',
-      readMore: 'Weiterlesen',
-      articles: [
-        {
-          tag: 'Ratgeber',
-          title: 'Texteditor online: kostenlos schreiben, formatieren und als PDF speichern',
-          description:
-            'Wie du mit dem Kodini Texteditor Texte im Browser schreibst, formatierst und als PDF, Markdown oder HTML exportierst – ohne Anmeldung und ohne Upload.',
-          url: 'https://kodinitools.com/blog/texteditor-online/',
-        },
-      ],
+      title: 'Aus dem Blog',
+      subtitle: 'Anleitungen und Ratgeber zum Kodini Texteditor auf kodinitools.com.',
+      readMore: 'Artikel lesen',
+      minutes: 'Min.',
+    },
+    featuresPage: {
       hero: {
         badge: 'Funktionen im Überblick',
         title: 'Alles, was der Kodini Texteditor kann',
@@ -708,10 +708,6 @@ export const de = {
           variant: 'unique',
         },
       ],
-      articleSection: {
-        nav: 'Blogbeitrag',
-        title: 'Blogbeitrag',
-      },
       summary: {
         title: 'Zusammenfassung',
         text: 'Der Kodini Texteditor verbindet einen einfachen Einstieg mit den Werkzeugen, die beim Schreiben wirklich zählen.',
@@ -1072,6 +1068,11 @@ export const en: Messages = {
         title: 'Editor – Kodini Text Editor',
         description: 'Kodini Text Editor – write, format and export right in your browser.',
       },
+      features: {
+        title: 'Features – Kodini Text Editor',
+        description:
+          'All features of the Kodini Text Editor at a glance: formatting, page sizes, PDF/Markdown/HTML export, 30+ text tools and keyboard shortcuts.',
+      },
       blog: {
         title: 'Blog – Kodini Text Editor',
         description:
@@ -1083,6 +1084,7 @@ export const en: Messages = {
       start: 'Home',
       app: 'App',
       faq: 'FAQ',
+      features: 'Features',
       guide: 'Guide',
       blog: 'Blog',
     },
@@ -1183,18 +1185,12 @@ export const en: Messages = {
       button: 'Open editor',
     },
     blog: {
-      title: 'Blog',
-      subtitle: 'Articles about the Kodini Text Editor on kodinitools.com.',
-      readMore: 'Read more',
-      articles: [
-        {
-          tag: 'Guide',
-          title: 'Online text editor: write, format and save as PDF for free',
-          description:
-            'How to write and format texts in your browser with the Kodini Text Editor and export them as PDF, Markdown or HTML – no sign-up, no upload.',
-          url: 'https://kodinitools.com/blog/texteditor-online/',
-        },
-      ],
+      title: 'From the Blog',
+      subtitle: 'Guides and tips for the Kodini Text Editor on kodinitools.com.',
+      readMore: 'Read article',
+      minutes: 'min',
+    },
+    featuresPage: {
       hero: {
         badge: 'Features at a glance',
         title: 'Everything the Kodini Text Editor can do',
@@ -1418,10 +1414,6 @@ export const en: Messages = {
           variant: 'unique',
         },
       ],
-      articleSection: {
-        nav: 'Blog post',
-        title: 'Blog post',
-      },
       summary: {
         title: 'Summary',
         text: 'The Kodini Text Editor combines an easy start with the tools that really matter when writing.',

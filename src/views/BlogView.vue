@@ -1,269 +1,84 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from '@/i18n'
 import LandingLayout from '@/components/landing/LandingLayout.vue'
-import LandingIcon, { type LandingIconName } from '@/components/landing/LandingIcon.vue'
-import '@/styles/blog.css'
+import LandingIcon from '@/components/landing/LandingIcon.vue'
+import { formatBlogDate, getBlogArticlesNewestFirst } from '@/data/blogArticles'
 
 /**
- * Funktions-/Blogseite. Aufbau wie die Blogseite des Visualizers
- * (Hero mit Kennzahlen, Uebersichtskarten, klebendes Inhaltsverzeichnis,
- * Abschnitte, Zusammenfassung, CTA). Inhalte vollstaendig aus i18n.
+ * Blogseite: "Aus dem Blog" -- gleiches Muster wie der Blog-Abschnitt der
+ * Visualizer-Landingpage (Karten mit Bild, Kategorie, Datum/Lesezeit, Titel,
+ * Beschreibung, "Artikel lesen").
  */
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
-const ARTICLE_ID = 'blogbeitrag'
-/** Abstand zur klebenden Hero-Navigation beim Springen/Erkennen. */
-const SCROLL_OFFSET = 90
-
-const blog = computed(() => t.value.landing.blog)
-
-const tocEntries = computed(() => [
-  ...blog.value.sections.map((s) => ({ id: s.id, nav: s.nav, icon: s.icon as LandingIconName })),
-  { id: ARTICLE_ID, nav: blog.value.articleSection.nav, icon: 'article' as LandingIconName },
-])
-
-/** Icon je Uebersichtskarte = Icon des verlinkten Abschnitts. */
-function sectionIcon(id: string): LandingIconName {
-  return (blog.value.sections.find((s) => s.id === id)?.icon ?? 'file') as LandingIconName
-}
-
-const activeSection = ref('')
-
-function handleScroll(): void {
-  const ids = tocEntries.value.map((e) => e.id)
-  for (let i = ids.length - 1; i >= 0; i--) {
-    const el = document.getElementById(ids[i]!)
-    if (el && el.getBoundingClientRect().top <= SCROLL_OFFSET + 30) {
-      activeSection.value = ids[i]!
-      return
+const blogCards = computed(() => {
+  const lang = locale.value
+  return getBlogArticlesNewestFirst().map((article) => {
+    const meta = [
+      article.date ? formatBlogDate(article.date, lang) : '',
+      article.minutes ? `${article.minutes} ${t.value.landing.blog.minutes}` : '',
+    ]
+      .filter(Boolean)
+      .join(' · ')
+    return {
+      id: article.id,
+      url: article.url[lang],
+      image: article.image?.[lang] ?? '',
+      tag: article.tag[lang],
+      title: article.title[lang],
+      description: article.description[lang],
+      meta,
     }
-  }
-  activeSection.value = ''
-}
-
-function scrollToSection(id: string): void {
-  const el = document.getElementById(id)
-  if (!el) return
-  const top = window.scrollY + el.getBoundingClientRect().top - SCROLL_OFFSET
-  window.scrollTo({ top, behavior: 'smooth' })
-}
-
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll, { passive: true })
-  handleScroll()
+  })
 })
-onBeforeUnmount(() => window.removeEventListener('scroll', handleScroll))
 </script>
 
 <template>
   <LandingLayout>
-    <div class="blog-page">
-      <!-- Hero -->
-      <section class="blog-hero">
-        <div class="blog-badge">{{ blog.hero.badge }}</div>
-        <h1 class="blog-title">{{ blog.hero.title }}</h1>
-        <p class="blog-subtitle">{{ blog.hero.subtitle }}</p>
-        <div class="hero-stats">
-          <template v-for="(stat, i) in blog.stats" :key="stat.label">
-            <div v-if="i > 0" class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-number">{{ stat.value }}</span>
-              <span class="stat-label">{{ stat.label }}</span>
-            </div>
-          </template>
-        </div>
-      </section>
-
-      <!-- Uebersichtskarten -->
-      <section class="overview-section">
-        <div class="overview-grid">
-          <a
-            v-for="card in blog.overview"
-            :key="card.id"
-            :href="`#${card.id}`"
-            class="overview-card"
-            @click.prevent="scrollToSection(card.id)"
-          >
-            <span class="overview-icon"
-              ><LandingIcon :name="sectionIcon(card.id)" :size="28"
-            /></span>
-            <span class="overview-card-content">
-              <span class="overview-card-title">{{ card.title }}</span>
-              <span class="overview-card-desc">{{ card.desc }}</span>
-            </span>
-          </a>
-        </div>
-      </section>
-
-      <!-- Inhalt -->
-      <div class="blog-content">
-        <div class="content-layout">
-          <aside class="toc-sidebar">
-            <div class="toc-inner">
-              <h2 class="toc-title">{{ blog.toc }}</h2>
-              <nav class="toc-nav" :aria-label="blog.toc">
-                <a
-                  v-for="entry in tocEntries"
-                  :key="entry.id"
-                  :href="`#${entry.id}`"
-                  class="toc-link"
-                  :class="{ active: activeSection === entry.id }"
-                  @click.prevent="scrollToSection(entry.id)"
-                >
-                  <span class="toc-icon"><LandingIcon :name="entry.icon" :size="14" /></span>
-                  {{ entry.nav }}
-                </a>
-              </nav>
-              <RouterLink :to="{ name: 'editor' }" class="toc-cta">
-                {{ blog.startEditor }}
-                <LandingIcon name="arrow" :size="14" :stroke-width="2.5" />
-              </RouterLink>
-            </div>
-          </aside>
-
-          <article class="blog-article">
-            <section class="article-section intro-section">
-              <p class="intro-text">{{ blog.intro }}</p>
-            </section>
-
-            <section
-              v-for="section in blog.sections"
-              :id="section.id"
-              :key="section.id"
-              class="article-section"
-              :class="{ 'unique-section': section.variant === 'unique' }"
-            >
-              <div class="article-section-header">
-                <div class="article-section-icon">
-                  <LandingIcon :name="section.icon as LandingIconName" :size="22" />
-                </div>
-                <h2 class="article-section-title">{{ section.title }}</h2>
-              </div>
-              <p v-if="section.intro" class="article-section-intro">{{ section.intro }}</p>
-
-              <div v-if="section.tags" class="tag-box">
-                <h3 class="subsection-title">{{ section.tags.title }}</h3>
-                <div class="tag-grid">
-                  <span v-for="tag in section.tags.items" :key="tag" class="tag-pill">{{
-                    tag
-                  }}</span>
-                </div>
-              </div>
-
-              <div v-if="section.categories" class="category-grid">
-                <div
-                  v-for="category in section.categories"
-                  :key="category.name"
-                  class="category-card"
-                >
-                  <h3 class="category-title">{{ category.name }}</h3>
-                  <ul class="category-list">
-                    <li v-for="item in category.items" :key="item">{{ item }}</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div v-if="section.groups" class="subsection-grid">
-                <div v-for="group in section.groups" :key="group.title" class="subsection-block">
-                  <h3 class="subsection-title">{{ group.title }}</h3>
-                  <ul class="feature-list">
-                    <li v-for="item in group.items" :key="item">{{ item }}</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div v-if="section.highlight" class="highlight-box">
-                <h3 class="subsection-title">{{ section.highlight.title }}</h3>
-                <ul class="feature-list feature-list--inline">
-                  <li v-for="item in section.highlight.items" :key="item">{{ item }}</li>
-                </ul>
-              </div>
-
-              <div v-if="section.shortcuts" class="shortcuts-grid">
-                <div
-                  v-for="shortcut in section.shortcuts"
-                  :key="shortcut.key"
-                  class="shortcut-item"
-                >
-                  <kbd class="shortcut-key">{{ shortcut.key }}</kbd>
-                  <span class="shortcut-action">{{ shortcut.action }}</span>
-                </div>
-              </div>
-
-              <ul
-                v-if="section.items"
-                class="feature-list"
-                :class="{
-                  'feature-list--grid': section.variant === 'grid' || section.variant === 'unique',
-                  'feature-list--highlight': section.variant === 'unique',
-                  'feature-list--spaced': section.tags,
-                }"
-              >
-                <li v-for="item in section.items" :key="item">{{ item }}</li>
-              </ul>
-            </section>
-
-            <!-- Blogbeitrag auf kodinitools.com -->
-            <section :id="ARTICLE_ID" class="article-section">
-              <div class="article-section-header">
-                <div class="article-section-icon"><LandingIcon name="article" :size="22" /></div>
-                <h2 class="article-section-title">{{ blog.articleSection.title }}</h2>
-              </div>
-              <div class="article-links">
-                <a
-                  v-for="article in blog.articles"
-                  :key="article.url"
-                  :href="article.url"
-                  class="blog-card"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <div class="blog-card-body">
-                    <div class="blog-card-header">
-                      <span class="blog-card-tag">{{ article.tag }}</span>
-                      <span class="blog-card-meta">kodinitools.com/blog</span>
-                    </div>
-                    <h3 class="blog-card-title">{{ article.title }}</h3>
-                    <p class="blog-card-description">{{ article.description }}</p>
-                    <span class="blog-card-link">
-                      {{ blog.readMore }}
-                      <LandingIcon name="arrow" :size="16" :stroke-width="2.5" />
-                    </span>
-                  </div>
-                </a>
-              </div>
-            </section>
-
-            <!-- Zusammenfassung -->
-            <section class="article-section summary-section">
-              <h2 class="article-section-title">{{ blog.summary.title }}</h2>
-              <p class="article-section-intro">{{ blog.summary.text }}</p>
-              <ul class="summary-list">
-                <li v-for="item in blog.summary.items" :key="item">
-                  <span class="summary-check"
-                    ><LandingIcon name="check" :size="16" :stroke-width="3"
-                  /></span>
-                  {{ item }}
-                </li>
-              </ul>
-              <p class="summary-cta-text">{{ blog.summary.cta }}</p>
-            </section>
-          </article>
-        </div>
+    <section id="blog" class="blog-section blog-page">
+      <div class="section-header">
+        <h1 class="section-title">{{ t.landing.blog.title }}</h1>
+        <p class="section-subtitle">{{ t.landing.blog.subtitle }}</p>
       </div>
-
-      <!-- CTA -->
-      <section class="cta-section">
-        <div class="cta-content">
-          <h2 class="cta-title">{{ blog.cta.title }}</h2>
-          <p class="cta-subtitle">{{ blog.cta.subtitle }}</p>
-          <RouterLink :to="{ name: 'editor' }" class="btn-primary btn-large">
-            <span class="btn-icon"><LandingIcon name="play" :size="24" /></span>
-            {{ blog.cta.button }}
-          </RouterLink>
-        </div>
-      </section>
-    </div>
+      <div class="blog-grid">
+        <a
+          v-for="article in blogCards"
+          :key="article.id"
+          :href="article.url"
+          class="blog-card"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div class="blog-card-media">
+            <img
+              v-if="article.image"
+              :src="article.image"
+              alt=""
+              width="640"
+              height="360"
+              loading="lazy"
+            />
+            <!-- Ohne Vorschaubild: stilisierte Dokumentseite im Theme. -->
+            <div v-else class="blog-card-sheet" aria-hidden="true">
+              <span class="sheet-heading"></span>
+              <span v-for="n in 6" :key="n" class="sheet-line"></span>
+            </div>
+          </div>
+          <div class="blog-card-body">
+            <div class="blog-card-header">
+              <span class="blog-card-tag">{{ article.tag }}</span>
+              <span v-if="article.meta" class="blog-card-meta">{{ article.meta }}</span>
+            </div>
+            <h2 class="blog-card-title">{{ article.title }}</h2>
+            <p class="blog-card-description">{{ article.description }}</p>
+            <span class="blog-card-link">
+              {{ t.landing.blog.readMore }}
+              <LandingIcon name="arrow" :size="16" :stroke-width="2.5" />
+            </span>
+          </div>
+        </a>
+      </div>
+    </section>
   </LandingLayout>
 </template>
