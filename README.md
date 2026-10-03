@@ -325,6 +325,20 @@ Nutzerdaten); nur das erste Willkommensdokument wird in der Startsprache angeleg
 - Passt zum Privacy-First-Ansatz: keine Netzwerkaufrufe zur Laufzeit, solange keine eigene
   Schrift ausgewaehlt ist (dann wird genau deren Datei geladen).
 
+### Uebernahme aus anderen Tools (z. B. Playlist Generator)
+
+Andere KodiniTools koennen eine Textdatei direkt in den Editor uebergeben -- ohne Upload, nur
+ueber den gemeinsamen Ursprung `kodinitools.com`:
+
+1. Das sendende Tool legt einen JSON-Eintrag unter `localStorage['kodinitools-texteditor-handoff-v1']`
+   ab: `{ version: 1, source, name, content, mimeType?, sharedAt }`.
+2. Es oeffnet `https://kodinitools.com/texteditor/app?source=<tool>` (neuer Tab).
+3. Der Editor liest den Eintrag beim Start genau einmal, entfernt ihn und oeffnet den Inhalt als
+   neues Dokument (Name ohne Endung; Markup wie XSPF als Quelltext). Eintraege aelter als eine
+   Stunde oder mit ungueltigem Aufbau werden verworfen; dann erscheint nur ein Hinweis.
+
+Umsetzung: `src/utils/handoff.ts` (getestet), Verdrahtung in `views/EditorView.vue`.
+
 ## PWA / Offline
 
 Der Editor ist eine installierbare **Progressive Web App** und laeuft komplett **offline** – das

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useEditorStore } from '@/stores/editor'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { useFileDrop } from '@/composables/useFileDrop'
@@ -9,6 +10,7 @@ import { pageRenderOptions } from '@/utils/pageRenderOptions'
 import { exportPdf } from '@/utils/exportPdf'
 import { isBackupFile, isHtmlFile, isImageFile, isTextFile, readFileAsText } from '@/utils/files'
 import { htmlFileToSource } from '@/utils/richText'
+import { handoffContent, handoffDocumentName, readHandoff } from '@/utils/handoff'
 import { loadFont, findFont } from '@/config/fonts'
 import { useToast } from '@/composables/useToast'
 import type { EditorApi, SelectionFormat } from '@/types'
@@ -27,6 +29,8 @@ import { LIMITS } from '@/stores/editor'
 const store = useEditorStore()
 const { t } = useI18n()
 const { showToast } = useToast()
+const route = useRoute()
+const router = useRouter()
 
 const editorAreaRef = ref<InstanceType<typeof EditorArea> | null>(null)
 const findRef = ref<InstanceType<typeof FindReplace> | null>(null)
@@ -199,6 +203,27 @@ async function handleDroppedFiles(files: File[]): Promise<void> {
 
 const { active: dropActive } = useFileDrop(handleDroppedFiles)
 
+/* ---------- Uebernahme aus anderen KodiniTools ---------- */
+/**
+ * Wurde der Editor mit `?source=<tool>` geoeffnet, liegt im localStorage eine
+ * Datei des sendenden Tools (z. B. eine Wiedergabeliste des Playlist Generators).
+ * Sie wird genau einmal als neues Dokument uebernommen; der Query-Parameter
+ * verschwindet danach, damit ein Neuladen nichts erneut anfordert.
+ */
+function consumeHandoff(): void {
+  if (typeof route.query.source !== 'string') return
+  const doc = readHandoff()
+  if (doc) {
+    store.openDocument(handoffDocumentName(doc), handoffContent(doc))
+    showToast(t.value.toast.handoffOpened(doc.name), { key: 'handoff' })
+  } else {
+    showToast(t.value.toast.handoffEmpty, { type: 'info' })
+  }
+  const query = { ...route.query }
+  delete query.source
+  void router.replace({ query })
+}
+
 /* ---------- Vorschau in neuem Tab ---------- */
 /**
  * Oeffnet die exakte Vorschau in einem eigenen Tab. Vorher den aktuellen Stand
@@ -267,7 +292,10 @@ async function exportPdfDocument(): Promise<void> {
   }
 }
 
-onMounted(syncPageStyle)
+onMounted(() => {
+  syncPageStyle()
+  consumeHandoff()
+})
 onBeforeUnmount(() => pageStyleEl?.remove())
 watch(() => [store.settings.pageFormat, store.settings.pageOrientation], syncPageStyle)
 
