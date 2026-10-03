@@ -301,6 +301,8 @@ export const de = {
     printing: 'Druckdialog geöffnet',
     previewOpened: 'Vorschau in neuem Tab geöffnet',
     previewBlocked: 'Vorschau blockiert -- bitte Popups für diese Seite erlauben',
+    handoffOpened: (name: string): string => `Datei übernommen: ${name}`,
+    handoffEmpty: 'Keine Datei zur Übernahme gefunden',
   },
   transformMenu: {
     hint: 'Wird auf Auswahl oder ganzen Text angewendet',
@@ -1011,6 +1013,8 @@ export const en: Messages = {
     printing: 'Print dialog opened',
     previewOpened: 'Preview opened in a new tab',
     previewBlocked: 'Preview blocked -- please allow pop-ups for this site',
+    handoffOpened: (name: string): string => `File received: ${name}`,
+    handoffEmpty: 'No file found to take over',
   },
   transformMenu: {
     hint: 'Applies to selection or whole text',
