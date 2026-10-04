@@ -618,7 +618,7 @@ defineExpose({ openLinkEditor })
         class="zoom-range"
         :min="LIMITS.zoom.min"
         :max="LIMITS.zoom.max"
-        :step="LIMITS.zoom.step"
+        step="0.01"
         :value="store.settings.pageZoom"
         :title="t.format.zoomTitle"
         :aria-label="t.format.zoomTitle"

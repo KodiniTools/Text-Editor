@@ -1,7 +1,10 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'
-import { useEditorStore } from '@/stores/editor'
+import { LIMITS, useEditorStore } from '@/stores/editor'
 import { pageDimensions } from '@/utils/pageFormats'
 import { DEFAULT_MARGIN_MM, mmToPx, pageLineStepPx, paginateByLines } from '@/utils/renderPages'
+
+/** Innen-Abstand der Seiten-Leinwand (.page-backdrop) je Seite in px (1rem). */
+const BACKDROP_PAD = 16
 
 /** Kennzahlen der aktuellen Seite (in px), abgeleitet vom Papierformat. */
 export interface PageMetrics {
@@ -27,6 +30,16 @@ export function usePageView(editable: Ref<HTMLElement | null>) {
   /** Scroll-Container der Seiten-Ansicht (fuer Bild-Platzierung relativ zum Sichtfeld). */
   const host = ref<HTMLElement | null>(null)
   const contentHeight = ref(0)
+  /** Aktuelle Innenbreite des Scroll-Containers (fuer "An Breite anpassen"). */
+  const hostWidth = ref(0)
+  // "An Breite anpassen": auf schmalen Bildschirmen das Blatt automatisch so
+  // verkleinern, dass es ohne horizontales Scrollen vollstaendig sichtbar ist.
+  // Bleibt aktiv, bis der Nutzer den Zoom selbst setzt; ein Wechsel von Format,
+  // Ausrichtung oder zurueck in den Seiten-Modus schaltet es wieder ein.
+  const autoFit = ref(true)
+  // Sentinel: merkt sich den von uns gesetzten Zoom, damit der eigene
+  // Schreibzugriff nicht faelschlich als Nutzer-Eingabe gewertet wird.
+  let selfSetZoom: number | null = null
 
   const pageActive = computed(() => store.settings.pageFormat !== 'none')
   const zoom = computed(() => store.settings.pageZoom)
@@ -89,20 +102,81 @@ export function usePageView(editable: Ref<HTMLElement | null>) {
 
   function measure(): void {
     if (editable.value && pageActive.value) contentHeight.value = editable.value.scrollHeight
+    if (host.value) hostWidth.value = host.value.clientWidth
+  }
+
+  /**
+   * "An Breite anpassen": Nur wenn das Blatt bei 100 % breiter ist als der
+   * verfuegbare Platz (also auf Telefon-/Schmal-Displays), wird der Zoom auf den
+   * Faktor gesetzt, bei dem das Blatt die Breite gerade ausfuellt. Dadurch ist
+   * ein ganzes A4 ohne horizontales Scrollen sichtbar. Auf breiten Bildschirmen
+   * (Blatt passt bei 100 %) bleibt der eingestellte Zoom unangetastet, es wird
+   * nie ueber 100 % hinaus vergroessert. Es wird derselbe pageZoom geschrieben,
+   * den auch der Regler nutzt -> Blatt, Seitenumbruch und Bildkoordinaten
+   * bleiben deckungsgleich (WYSIWYG). pageZoom zaehlt nicht zur Undo-History.
+   */
+  function applyFit(): void {
+    if (!autoFit.value || !pageActive.value) return
+    const m = metrics.value
+    if (!m || hostWidth.value <= 0) return
+    const avail = hostWidth.value - 2 * BACKDROP_PAD
+    // Passt das Blatt bei 100 % schon hinein -> nichts tun (Desktop unberuehrt).
+    if (avail <= 0 || avail >= m.pageW) return
+    // Abrunden auf zwei Stellen, damit kein Sub-Pixel-Ueberlauf bleibt.
+    const raw = Math.floor((avail / m.pageW) * 100) / 100
+    const target = Math.min(LIMITS.zoom.max, Math.max(LIMITS.zoom.min, raw))
+    // Schwelle ~ Scrollleistenbreite: absorbiert das Zittern, wenn durch das
+    // Anpassen eine Scrollleiste erscheint/verschwindet (kein Hin-und-her).
+    if (Math.abs(store.settings.pageZoom - target) < 0.02) return
+    selfSetZoom = target
+    store.updateSettings({ pageZoom: target })
   }
 
   let resizeObserver: ResizeObserver | null = null
   function setupObserver(): void {
-    if (typeof ResizeObserver === 'undefined' || !editable.value) return
-    resizeObserver = new ResizeObserver(measure)
-    resizeObserver.observe(editable.value)
+    if (typeof ResizeObserver === 'undefined') return
+    resizeObserver = new ResizeObserver(() => {
+      measure()
+      applyFit()
+    })
+    if (editable.value) resizeObserver.observe(editable.value)
+    // Auch die Breite des Scroll-Containers beobachten (Drehen des Geraets,
+    // Fenster-/Spalten-Resize) -> Auto-Fit neu berechnen.
+    if (host.value) resizeObserver.observe(host.value)
   }
 
   watch([pageActive, metrics], () => nextTick(measure))
 
+  // Neuer Layout-Kontext (Seiten-Modus betreten, Format/Ausrichtung gewechselt)
+  // -> Auto-Fit wieder einschalten und neu einpassen.
+  watch(
+    () => [pageActive.value, store.settings.pageFormat, store.settings.pageOrientation],
+    () => {
+      autoFit.value = true
+      nextTick(applyFit)
+    },
+  )
+
+  // Aendert der Nutzer den Zoom selbst (Regler, %-Zuruecksetzen), Auto-Fit
+  // abschalten -- wir ueberschreiben seine Wahl nicht mehr (bis zum naechsten
+  // Layout-Wechsel). Unseren eigenen Schreibzugriff per Sentinel ausnehmen.
+  watch(
+    () => store.settings.pageZoom,
+    (z) => {
+      if (selfSetZoom !== null && Math.abs(z - selfSetZoom) < 0.005) {
+        selfSetZoom = null
+        return
+      }
+      autoFit.value = false
+    },
+  )
+
   onMounted(() => {
     setupObserver()
-    nextTick(measure)
+    nextTick(() => {
+      measure()
+      applyFit()
+    })
   })
   onBeforeUnmount(() => resizeObserver?.disconnect())
 
