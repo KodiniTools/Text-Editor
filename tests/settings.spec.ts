@@ -71,7 +71,7 @@ describe('normalizeSettings', () => {
   it('begrenzt den Zoom der Seiten-Ansicht', () => {
     expect(normalizeSettings({ pageZoom: 1.5 }).pageZoom).toBe(1.5)
     expect(normalizeSettings({ pageZoom: 9 }).pageZoom).toBe(2)
-    expect(normalizeSettings({ pageZoom: 0.1 }).pageZoom).toBe(0.5)
+    expect(normalizeSettings({ pageZoom: 0.1 }).pageZoom).toBe(0.3)
     expect(normalizeSettings({ pageZoom: NaN }).pageZoom).toBe(DEFAULT_SETTINGS.pageZoom)
     expect(normalizeSettings({}).pageZoom).toBe(1)
   })

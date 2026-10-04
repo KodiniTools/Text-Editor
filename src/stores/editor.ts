@@ -70,7 +70,10 @@ export const LIMITS = {
   fontSize: { min: 10, max: 42, step: 1 },
   lineHeight: { min: 1, max: 3, step: 0.1 },
   letterSpacing: { min: -1, max: 8, step: 0.1 },
-  zoom: { min: 0.5, max: 2, step: 0.1 },
+  // min 0.3: erlaubt "An Breite anpassen", damit auf schmalen Telefon-Displays
+  // (~390 px) ein ganzes A4-Blatt (benoetigt ~0.45) ohne horizontales Scrollen
+  // vollstaendig sichtbar wird.
+  zoom: { min: 0.3, max: 2, step: 0.1 },
 } as const
 
 /** Die Darstellungs-Einstellungen, die per Undo/Redo erfasst werden. */

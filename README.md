@@ -74,7 +74,10 @@ Datei, wird der Bildbereich ausgeblendet.
   Tippflaechen, Formularfelder nutzen 16px (kein ungewolltes iOS-Zoom beim Fokus), Bild-Griffe zum
   Skalieren/Loeschen sind groesser, und die Tab-Aktionen (Umbenennen/Schliessen) sind ohne Hover
   dauerhaft sichtbar. Die Menues (`Speichern`, `Werkzeuge`) liegen per `Teleport` im `body`, damit
-  sie in einer scrollenden Leiste nicht abgeschnitten werden
+  sie in einer scrollenden Leiste nicht abgeschnitten werden. Im **Seiten-Modus** (A4/A3/…) wird das
+  Blatt auf schmalen Bildschirmen automatisch **an die Breite angepasst** (Fit-to-Width), sodass eine
+  ganze Seite ohne horizontales Scrollen sichtbar ist – der Zoom-Regler bleibt jederzeit manuell
+  uebersteuerbar
 - **Zweisprachig (DE/EN)** – die komplette Oberflaeche laesst sich ueber den Sprachumschalter der
   globalen Navigation wechseln; die Wahl wird gemerkt und beim ersten Besuch aus der Browsersprache abgeleitet
 - **Import/Export**: Datei oeffnen, als `.txt` (reiner Text), `.md` (**echtes Markdown**, siehe
