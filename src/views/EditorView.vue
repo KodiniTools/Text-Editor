@@ -205,23 +205,28 @@ const { active: dropActive } = useFileDrop(handleDroppedFiles)
 
 /* ---------- Uebernahme aus anderen KodiniTools ---------- */
 /**
- * Wurde der Editor mit `?source=<tool>` geoeffnet, liegt im localStorage eine
- * Datei des sendenden Tools (z. B. eine Wiedergabeliste des Playlist Generators).
- * Sie wird genau einmal als neues Dokument uebernommen; der Query-Parameter
- * verschwindet danach, damit ein Neuladen nichts erneut anfordert.
+ * Ein sendendes Tool (z. B. der Playlist Generator) legt eine Datei im
+ * localStorage ab und oeffnet den Editor mit `?source=<tool>`. Der Eintrag wird
+ * bei JEDEM Editor-Start gelesen, nicht nur mit `?source`: Erreicht die Datei den
+ * Editor erst beim naechsten Oeffnen (Popup blockiert, Tab geschlossen, alte
+ * Version aus dem Service-Worker-Cache), geht sie so nicht verloren -- sie
+ * verfaellt nach einer Stunde (siehe utils/handoff.ts). `?source` steuert nur
+ * den Hinweis, wenn nichts (Gueltiges) vorliegt, und wird danach entfernt.
  */
 function consumeHandoff(): void {
-  if (typeof route.query.source !== 'string') return
+  const expected = typeof route.query.source === 'string'
   const doc = readHandoff()
   if (doc) {
     store.openDocument(handoffDocumentName(doc), handoffContent(doc))
     showToast(t.value.toast.handoffOpened(doc.name), { key: 'handoff' })
-  } else {
+  } else if (expected) {
     showToast(t.value.toast.handoffEmpty, { type: 'info' })
   }
-  const query = { ...route.query }
-  delete query.source
-  void router.replace({ query })
+  if (expected) {
+    const query = { ...route.query }
+    delete query.source
+    void router.replace({ query })
+  }
 }
 
 /* ---------- Vorschau in neuem Tab ---------- */

@@ -333,9 +333,16 @@ ueber den gemeinsamen Ursprung `kodinitools.com`:
 1. Das sendende Tool legt einen JSON-Eintrag unter `localStorage['kodinitools-texteditor-handoff-v1']`
    ab: `{ version: 1, source, name, content, mimeType?, sharedAt }`.
 2. Es oeffnet `https://kodinitools.com/texteditor/app?source=<tool>` (neuer Tab).
-3. Der Editor liest den Eintrag beim Start genau einmal, entfernt ihn und oeffnet den Inhalt als
-   neues Dokument (Name ohne Endung; Markup wie XSPF als Quelltext). Eintraege aelter als eine
-   Stunde oder mit ungueltigem Aufbau werden verworfen; dann erscheint nur ein Hinweis.
+3. Der Editor liest den Eintrag bei jedem Start genau einmal, entfernt ihn und oeffnet den Inhalt
+   als neues Dokument (Name ohne Endung; Markup wie XSPF als Quelltext). Das gilt auch ohne
+   `?source` -- erreicht die Datei den Editor erst beim naechsten Oeffnen (Popup blockiert, alte
+   Version aus dem Service-Worker-Cache), geht sie nicht verloren. Eintraege aelter als eine Stunde
+   oder mit ungueltigem Aufbau werden verworfen; mit `?source` erscheint dann nur ein Hinweis.
+
+Hinweis zum Deploy: Der Editor ist eine PWA mit stillem Update (`registerType: 'prompt'`). Ein
+bereits installierter Service Worker liefert nach einem Deploy weiter die alte Version aus, bis
+alle Editor-Tabs (und PWA-Fenster) geschlossen und neu geoeffnet wurden -- erst dann greift eine
+neue Fassung dieser Uebernahme.
 
 Umsetzung: `src/utils/handoff.ts` (getestet), Verdrahtung in `views/EditorView.vue`.
 
