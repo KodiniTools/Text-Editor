@@ -46,8 +46,12 @@ export function useTheme(settings: EditorSettings) {
   function applyTheme(): void {
     const dark = isDark()
     applyingTheme = true
+    // html[data-theme] schaltet die Design-Tokens (--ds-*) und die globale
+    // Navigation, body.light-theme haelt Paritaet zum Collage Maker / Playlist
+    // Generator, html.dark bleibt als Altbestand fuer externe Skripte.
     root.classList.toggle('dark', dark)
     root.setAttribute('data-theme', dark ? 'dark' : 'light')
+    document.body.classList.toggle('light-theme', !dark)
     // Nur eine bewusste Wahl (nicht 'system') global weitergeben, damit die
     // Auto-Einstellung nicht ungewollt zu einem festen Wert einfriert.
     if (settings.theme !== 'system') {
