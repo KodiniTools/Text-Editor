@@ -17,7 +17,7 @@ const pageFormatLabel = usePageFormatLabel()
 
 <template>
   <div
-    class="hbar-scroll flex flex-wrap items-center gap-x-4 gap-y-1 whitespace-nowrap border-t border-zinc-200 bg-zinc-50 px-4 py-1.5 text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400"
+    class="hbar-scroll flex flex-wrap items-center gap-x-4 gap-y-1 whitespace-nowrap border-t border-line bg-surface-2 px-4 py-1.5 text-xs text-ink-3"
   >
     <span>{{ stats.words }} {{ t.status.words }}</span>
     <span>{{ stats.characters }} {{ t.status.characters }}</span>
@@ -27,7 +27,7 @@ const pageFormatLabel = usePageFormatLabel()
     <span>{{ stats.paragraphs }} {{ t.status.paragraphs }}</span>
     <span>{{ readTime }}</span>
     <span
-      class="ml-auto inline-flex items-center gap-1 rounded bg-zinc-200 px-2 py-0.5 font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+      class="ml-auto inline-flex items-center gap-1 rounded-sm bg-surface-3 px-2 py-0.5 font-medium text-ink-2"
       :title="t.format.page"
     >
       <svg viewBox="0 0 16 16" class="h-3 w-3" aria-hidden="true">

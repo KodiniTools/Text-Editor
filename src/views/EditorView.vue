@@ -15,6 +15,7 @@ import { loadFont, findFont } from '@/config/fonts'
 import { useToast } from '@/composables/useToast'
 import type { EditorApi, SelectionFormat } from '@/types'
 import type { Transform } from '@/utils/textTransforms'
+import { UiButton, UiIconButton, UiKbd } from '@/components/ui'
 
 import DocumentTabs from '@/components/DocumentTabs.vue'
 import EditorToolbar from '@/components/EditorToolbar.vue'
@@ -369,9 +370,7 @@ useKeyboardShortcuts({
 </script>
 
 <template>
-  <div
-    class="relative flex h-full flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
-  >
+  <div class="relative flex h-full flex-col bg-surface-0 text-ink">
     <!-- Nur fuer Suchmaschinen/Screenreader: eine eindeutige Ueberschrift und
          Kurzbeschreibung der Seite (visuell ausgeblendet). -->
     <h1 class="sr-only">{{ t.seo.heading }}</h1>
@@ -414,7 +413,7 @@ useKeyboardShortcuts({
            ab md nebeneinander (je halbe Breite). -->
       <MarkdownPreview
         v-if="showMarkdown"
-        class="min-h-0 min-w-0 flex-1 border-t border-zinc-200 md:border-l md:border-t-0 dark:border-zinc-800"
+        class="min-h-0 min-w-0 flex-1 border-t border-line md:border-l md:border-t-0"
         @close="showMarkdown = false"
       />
     </div>
@@ -427,10 +426,10 @@ useKeyboardShortcuts({
     -->
     <div
       v-if="dropActive"
-      class="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-accent/10 p-6 backdrop-blur-sm"
+      class="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-accent-soft p-6"
     >
       <div
-        class="rounded-2xl border-2 border-dashed border-accent bg-white/90 px-8 py-6 text-center shadow-xl dark:bg-zinc-900/90"
+        class="rounded-lg border-2 border-dashed border-accent bg-surface-1 px-8 py-6 text-center shadow-overlay"
       >
         <svg viewBox="0 0 24 24" class="mx-auto mb-2 h-9 w-9 text-accent" aria-hidden="true">
           <path
@@ -442,8 +441,8 @@ useKeyboardShortcuts({
             stroke-linejoin="round"
           />
         </svg>
-        <p class="text-lg font-semibold text-zinc-800 dark:text-zinc-100">{{ t.drop.title }}</p>
-        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ t.drop.hint }}</p>
+        <p class="text-lg font-semibold text-ink">{{ t.drop.title }}</p>
+        <p class="mt-1 text-sm text-ink-3">{{ t.drop.hint }}</p>
       </div>
     </div>
 
@@ -455,7 +454,7 @@ useKeyboardShortcuts({
     <button
       v-if="store.settings.focusMode"
       type="button"
-      class="absolute right-4 top-4 z-40 inline-flex items-center gap-2 rounded-full bg-zinc-800/90 px-4 py-2 text-sm font-medium text-white shadow-lg backdrop-blur hover:bg-zinc-700"
+      class="absolute right-4 top-4 z-40 inline-flex items-center gap-2 rounded-full border border-line bg-surface-1 px-4 py-2 text-sm font-medium text-ink shadow-overlay transition-colors hover:bg-surface-2"
       :title="`${t.focusOverlay.exit} (Esc)`"
       @click="store.updateSettings({ focusMode: false })"
     >
@@ -469,7 +468,7 @@ useKeyboardShortcuts({
         />
       </svg>
       {{ t.focusOverlay.exit }}
-      <span class="rounded bg-white/20 px-1.5 py-0.5 text-xs">Esc</span>
+      <UiKbd :keys="['Esc']" />
     </button>
 
     <!--
@@ -480,13 +479,12 @@ useKeyboardShortcuts({
     -->
     <div
       v-if="store.settings.focusMode"
-      class="absolute bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full bg-zinc-800/90 px-2 py-1.5 text-white shadow-lg backdrop-blur"
+      class="absolute bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full border border-line bg-surface-1 px-2 py-1.5 text-ink shadow-overlay"
     >
-      <button
-        type="button"
-        class="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/15 disabled:opacity-40 disabled:hover:bg-transparent"
-        :title="t.focusOverlay.zoomOut"
-        :aria-label="t.focusOverlay.zoomOut"
+      <UiIconButton
+        size="sm"
+        round
+        :label="t.focusOverlay.zoomOut"
         :disabled="focusZoom <= LIMITS.zoom.min + 0.001"
         @click="zoomOut"
       >
@@ -499,17 +497,16 @@ useKeyboardShortcuts({
             stroke-linecap="round"
           />
         </svg>
-      </button>
+      </UiIconButton>
       <span
         class="min-w-[3.25rem] select-none text-center text-sm font-medium tabular-nums"
         :aria-label="t.focusOverlay.zoomLabel"
         >{{ Math.round(focusZoom * 100) }} %</span
       >
-      <button
-        type="button"
-        class="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/15 disabled:opacity-40 disabled:hover:bg-transparent"
-        :title="t.focusOverlay.zoomIn"
-        :aria-label="t.focusOverlay.zoomIn"
+      <UiIconButton
+        size="sm"
+        round
+        :label="t.focusOverlay.zoomIn"
         :disabled="focusZoom >= LIMITS.zoom.max - 0.001"
         @click="zoomIn"
       >
@@ -522,27 +519,29 @@ useKeyboardShortcuts({
             stroke-linecap="round"
           />
         </svg>
-      </button>
-      <span class="mx-0.5 h-5 w-px bg-white/20" aria-hidden="true" />
-      <button
-        type="button"
-        class="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium hover:bg-white/15 disabled:opacity-40 disabled:hover:bg-transparent"
+      </UiIconButton>
+      <span class="mx-0.5 h-5 w-px bg-line" aria-hidden="true" />
+      <UiButton
+        size="sm"
+        variant="ghost"
         :title="t.focusOverlay.zoomReset"
         :disabled="Math.abs(focusZoom - 1) < 0.001"
         @click="resetZoom"
       >
-        <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true">
-          <path
-            d="M3.5 8a4.5 4.5 0 106-4.24M3.5 3.5v2.2h2.2"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
+        <template #icon>
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              d="M3.5 8a4.5 4.5 0 106-4.24M3.5 3.5v2.2h2.2"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </template>
         {{ t.focusOverlay.zoomReset }}
-      </button>
+      </UiButton>
     </div>
 
     <!--

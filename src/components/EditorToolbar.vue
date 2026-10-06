@@ -61,9 +61,9 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const imageInput = ref<HTMLInputElement | null>(null)
 const backupInput = ref<HTMLInputElement | null>(null)
 
-// Speichern-Menue: haengt an seinem Knopf und liegt per Teleport im <body>,
-// damit es in der (auf Mobile horizontal scrollenden) Werkzeugleiste nicht
-// abgeschnitten wird.
+// Speichern-Menue: haengt an seinem Knopf und liegt per Teleport im
+// #modal-portal, damit es in der (auf Mobile horizontal scrollenden)
+// Werkzeugleiste nicht abgeschnitten wird und ueber der Navigation liegt.
 const {
   open: downloadOpen,
   anchorEl: downloadAnchor,
@@ -272,7 +272,7 @@ defineExpose({ download, copyAll, triggerImport })
 
 <template>
   <div
-    class="hbar-scroll flex flex-wrap items-center gap-1 border-b border-zinc-200 bg-white px-2 py-1.5 dark:border-zinc-800 dark:bg-zinc-900"
+    class="hbar-scroll flex flex-wrap items-center gap-1 border-b border-line bg-surface-1 px-2 py-1.5"
   >
     <button type="button" class="tb-btn" :title="t.toolbar.newTitle" @click="newDocument">
       {{ t.toolbar.new }}
@@ -294,11 +294,11 @@ defineExpose({ download, copyAll, triggerImport })
     >
       {{ t.toolbar.save }} ▾
     </button>
-    <Teleport to="body">
+    <Teleport to="#modal-portal">
       <div
         v-if="downloadOpen"
         ref="downloadMenu"
-        class="fixed z-50 w-48 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-1 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
+        class="fixed z-dialog w-48 overflow-y-auto rounded-md border border-line bg-surface-1 p-1 shadow-overlay"
         :style="downloadStyle"
       >
         <button type="button" class="menu-item" @click="download('txt')">
@@ -309,26 +309,26 @@ defineExpose({ download, copyAll, triggerImport })
         </button>
         <button type="button" class="menu-item leading-tight" @click="exportHtml">
           {{ t.toolbar.asHtml }}
-          <span class="block text-xs text-zinc-400">{{ t.toolbar.asHtmlHint }}</span>
+          <span class="block text-xs text-ink-3">{{ t.toolbar.asHtmlHint }}</span>
         </button>
         <button type="button" class="menu-item leading-tight" @click="exportHtmlSource">
           {{ t.toolbar.asHtmlSource }}
-          <span class="block text-xs text-zinc-400">{{ t.toolbar.asHtmlSourceHint }}</span>
+          <span class="block text-xs text-ink-3">{{ t.toolbar.asHtmlSourceHint }}</span>
         </button>
         <button type="button" class="menu-item leading-tight" @click="exportPdf">
           {{ t.toolbar.asPdf }}
-          <span class="block text-xs text-zinc-400">{{ pageFormatLabel }}</span>
+          <span class="block text-xs text-ink-3">{{ pageFormatLabel }}</span>
         </button>
 
-        <div class="my-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+        <div class="my-1 h-px bg-line" />
 
         <button type="button" class="menu-item leading-tight" @click="exportBackup">
           {{ t.toolbar.backupSave }}
-          <span class="block text-xs text-zinc-400">{{ t.toolbar.backupSaveHint }}</span>
+          <span class="block text-xs text-ink-3">{{ t.toolbar.backupSaveHint }}</span>
         </button>
         <button type="button" class="menu-item leading-tight" @click="triggerRestore">
           {{ t.toolbar.backupRestore }}
-          <span class="block text-xs text-zinc-400">{{ t.toolbar.backupRestoreHint }}</span>
+          <span class="block text-xs text-ink-3">{{ t.toolbar.backupRestoreHint }}</span>
         </button>
       </div>
     </Teleport>
@@ -361,7 +361,7 @@ defineExpose({ download, copyAll, triggerImport })
 
     <button
       type="button"
-      class="tb-btn text-red-600 disabled:text-zinc-400 dark:text-red-400"
+      class="tb-btn text-danger disabled:text-ink-3"
       :disabled="isEmpty"
       :title="t.toolbar.clearTitle"
       @click="clearText"
@@ -378,7 +378,7 @@ defineExpose({ download, copyAll, triggerImport })
       {{ t.toolbar.print }}
     </button>
 
-    <span class="mx-1 h-5 w-px bg-zinc-200 dark:bg-zinc-700" />
+    <span class="mx-1 h-5 w-px bg-line" />
 
     <button
       type="button"
@@ -399,14 +399,14 @@ defineExpose({ download, copyAll, triggerImport })
       ↷
     </button>
 
-    <span class="mx-1 h-5 w-px bg-zinc-200 dark:bg-zinc-700" />
+    <span class="mx-1 h-5 w-px bg-line" />
 
     <TransformMenu @apply="(fn: Transform) => emit('transform', fn)" />
     <button type="button" class="tb-btn" :title="t.toolbar.findTitle" @click="emit('toggleFind')">
       {{ t.toolbar.find }}
     </button>
 
-    <span class="mx-1 h-5 w-px bg-zinc-200 dark:bg-zinc-700" />
+    <span class="mx-1 h-5 w-px bg-line" />
 
     <button type="button" class="tb-btn" :title="t.toolbar.previewTitle" @click="emit('preview')">
       {{ t.toolbar.preview }}
@@ -487,12 +487,12 @@ defineExpose({ download, copyAll, triggerImport })
 
 <style scoped>
 .tb-btn {
-  @apply rounded-md px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-zinc-200 dark:hover:bg-zinc-800;
+  @apply rounded-sm px-3 py-1.5 text-sm font-medium text-ink-2 transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40;
 }
 .tb-start {
-  @apply border border-accent/40 font-semibold text-accent hover:bg-accent-soft dark:text-accent dark:hover:bg-zinc-800;
+  @apply border border-accent font-semibold text-accent hover:bg-accent-soft;
 }
 .menu-item {
-  @apply block w-full rounded-md px-2 py-1.5 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-700;
+  @apply block w-full rounded-sm px-2 py-1.5 text-left text-sm text-ink-2 hover:bg-surface-2;
 }
 </style>

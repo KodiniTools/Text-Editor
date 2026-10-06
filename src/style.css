@@ -1,27 +1,23 @@
+/* ==========================================================================
+   Kodini Texteditor · Globale Basis-Styles
+   --------------------------------------------------------------------------
+   Tokens: src/design-system/tokens-v2.css (--ds-*, gemeinsam mit dem Collage
+   Maker und dem Playlist Generator). Farben, Radien, Schatten und Dauern laufen
+   in Tailwind ueber diese Variablen (tailwind.config.js); Komponenten nutzen
+   keine festen Farbwerte. Hier steht nur, was keiner Komponente gehoert:
+   Schrift, Body/App-Shell, Angleichung der Partials, Dokument-Typografie
+   (.editor-rich), Druck, Touch, Bewegung.
+   ========================================================================== */
+
+@import './design-system/tokens-v2.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* KodiniTools-/Visualizer-Farbschema (hell). RGB-Tripel, damit Tailwind
-     Deckkraft-Modifikatoren (bg-zinc-900/80) weiter funktionieren. */
-  --accent: 1 79 153; /* #014f99 */
-  --accent-soft: 248 225 169; /* #f8e1a9 */
-  --accent-fg: 245 244 214; /* #f5f4d6 */
-
-  --zinc-50: 245 244 214; /* #f5f4d6 Seitenhintergrund */
-  --zinc-100: 249 242 213; /* #f9f2d5 */
-  --zinc-200: 240 228 190; /* #f0e4be */
-  --zinc-300: 226 207 157; /* #e2cf9d Rahmen */
-  --zinc-400: 122 141 160; /* #7a8da0 */
-  --zinc-500: 77 109 142; /* #4d6d8e gedaempfter Text */
-  --zinc-600: 46 90 134; /* #2e5a86 */
-  --zinc-700: 11 70 127; /* #0b467f */
-  --zinc-800: 0 57 113; /* #003971 Haupttext */
-  --zinc-900: 0 43 87; /* #002b57 */
-  --zinc-950: 0 29 61; /* #001d3d */
-
-  /* Textdarstellung - wird von useTheme aus den Settings gesetzt */
+  /* Textdarstellung des Dokuments - wird von useTheme aus den Settings gesetzt.
+     Das sind keine UI-Token, sondern Inhalt (Editor, Vorschau, Druck, Export). */
   --editor-font: ui-sans-serif, system-ui, sans-serif;
   --editor-weight: 400;
   --editor-style: normal;
@@ -34,66 +30,40 @@
      damit der zeilengenaue Seitenumbruch weiter aufgeht. */
   --editor-step: calc(var(--editor-size) * var(--editor-line-height));
   /* --editor-color wird nur gesetzt, wenn eine eigene Textfarbe gewaehlt ist */
-
-  color-scheme: light;
 }
 
-/* KodiniTools-/Visualizer-Farbschema (dunkel). */
-.dark {
-  --accent: 201 152 77; /* #c9984d */
-  --accent-soft: 60 48 30;
-  --accent-fg: 9 20 40; /* #091428 */
+/* === Schrift: Supreme in den drei genutzten Gewichten (font-medium = 500,
+   font-bold = 700; font-semibold = 600 wird vom Browser aus 500/700 abgeleitet),
+   gebuendelt aus src/assets/fonts wie im Collage Maker. === */
+@font-face {
+  font-family: 'Supreme';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('./assets/fonts/Supreme-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Supreme';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url('./assets/fonts/Supreme-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Supreme';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('./assets/fonts/Supreme-Bold.woff2') format('woff2');
+}
 
-  --zinc-50: 253 248 228;
-  --zinc-100: 249 242 213; /* #f9f2d5 Haupttext */
-  --zinc-200: 248 225 169; /* #f8e1a9 */
-  --zinc-300: 227 207 160;
-  --zinc-400: 122 141 160; /* #7a8da0 gedaempfter Text */
-  --zinc-500: 92 111 134;
-  --zinc-600: 52 70 94; /* Eingabe-Rahmen */
-  --zinc-700: 29 51 84; /* Hover/aktiv */
-  --zinc-800: 20 38 64; /* #142640 Karten */
-  --zinc-900: 14 28 50; /* #0e1c32 Leisten */
-  --zinc-950: 9 20 40; /* #091428 Hintergrund */
-
+/* === Farbschema fuer native Controls (Select-Listen, Scrollbalken) === */
+:root[data-theme='dark'] {
   color-scheme: dark;
 }
 
-/* UI-Schrift der KodiniTools-Seiten (gemeinsamer Font-Ordner der Domain). */
-@font-face {
-  font-family: 'Supreme';
-  src:
-    url('/fonts/Supreme-Regular.woff2') format('woff2'),
-    url('/public/fonts/Supreme-Regular.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Scrollleisten wie im Visualizer */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: rgba(1, 79, 153, 0.05);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(1, 79, 153, 0.2);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(1, 79, 153, 0.4);
-}
-.dark ::-webkit-scrollbar-track {
-  background: rgba(201, 152, 77, 0.1);
-}
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(201, 152, 77, 0.4);
-}
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(201, 152, 77, 0.6);
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 html,
@@ -110,8 +80,17 @@ body {
 body {
   display: flex;
   flex-direction: column;
-  /* Theme-Hintergrund auch zwischen App und Footer (Creme / Navy). */
-  @apply bg-zinc-50 dark:bg-zinc-950;
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-text-lg);
+  line-height: var(--ds-leading);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Theme-Hintergrund auch zwischen App und Footer. */
+  background: var(--ds-surface-0);
+  color: var(--ds-text);
+  transition:
+    background-color var(--ds-duration-slow) var(--ds-ease),
+    color var(--ds-duration-slow) var(--ds-ease);
 }
 
 #app {
@@ -140,6 +119,135 @@ html.ktx-scroll #app {
 }
 .global-nav {
   flex: 0 0 auto;
+}
+
+/* === Partials (Navigation/Footer ausserhalb von #app, eingebacken oder vom
+   Live-Server) ===
+   Eigene Hintergruende entfernen, damit die Seitenflaeche durchscheint -- ausser
+   beim Cookie-Banner. Direkte Wrapper (nav, footer): normale Spezifitaet. */
+body > :not(#app):not(script):not(.cookie-banner):not(.cookie-consent):not([class*='cookie']) {
+  background-color: transparent !important;
+}
+/* Alle inneren Nachfahren: :where() hat Spezifitaet 0, damit die Restore-Regeln gewinnen */
+:where(
+    body > :not(#app):not(script):not(.cookie-banner):not(.cookie-consent):not([class*='cookie'])
+  )
+  :where(*:not(.cookie-banner):not(.cookie-consent):not([class*='cookie'])) {
+  background-color: transparent !important;
+}
+
+/* Dropdowns/Submenues der Navigation bekommen wieder eine feste Flaeche */
+body > :not(#app):not(script) [class*='drop'],
+body > :not(#app):not(script) [class*='sub-menu'],
+body > :not(#app):not(script) [class*='submenu'],
+body > :not(#app):not(script) [class*='popup'],
+body > :not(#app):not(script) [class*='popover'],
+body > :not(#app):not(script) [class*='megamenu'] {
+  background-color: var(--ds-surface-1) !important;
+}
+
+/* Hamburger / Toggle-Menue in der Navigation: dekorative Balken und Icons
+   folgen der Textfarbe. */
+body > :not(#app):not(script) span:empty,
+body > :not(#app):not(script) [aria-expanded] > span:empty,
+body > :not(#app):not(script) [aria-expanded] > span > span:empty,
+body > :not(#app):not(script) [aria-expanded] > div > span:empty {
+  background-color: currentColor !important;
+  border-color: currentColor !important;
+}
+body > :not(#app):not(script) button svg line,
+body > :not(#app):not(script) button svg path,
+body > :not(#app):not(script) button svg rect,
+body > :not(#app):not(script) [aria-expanded] svg line,
+body > :not(#app):not(script) [aria-expanded] svg path,
+body > :not(#app):not(script) [aria-expanded] svg rect,
+body > :not(#app):not(script) [role='button'] svg line,
+body > :not(#app):not(script) [role='button'] svg path,
+body > :not(#app):not(script) [role='button'] svg rect {
+  stroke: currentColor !important;
+  fill: currentColor !important;
+}
+body > :not(#app):not(script) [class*='toggler-icon'] {
+  filter: brightness(0) saturate(100%) !important;
+}
+:root[data-theme='dark'] body > :not(#app):not(script) [class*='toggler-icon'] {
+  filter: brightness(0) saturate(100%) invert(1) !important;
+}
+
+/* App-Modals (Dialoge, Popover) werden per <Teleport> nach #modal-portal
+   gerendert. Ein eigener Stacking-Context hebt alle teleportierten Ebenen
+   gemeinsam ueber die globale Navigation (z-index 100) und deren Dropdowns
+   (200), haelt sie aber unter dem Cookie-Banner (10000). */
+#modal-portal {
+  position: relative;
+  z-index: var(--ds-z-backdrop);
+}
+
+/* Cookie Banner: immer im Vordergrund, ueber Nav und Dropdowns */
+.cookie-banner,
+.cookie-consent,
+[class*='cookie-banner'],
+[class*='cookie-consent'],
+[id*='cookie-banner'],
+[id*='cookie-consent'] {
+  z-index: 10000 !important;
+  position: fixed !important;
+}
+
+/* Textfarben der Partials aus den Tokens; die Variablen wechseln mit dem
+   Theme, deshalb gibt es keine Dark-Varianten. Cookie-Banner ausgenommen. */
+body
+  > :not(#app):not(script):not(.cookie-banner):not(.cookie-consent):not([class*='cookie']):not(
+    [id*='cookie']
+  ),
+body
+  > :not(#app):not(script):not(.cookie-banner):not(.cookie-consent):not([class*='cookie']):not(
+    [id*='cookie']
+  )
+  *:not([class*='cookie']):not([id*='cookie']) {
+  color: var(--ds-text) !important;
+}
+body
+  > :not(#app):not(script):not(.cookie-banner):not(.cookie-consent):not([class*='cookie']):not(
+    [id*='cookie']
+  )
+  a:not([class*='cookie']):not([id*='cookie']),
+body
+  > :not(#app):not(script):not(.cookie-banner):not(.cookie-consent):not([class*='cookie']):not(
+    [id*='cookie']
+  )
+  a:not([class*='cookie']):not([id*='cookie'])
+  * {
+  color: var(--ds-link) !important;
+}
+body
+  > :not(#app):not(script):not(.cookie-banner):not(.cookie-consent):not([class*='cookie']):not(
+    [id*='cookie']
+  )
+  a:hover:not([class*='cookie']):not([id*='cookie']),
+body
+  > :not(#app):not(script):not(.cookie-banner):not(.cookie-consent):not([class*='cookie']):not(
+    [id*='cookie']
+  )
+  a:hover:not([class*='cookie']):not([id*='cookie'])
+  * {
+  color: var(--ds-accent) !important;
+}
+
+/* Scrollleisten dezent, aus den Tokens */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ds-border-strong);
+  border-radius: var(--ds-radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ds-text-3);
 }
 
 /*
@@ -262,21 +370,22 @@ html.ktx-scroll #app {
   margin: 0;
   padding: 0 0 0 1em;
   line-height: var(--editor-step);
-  border-left: 3px solid rgb(161 161 170 / 0.6); /* zinc-400 */
+  border-left: 3px solid var(--ds-border-strong);
   color: inherit;
   font-style: italic;
 }
 
 /* Erweiterte Inline-Auszeichnung: Highlight (<mark>) und Links (<a>). Padding nur
-   waagerecht -> keine Aenderung der Zeilenhoehe. */
+   waagerecht -> keine Aenderung der Zeilenhoehe. Der Marker ist Dokumentinhalt
+   (identisch im HTML-Export, exportHtml.ts), deshalb feste Werte. */
 .editor-rich mark {
-  background-color: #fde68a; /* amber-200 */
-  color: #111827; /* zinc-900 -- auf dem hellen Marker immer lesbar */
+  background-color: #fde68a;
+  color: #111827;
   border-radius: 2px;
   padding: 0 1px;
 }
 .editor-rich a {
-  color: rgb(var(--accent));
+  color: var(--ds-link);
   text-decoration: underline;
   cursor: text; /* im Editor wird getippt, nicht navigiert */
 }
@@ -285,30 +394,57 @@ html.ktx-scroll #app {
   cursor: pointer;
 }
 
-/* Bildlaufleiste dezent */
-textarea::-webkit-scrollbar,
-.overflow-y-auto::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-textarea::-webkit-scrollbar-thumb,
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: rgb(161 161 170 / 0.4);
-  border-radius: 9999px;
+/* ─────────────────────────────────────────────────────────────────────────
+   Touch / Mobile
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Kein grauer Tap-Highlight, keine 300ms-Klickverzoegerung auf Bedienelementen */
+#app button,
+#app [role='button'],
+#app select,
+#app input[type='range'],
+#app input[type='color'] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-/* =====================================================================
- * Mobile / Touch
- *
- * Ziel: die komplette Oberflaeche laesst sich auf Smartphones und Tablets mit
- * dem Finger bedienen. Zwei Bausteine:
- *   1. `.hbar-scroll` -- eine Leiste (Tabs, Werkzeuge, Format, Status) wird auf
- *      schmalen Bildschirmen zu EINER horizontal scrollbaren Zeile, statt in
- *      viele Zeilen umzubrechen. Das spart die knappe vertikale Hoehe.
- *   2. `@media (pointer: coarse)` -- auf Zeigern ohne Praezision (Finger) werden
- *      die Tippflaechen vergroessert und Formularfelder auf 16px gesetzt, damit
- *      iOS beim Fokus nicht hineinzoomt.
- * ===================================================================== */
+/* Range-Slider im System-Look (Spur Rahmenfarbe, Daumen Akzent, Fokus-Ring).
+   Vertikales Scrollen bleibt moeglich, horizontales Ziehen bewegt den Regler. */
+#app input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: var(--ds-radius-full);
+  background: var(--ds-border-strong);
+  outline: none;
+  touch-action: pan-y;
+}
+#app input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ds-accent);
+  border: 2px solid var(--ds-surface-1);
+  cursor: pointer;
+}
+#app input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ds-accent);
+  border: 2px solid var(--ds-surface-1);
+  cursor: pointer;
+}
+#app input[type='range']::-moz-range-track {
+  height: 6px;
+  border-radius: var(--ds-radius-full);
+  background: var(--ds-border-strong);
+}
+#app input[type='range']:focus-visible {
+  box-shadow: var(--ds-focus-ring);
+}
 
 /*
  * Horizontal scrollende Leiste auf schmalen Bildschirmen. Native <select>- und
@@ -343,21 +479,22 @@ textarea::-webkit-scrollbar-thumb,
     font-size: 16px;
   }
 
-  /* Groessere Tippflaechen fuer die Knoepfe der Leisten und Menues. */
+  /* Groessere Tippflaechen fuer die Knoepfe der Leisten und Menues
+     (--ds-control-lg). */
   .tb-btn,
   .seg-btn,
   .fr-btn,
   .menu-item,
   .fb-select {
-    min-height: 40px;
+    min-height: var(--ds-control-lg);
   }
   .seg-btn {
-    min-width: 40px;
+    min-width: var(--ds-control-lg);
   }
   /* Kompaktes Zahlenfeld auf Touch hoeher (die Pfeile fuellen es je zur Haelfte),
      damit sie mit dem Finger gut zu treffen sind. */
   .stepper {
-    height: 42px;
+    height: var(--ds-row-height);
   }
   .spin-btn {
     min-width: 30px;
@@ -369,8 +506,8 @@ textarea::-webkit-scrollbar-thumb,
   }
   /* Farb-Schnellwahl und Farbwaehler groesser antippbar. */
   .fb-swatch {
-    width: 28px;
-    height: 28px;
+    width: var(--ds-control-sm);
+    height: var(--ds-control-sm);
   }
   .fb-color {
     width: 34px;
@@ -380,5 +517,28 @@ textarea::-webkit-scrollbar-thumb,
   .tab-action {
     opacity: 1;
     padding: 4px 6px;
+  }
+  #app input[type='range'] {
+    height: 8px;
+  }
+  #app input[type='range']::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+  }
+  #app input[type='range']::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* === Reduzierte Bewegung === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

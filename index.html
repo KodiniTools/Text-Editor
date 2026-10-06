@@ -17,8 +17,24 @@
     />
     <meta name="author" content="KodiniTools" />
     <meta name="application-name" content="Kodini Texteditor" />
-    <meta name="theme-color" content="#f5f4d6" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#091428" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a1324" media="(prefers-color-scheme: dark)" />
+    <!-- Theme vor dem ersten Paint setzen (Tokens: Dark auf :root, Light ueber
+         data-theme), damit es keinen falschen Flash gibt. Ohne eigene Wahl
+         ('system' oder nichts gespeichert) entscheidet das Systemschema; der
+         Editor (useTheme) uebernimmt danach. -->
+    <script>
+      try {
+        var storedTheme = localStorage.getItem('theme')
+        var dark =
+          storedTheme === 'dark' ||
+          (storedTheme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
+        if (dark) document.documentElement.classList.add('dark')
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light')
+      }
+    </script>
     <meta name="format-detection" content="telephone=no" />
 
     <!-- Sprachvarianten (gleiche URL, Umschaltung im Browser DE/EN) -->
@@ -94,15 +110,14 @@
         align-items: center;
         justify-content: center;
         padding: 3rem 1rem;
-        font-family: ui-sans-serif, system-ui, sans-serif;
-        color: #003971;
-        background: #f5f4d6;
+        font-family: 'Supreme', ui-sans-serif, system-ui, sans-serif;
+        /* Token-Werte (surface-0 / text) aus src/design-system/tokens-v2.css */
+        color: #14213a;
+        background: #f6f5f1;
       }
-      @media (prefers-color-scheme: dark) {
-        .ktx-prerender {
-          color: #f9f2d5;
-          background: #091428;
-        }
+      :root[data-theme='dark'] .ktx-prerender {
+        color: #f2eee2;
+        background: #0a1324;
       }
       .ktx-hero {
         max-width: 44rem;

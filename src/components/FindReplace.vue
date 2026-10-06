@@ -4,6 +4,7 @@ import type { EditorApi } from '@/types'
 import type { FindOptions } from '@/utils/find'
 import { useI18n } from '@/i18n'
 import { useToast } from '@/composables/useToast'
+import { UiButton, UiIconButton } from '@/components/ui'
 
 const props = defineProps<{ editor: EditorApi | null }>()
 const emit = defineEmits<{ close: [] }>()
@@ -51,26 +52,32 @@ defineExpose({ focus, next, prev })
 </script>
 
 <template>
-  <div
-    class="flex flex-col gap-2 border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900"
-  >
+  <div class="flex flex-col gap-2 border-b border-line bg-surface-2 px-4 py-3">
     <div class="flex flex-wrap items-center gap-2">
       <input
         ref="queryInput"
         v-model="query"
         type="text"
         :placeholder="t.find.searchPlaceholder"
-        class="min-w-40 flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm outline-none focus:border-accent dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+        class="fr-input min-w-40 flex-1"
         @keydown.enter.exact.prevent="next"
         @keydown.shift.enter.prevent="prev"
         @keydown.esc.prevent="emit('close')"
       />
-      <button type="button" class="fr-btn" :title="t.find.prevTitle" @click="prev">‹</button>
-      <button type="button" class="fr-btn" :title="t.find.nextTitle" @click="next">›</button>
-      <span class="min-w-24 text-xs text-zinc-500 dark:text-zinc-400">{{ status }}</span>
-      <button type="button" class="fr-btn" :title="t.find.closeTitle" @click="emit('close')">
-        ✕
-      </button>
+      <UiButton size="sm" variant="secondary" :title="t.find.prevTitle" @click="prev">‹</UiButton>
+      <UiButton size="sm" variant="secondary" :title="t.find.nextTitle" @click="next">›</UiButton>
+      <span class="min-w-24 text-xs text-ink-3">{{ status }}</span>
+      <UiIconButton size="sm" :label="t.find.closeTitle" @click="emit('close')">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path
+            d="M4 4l8 8M12 4l-8 8"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          />
+        </svg>
+      </UiIconButton>
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
@@ -78,28 +85,31 @@ defineExpose({ focus, next, prev })
         v-model="replacement"
         type="text"
         :placeholder="t.find.replacePlaceholder"
-        class="min-w-40 flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm outline-none focus:border-accent dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+        class="fr-input min-w-40 flex-1"
       />
-      <button type="button" class="fr-btn px-3" @click="replaceOne">{{ t.find.replace }}</button>
-      <button type="button" class="fr-btn px-3" @click="replaceAll">{{ t.find.replaceAll }}</button>
+      <UiButton size="sm" variant="secondary" @click="replaceOne">{{ t.find.replace }}</UiButton>
+      <UiButton size="sm" variant="secondary" @click="replaceAll">{{ t.find.replaceAll }}</UiButton>
     </div>
 
-    <div class="flex flex-wrap gap-3 text-xs text-zinc-600 dark:text-zinc-300">
+    <div class="flex flex-wrap gap-3 text-xs text-ink-2">
       <label class="flex cursor-pointer items-center gap-1">
-        <input v-model="opts.caseSensitive" type="checkbox" /> {{ t.find.caseSensitive }}
+        <input v-model="opts.caseSensitive" type="checkbox" class="accent-accent" />
+        {{ t.find.caseSensitive }}
       </label>
       <label class="flex cursor-pointer items-center gap-1">
-        <input v-model="opts.wholeWord" type="checkbox" /> {{ t.find.wholeWord }}
+        <input v-model="opts.wholeWord" type="checkbox" class="accent-accent" />
+        {{ t.find.wholeWord }}
       </label>
       <label class="flex cursor-pointer items-center gap-1">
-        <input v-model="opts.regex" type="checkbox" /> {{ t.find.regex }}
+        <input v-model="opts.regex" type="checkbox" class="accent-accent" />
+        {{ t.find.regex }}
       </label>
     </div>
   </div>
 </template>
 
 <style scoped>
-.fr-btn {
-  @apply rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700;
+.fr-input {
+  @apply h-7 rounded-sm border border-line-strong bg-surface-1 px-2 text-sm text-ink outline-none focus:border-accent focus-visible:shadow-focus;
 }
 </style>

@@ -6,6 +6,7 @@ import { useI18n } from '@/i18n'
 import { pageSizeCss } from '@/utils/pageFormats'
 import { usePageFormatLabel } from '@/composables/usePageFormatLabel'
 import PagePreview from '@/components/PagePreview.vue'
+import { UiButton } from '@/components/ui'
 
 /**
  * Vollbild-Vorschau in einem eigenen Tab. Zeigt das Dokument exakt so, wie es
@@ -76,25 +77,30 @@ function printDocument(): void {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col bg-zinc-200 dark:bg-zinc-950">
+  <div class="flex h-full min-h-0 flex-col bg-surface-2">
     <header
-      class="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-zinc-300 bg-white px-4 py-2 dark:border-zinc-800 dark:bg-zinc-900"
+      class="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-line bg-surface-1 px-4 py-2"
     >
       <div class="min-w-0">
-        <h1 class="truncate text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+        <h1 class="truncate text-sm font-semibold text-ink">
           {{ store.activeTitle || t.previewView.title }}
         </h1>
-        <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">
+        <p class="truncate text-xs text-ink-3">
           {{ t.previewView.subtitle }} · {{ pageFormatLabel }}
         </p>
       </div>
       <div class="ml-auto flex items-center gap-2">
-        <button type="button" class="pv-btn" :title="t.previewView.backTitle" @click="backToEditor">
+        <UiButton
+          size="sm"
+          variant="secondary"
+          :title="t.previewView.backTitle"
+          @click="backToEditor"
+        >
           {{ t.previewView.back }}
-        </button>
-        <button type="button" class="pv-btn pv-btn-primary" @click="printDocument">
+        </UiButton>
+        <UiButton size="sm" variant="primary" @click="printDocument">
           {{ t.previewView.print }}
-        </button>
+        </UiButton>
       </div>
     </header>
 
@@ -103,12 +109,3 @@ function printDocument(): void {
     </div>
   </div>
 </template>
-
-<style scoped>
-.pv-btn {
-  @apply rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800;
-}
-.pv-btn-primary {
-  @apply border-accent bg-accent text-accent-fg hover:bg-accent/90;
-}
-</style>

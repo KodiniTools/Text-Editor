@@ -15,4 +15,7 @@ void discoverFonts(import.meta.env.BASE_URL)
 <template>
   <RouterView />
   <ToastHost />
+  <!-- Ziel fuer teleportierte Dialoge/Popover: eigener Stacking-Context ueber der
+       globalen Navigation (siehe #modal-portal in style.css). -->
+  <div id="modal-portal"></div>
 </template>

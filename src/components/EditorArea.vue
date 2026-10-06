@@ -8,6 +8,7 @@ import { useEditorImages } from '@/composables/useEditorImages'
 import { useEditorFind } from '@/composables/useEditorFind'
 import { imageFileFromDataTransfer } from '@/utils/files'
 import { useI18n } from '@/i18n'
+import { UiButton } from '@/components/ui'
 
 // Der Editor bündelt vier klar getrennte Belange in eigenen Composables:
 //   usePageView     -- Seiten-Ansicht (A4/A3), Kennzahlen, Seitenumbruch
@@ -258,24 +259,21 @@ defineExpose({
       </div>
     </div>
 
-    <!-- Bild verlinken: kompaktes Popover am Link-Knopf (Teleport im <body>).
+    <!-- Bild verlinken: kompaktes Popover am Link-Knopf (Teleport im #modal-portal).
          Als Kind des Wurzel-<div> gehalten, damit EditorArea EINEN Wurzelknoten
          hat und das von aussen gesetzte class="h-full" (Hoehenbegrenzung der
          Seiten-Ansicht) zuverlaessig geerbt wird. Bewusst KEIN Vollbild-Overlay
          -> Footer bleibt sichtbar, Seite scrollbar. -->
-    <Teleport to="body">
+    <Teleport to="#modal-portal">
       <div
         v-if="imageLinkOpen"
         ref="imageLinkMenu"
-        class="fixed z-50 w-64 rounded-lg border border-zinc-200 bg-white p-2 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
+        class="fixed z-dialog w-64 rounded-md border border-line bg-surface-1 p-2 shadow-overlay"
         :style="imageLinkStyle"
         role="dialog"
         :aria-label="t.editor.imageLink"
       >
-        <label
-          class="mb-1 block text-xs font-semibold text-zinc-500 dark:text-zinc-400"
-          for="img-link-input"
-        >
+        <label class="mb-1 block text-xs font-semibold text-ink-2" for="img-link-input">
           {{ t.editor.imageLink }}
         </label>
         <input
@@ -284,28 +282,19 @@ defineExpose({
           v-model="imageLinkUrl"
           type="url"
           inputmode="url"
-          class="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-800 outline-none focus:border-accent dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+          class="w-full rounded-sm border border-line-strong bg-surface-1 px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus-visible:shadow-focus"
           :placeholder="t.editor.imageLinkPlaceholder"
           @keydown.enter.prevent="applyImageLink"
           @keydown.esc.prevent="closeImageLink"
         />
         <div class="mt-2 flex items-center justify-between gap-2">
-          <button
-            v-if="imageLinkUrl"
-            type="button"
-            class="rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
-            @click="removeImageLink"
-          >
+          <UiButton v-if="imageLinkUrl" size="sm" variant="danger" @click="removeImageLink">
             {{ t.editor.imageLinkRemove }}
-          </button>
+          </UiButton>
           <span v-else />
-          <button
-            type="button"
-            class="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-fg hover:opacity-90"
-            @click="applyImageLink"
-          >
+          <UiButton size="sm" variant="primary" @click="applyImageLink">
             {{ t.editor.imageLinkApply }}
-          </button>
+          </UiButton>
         </div>
       </div>
     </Teleport>
@@ -351,7 +340,7 @@ defineExpose({
   pointer-events: none;
 }
 .img-selected {
-  outline: 2px solid rgb(var(--accent));
+  outline: 2px solid var(--ds-accent);
   outline-offset: 1px;
 }
 /* Skalier-Griff unten rechts. */
@@ -362,8 +351,8 @@ defineExpose({
   width: 14px;
   height: 14px;
   border-radius: 3px;
-  background: rgb(var(--accent));
-  border: 2px solid #fff;
+  background: var(--ds-accent);
+  border: 2px solid var(--ds-surface-1);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
   cursor: nwse-resize;
   touch-action: none;
@@ -379,7 +368,7 @@ defineExpose({
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: rgb(220 38 38);
+  background: var(--ds-danger);
   color: #fff;
   font-size: 14px;
   line-height: 1;
@@ -397,14 +386,14 @@ defineExpose({
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: #fff;
-  color: rgb(63 63 70); /* zinc-700 */
+  background: var(--ds-surface-1);
+  color: var(--ds-text);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
   cursor: pointer;
 }
 .img-link-btn.img-link-active {
-  background: rgb(var(--accent));
-  color: #fff;
+  background: var(--ds-accent);
+  color: var(--ds-on-accent);
 }
 /* Badge unten links: markiert ein verlinktes Bild auch ohne Auswahl. */
 .img-linkbadge {
@@ -417,8 +406,8 @@ defineExpose({
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  background: rgb(var(--accent));
-  color: #fff;
+  background: var(--ds-accent);
+  color: var(--ds-on-accent);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
   pointer-events: none;
 }
@@ -462,7 +451,7 @@ defineExpose({
 .editor-rich:empty::before,
 .editor-rich:has(> br:only-child)::before {
   content: attr(data-placeholder);
-  color: rgb(161 161 170); /* zinc-400 */
+  color: var(--ds-text-3);
   pointer-events: none;
 }
 
@@ -476,12 +465,7 @@ defineExpose({
   justify-content: center;
   overflow: auto;
   padding: 1rem;
-  background: rgb(var(--zinc-200));
-}
-/* `html.dark` statt `:global(.dark)`: Letzteres kompiliert Vue in scoped
-   Styles zu einem nackten `.dark { ... }` -- die Regel traf nie das Blatt. */
-html.dark .page-backdrop {
-  background: rgb(var(--zinc-950));
+  background: var(--ds-surface-2);
 }
 
 .page-canvas {
@@ -492,12 +476,9 @@ html.dark .page-backdrop {
 .page-sheet {
   position: relative;
   box-sizing: border-box;
-  background: #ffffff;
-  box-shadow: 0 4px 24px rgb(0 0 0 / 0.18);
+  background: var(--ds-surface-1);
+  box-shadow: var(--ds-shadow-overlay);
   border-radius: 2px;
-}
-html.dark .page-sheet {
-  background: rgb(var(--zinc-900));
 }
 
 .page-break-guide {
@@ -505,10 +486,7 @@ html.dark .page-sheet {
   left: 0;
   right: 0;
   height: 0;
-  border-top: 1px dashed rgb(161 161 170); /* zinc-400 */
+  border-top: 1px dashed var(--ds-border-strong);
   pointer-events: none;
-}
-html.dark .page-break-guide {
-  border-top-color: rgb(var(--zinc-600));
 }
 </style>
