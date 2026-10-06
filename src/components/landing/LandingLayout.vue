@@ -6,7 +6,7 @@ import '@/styles/landing.css'
 
 /**
  * Rahmen fuer Startseite, Funktionen und Blog: klebende Hero-Navigation (Start,
- * Anwendung, Funktionen, FAQ, Anleitung, Blog) + Seiteninhalt. Optik 1:1 aus der Visualizer-Landingpage.
+ * Anwendung, Funktionen, FAQ, Anleitung, Blog) + Seiteninhalt. Optik auf den gemeinsamen Design-Tokens (landing.css).
  */
 const { t } = useI18n()
 const route = useRoute()

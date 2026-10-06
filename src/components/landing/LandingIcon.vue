@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Inline-SVG-Icons der Landingpage (Strichstil wie im Visualizer, 24er-Raster).
+ * Inline-SVG-Icons der Landingpage (Strichstil, 24er-Raster, Strichstaerke wie Token --ds-icon-stroke).
  * Bewusst ohne Icon-Font: keine zusaetzliche Abhaengigkeit, Farbe ueber currentColor.
  */
 export type LandingIconName =
@@ -22,7 +22,7 @@ export type LandingIconName =
 
 withDefaults(defineProps<{ name: LandingIconName; size?: number; strokeWidth?: number }>(), {
   size: 24,
-  strokeWidth: 2,
+  strokeWidth: 1.75,
 })
 </script>
 

@@ -7,30 +7,18 @@ import { useDocumentTheme } from '@/composables/useDocumentTheme'
 
 const { t } = useI18n()
 
-// Icons und Verlaeufe fest je Karte (Reihenfolge = messages.landing.features.cards),
-// Verlaeufe identisch zur Visualizer-Landingpage.
+// Icons fest je Karte (Reihenfolge = messages.landing.features.cards).
+// Die Icon-Box ist einheitlich akzentfarben (Tokens), siehe .feature-icon in landing.css.
 const FEATURE_ICONS: LandingIconName[] = ['type', 'file', 'tools', 'lock']
-const GRADIENTS = [
-  'linear-gradient(135deg, #f8e1a9, #f8e1a9)',
-  'linear-gradient(135deg, #C5DEB0, #f8e1a9)',
-  'linear-gradient(135deg, #c9984d, #f8e1a9)',
-  'linear-gradient(135deg, #7A8DA0, #C5DEB0)',
-]
 
 const featureCards = computed(() =>
   t.value.landing.features.cards.map((card, index) => ({
     ...card,
     icon: FEATURE_ICONS[index % FEATURE_ICONS.length],
-    gradient: GRADIENTS[index % GRADIENTS.length],
   })),
 )
 
-const guideSteps = computed(() =>
-  t.value.landing.guide.steps.map((step, index) => ({
-    ...step,
-    gradient: GRADIENTS[index % GRADIENTS.length],
-  })),
-)
+const guideSteps = computed(() => t.value.landing.guide.steps)
 
 // Hero-Bild je Theme aus public/image (zum Austauschen nur die Dateien ersetzen).
 // Fehlt eine Datei, wird der Bildbereich ausgeblendet statt ein kaputtes Bild zu zeigen.
@@ -54,7 +42,7 @@ function toggleFaq(index: number): void {
       <div class="hero-content">
         <h1 class="hero-title">
           {{ t.landing.hero.title }}
-          <span class="gradient-text">{{ t.landing.hero.highlight }}</span>
+          <span class="hero-highlight">{{ t.landing.hero.highlight }}</span>
         </h1>
         <p class="hero-subtitle">{{ t.landing.hero.subtitle }}</p>
         <div class="hero-actions">
@@ -90,7 +78,7 @@ function toggleFaq(index: number): void {
       </div>
       <div class="features-grid">
         <div v-for="card in featureCards" :key="card.title" class="feature-card">
-          <div class="feature-icon" :style="{ background: card.gradient }">
+          <div class="feature-icon">
             <LandingIcon :name="card.icon" :size="28" />
           </div>
           <h3 class="feature-title">{{ card.title }}</h3>
@@ -107,7 +95,7 @@ function toggleFaq(index: number): void {
       </div>
       <ol class="guide-grid">
         <li v-for="(step, index) in guideSteps" :key="step.title" class="feature-card">
-          <div class="feature-icon step-number" :style="{ background: step.gradient }">
+          <div class="feature-icon step-number">
             {{ index + 1 }}
           </div>
           <h3 class="feature-title">{{ step.title }}</h3>
