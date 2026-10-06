@@ -27,6 +27,13 @@ export default defineConfigWithVueTs(
     },
   },
 
+  // Ui-Bausteine sind eine Kopie aus dem Collage Maker (src/components/ui);
+  // optionale Props ohne Default sind dort Absicht, die Dateien bleiben 1:1.
+  {
+    files: ['src/components/ui/**/*.vue'],
+    rules: { 'vue/require-default-prop': 'off' },
+  },
+
   // Node-Globals fuer Build-/Tooling-Dateien.
   {
     files: ['*.{ts,js,mjs}', 'vite.config.ts'],

@@ -9,6 +9,7 @@ import type { BlockType, EditorApi, SelectionFormat } from '@/types'
 import { useToast } from '@/composables/useToast'
 import { useAnchoredMenu } from '@/composables/useAnchoredMenu'
 import NumberStepper from './NumberStepper.vue'
+import { UiButton } from '@/components/ui'
 
 // Design (Hell/Dunkel/Auto) und Sprache steuert die globale Navigation --
 // deshalb liegen sie nicht mehr in der Format-Leiste.
@@ -195,7 +196,7 @@ defineExpose({ openLinkEditor })
 
 <template>
   <div
-    class="hbar-scroll flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-zinc-200 bg-zinc-50 px-2 py-1.5 dark:border-zinc-800 dark:bg-zinc-900/60"
+    class="hbar-scroll flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-surface-2 px-2 py-1.5"
   >
     <!-- Schriftart -->
     <label class="fb-group">
@@ -486,11 +487,11 @@ defineExpose({ openLinkEditor })
           v-for="s in SWATCHES"
           :key="s.value || 'auto'"
           type="button"
-          class="fb-swatch inline-flex h-5 w-5 items-center justify-center rounded border leading-none transition-transform hover:scale-110"
+          class="fb-swatch inline-flex h-5 w-5 items-center justify-center rounded-sm border leading-none transition-colors"
           :class="
             store.settings.textColor === s.value
-              ? 'border-accent ring-2 ring-accent/40'
-              : 'border-zinc-300 dark:border-zinc-600'
+              ? 'border-accent ring-2 ring-accent'
+              : 'border-line-strong'
           "
           :style="s.value ? { backgroundColor: s.value } : undefined"
           :title="t.format[s.labelKey]"
@@ -500,11 +501,11 @@ defineExpose({ openLinkEditor })
           @click="setColor(s.value)"
         >
           <!-- Der Auto-Knopf zeigt statt einer Farbe ein A -->
-          <span v-if="!s.value" class="text-[10px] font-semibold text-zinc-500">A</span>
+          <span v-if="!s.value" class="text-xs font-semibold text-ink-3">A</span>
         </button>
         <input
           type="color"
-          class="fb-color h-7 w-8 cursor-pointer rounded-md border border-zinc-300 bg-transparent p-0.5 dark:border-zinc-600"
+          class="fb-color h-7 w-8 cursor-pointer rounded-sm border border-line-strong bg-transparent p-0.5"
           :value="colorInputValue"
           :title="t.format.customColor"
           :aria-label="t.format.customColor"
@@ -643,7 +644,7 @@ defineExpose({ openLinkEditor })
     <label class="flex cursor-pointer items-center gap-1.5" :title="t.format.wrapTitle">
       <input
         type="checkbox"
-        class="accent-[rgb(var(--accent))]"
+        class="accent-accent"
         :checked="store.settings.wordWrap"
         @change="store.updateSettings({ wordWrap: ($event.target as HTMLInputElement).checked })"
       />
@@ -661,17 +662,17 @@ defineExpose({ openLinkEditor })
     </button>
   </div>
 
-  <!-- Link-Editor: an der Link-Schaltflaeche verankert, per Teleport im <body>,
-       damit es in der (auf Mobile horizontal scrollenden) Leiste nicht
-       abgeschnitten wird. -->
-  <Teleport to="body">
+  <!-- Link-Editor: an der Link-Schaltflaeche verankert, per Teleport im
+       #modal-portal, damit es in der (auf Mobile horizontal scrollenden) Leiste
+       nicht abgeschnitten wird und ueber der Navigation liegt. -->
+  <Teleport to="#modal-portal">
     <div
       v-if="linkOpen"
       ref="linkMenu"
-      class="fixed z-50 w-72 rounded-lg border border-zinc-200 bg-white p-2 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
+      class="fixed z-dialog w-72 rounded-md border border-line bg-surface-1 p-2 shadow-overlay"
       :style="linkStyle"
     >
-      <label class="mb-1 block text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+      <label class="mb-1 block text-xs font-semibold text-ink-2">
         {{ t.format.link }}
       </label>
       <input
@@ -679,28 +680,19 @@ defineExpose({ openLinkEditor })
         v-model="linkUrl"
         type="url"
         inputmode="url"
-        class="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-800 outline-none focus:border-accent dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+        class="w-full rounded-sm border border-line-strong bg-surface-1 px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus-visible:shadow-focus"
         :placeholder="t.format.linkPlaceholder"
         @keydown.enter.prevent="applyLink"
         @keydown.esc.prevent="closeLink"
       />
       <div class="mt-2 flex items-center justify-between gap-2">
-        <button
-          v-if="selection.link"
-          type="button"
-          class="rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
-          @click="removeLinkAction"
-        >
+        <UiButton v-if="selection.link" size="sm" variant="danger" @click="removeLinkAction">
           {{ t.format.linkRemove }}
-        </button>
+        </UiButton>
         <span v-else />
-        <button
-          type="button"
-          class="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-fg hover:opacity-90"
-          @click="applyLink"
-        >
+        <UiButton size="sm" variant="primary" @click="applyLink">
           {{ t.format.linkApply }}
-        </button>
+        </UiButton>
       </div>
     </div>
   </Teleport>
@@ -711,22 +703,22 @@ defineExpose({ openLinkEditor })
   @apply flex items-center gap-1.5;
 }
 .fb-label {
-  @apply text-xs font-semibold text-zinc-500 dark:text-zinc-400;
+  @apply text-xs font-semibold text-ink-2;
 }
 .fb-select {
-  @apply h-7 rounded-md border border-zinc-300 bg-white px-2 text-xs text-zinc-700 outline-none focus:border-accent dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200;
+  @apply h-7 rounded-sm border border-line-strong bg-surface-1 px-2 text-xs text-ink-2 outline-none focus:border-accent focus-visible:shadow-focus;
 }
 .fb-divider {
-  @apply mx-0.5 hidden h-6 w-px bg-zinc-200 sm:block dark:bg-zinc-700;
+  @apply mx-0.5 hidden h-6 w-px bg-line sm:block;
 }
 /* Einheitliche Knopfhoehe wie Auswahl-/Zahlenfelder (28px). */
 .seg-btn {
-  @apply inline-flex h-7 items-center justify-center rounded-md border border-zinc-300 px-2 text-xs text-zinc-600 transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700;
+  @apply inline-flex h-7 items-center justify-center rounded-sm border border-line-strong px-2 text-xs text-ink-2 transition-colors hover:bg-surface-3;
 }
 .seg-active {
-  @apply border-accent bg-accent-soft text-accent dark:bg-zinc-700;
+  @apply border-accent bg-accent-soft text-accent;
 }
 .zoom-range {
-  @apply h-1 w-24 cursor-pointer accent-[rgb(var(--accent))];
+  @apply h-1 w-24 cursor-pointer accent-accent;
 }
 </style>

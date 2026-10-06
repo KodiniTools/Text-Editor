@@ -1,8 +1,9 @@
 # UI-Komponenten
 
-Bausteine des Design-Systems v2, übernommen aus dem Playlist Generator
-(`KodiniTools/Playlist-Generator`, `src/components/ui/`, Stand `89bb48e`). Dort werden sie
-gepflegt; Änderungen hier bleiben minimal und werden zurückgespielt. Nicht übernommen: `UiFileList`
+Bausteine des Design-Systems v2, übernommen aus dem Collage Maker
+(`KodiniTools/Collage-Maker`, `src/components/ui/`, Stand `9dc4eca`), der sie seinerseits aus dem
+Playlist Generator (`89bb48e`) übernommen hat. Dort werden sie gepflegt; Änderungen hier bleiben
+minimal und werden zurückgespielt. Nicht übernommen: `UiFileList`
 (Wiedergabeliste, hier ohne Verwendung). Ergänzt: `UiDialog` kennt `size="lg"` (720 px) für
 Übersichten wie die Tastaturkürzel.
 
@@ -32,26 +33,21 @@ import { UiButton, UiPanel, UiTextField } from '@/components/ui'
 | `UiToast`            | Benachrichtigung                                | `message`, `type` success · error · info, `actionLabel`, `dismissLabel`, `dismissOnClick`; Events `action`, `dismiss`     |
 | `UiKbd`              | Tastenkombination                               | `keys: string[]`                                                                                                          |
 
-## Einsatz im Collage Maker
+## Einsatz im Texteditor
 
-| Stelle                                        | Komponente                                        |
-| --------------------------------------------- | ------------------------------------------------- |
-| Werkzeug- und Inspektor-Panels                | `UiPanel` (Titel, Zähler, Aktion rechts)          |
-| Kopfzeile, Zoom-Pill, Quick-Action-Toolbar    | `UiIconButton`, `UiButton variant="secondary"`    |
-| Inspektor-Reiter, Vorlagen-Filter, Textausr.  | `UiSegmentedControl` (Proxy für Union-Typen)      |
-| Exportformat, Rahmenstil, Hintergrund-Fit     | `UiSelect`                                        |
-| Wiederherstellen, Dateiname, Löschen, Vorlage | `UiDialog` + `UiButton` im Footer                 |
-| Tastaturkürzel                                | `UiDialog size="lg"`, `UiKbd`, `UiCallout`        |
-| Toasts                                        | `UiToast` in `ToastContainer` (Teleport, z-toast) |
-| Hinweise, Warnungen                           | `UiCallout`                                       |
-| Leere Listen, keine Auswahl                   | `UiEmptyState`                                    |
-| Zurücksetzen neben Slidern                    | `ResetButton` (Hülle um `UiIconButton size="sm"`) |
+| Stelle                                           | Komponente                                                |
+| ------------------------------------------------ | --------------------------------------------------------- |
+| Tastaturkürzel (`ShortcutHelp`)                  | `UiDialog size="lg"` (Teleport `#modal-portal`), `UiKbd`  |
+| Toasts (`ToastHost`)                             | `UiToast` (Teleport, z-toast)                             |
+| Suchen/Ersetzen                                  | `UiButton variant="secondary" size="sm"`, `UiIconButton`  |
+| Link-Popover (Formatleiste, Bild)                | `UiButton` primary / danger                               |
+| Vorschau-Kopf (`PreviewView`), Markdown-Vorschau | `UiButton` secondary / primary / ghost, `UiIconButton`    |
+| Zoom-Pill und Fokus-Modus (`EditorView`)         | `UiIconButton size="sm" round`, `UiButton ghost`, `UiKbd` |
 
-Union-typisierte Zustände (`'png' | 'jpeg' | …`) binden an `UiSegmentedControl`/`UiSelect` über
-einen `computed`-Proxy mit `get`/`set`, damit der Store seinen engen Typ behält.
-
-Breite Modale (Vorlagenbibliothek, Bild- und Exportvorschau) bleiben eigenes Markup auf denselben
-Tokens, weil `UiDialog` auf 440/720 px ausgelegt ist.
+Werkzeug-, Format- und Tab-Leiste bleiben eigenes Markup auf denselben Tokens (`.tb-btn`,
+`.seg-btn`, `.menu-item`, `.fb-select`): sie tragen `aria-pressed`, Anker-Refs für
+`useAnchoredMenu` und `@mousedown.prevent`, damit die Textauswahl beim Klick erhalten bleibt.
+Dropdowns und Popover teleportieren nach `#modal-portal` (siehe `style.css`).
 
 ## Regeln
 

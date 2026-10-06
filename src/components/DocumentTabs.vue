@@ -30,7 +30,7 @@ function commitEdit(): void {
 
 <template>
   <div
-    class="hbar-scroll flex items-center gap-1 overflow-x-auto border-b border-zinc-200 bg-zinc-100 px-2 dark:border-zinc-800 dark:bg-zinc-950"
+    class="hbar-scroll flex items-center gap-1 overflow-x-auto border-b border-line bg-surface-2 px-2"
   >
     <button
       v-for="doc in store.documents"
@@ -40,7 +40,7 @@ function commitEdit(): void {
       :class="
         doc.id === store.activeId
           ? 'border-accent text-accent'
-          : 'border-transparent text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
+          : 'border-transparent text-ink-2 hover:text-ink'
       "
       @click="store.switchDocument(doc.id)"
       @dblclick="startEdit(doc.id, store.documentTitle(doc))"
@@ -49,7 +49,7 @@ function commitEdit(): void {
         v-if="editingId === doc.id"
         ref="editInput"
         v-model="editValue"
-        class="w-28 rounded border border-accent bg-white px-1 text-sm text-zinc-900 outline-none dark:bg-zinc-800 dark:text-zinc-100"
+        class="w-28 rounded-sm border border-accent bg-surface-1 px-1 text-sm text-ink outline-none focus-visible:shadow-focus"
         :placeholder="t.tabs.renamePlaceholder"
         @click.stop
         @keydown.enter.prevent="commitEdit"
@@ -63,7 +63,7 @@ function commitEdit(): void {
            `tab-action`: auf Touch-Geraeten (kein Hover) dauerhaft sichtbar. -->
       <span
         v-if="editingId !== doc.id"
-        class="tab-action rounded px-1 text-xs text-zinc-400 opacity-0 hover:bg-zinc-300 hover:text-zinc-700 group-hover:opacity-100 dark:hover:bg-zinc-700"
+        class="tab-action rounded-sm px-1 text-xs text-ink-3 opacity-0 hover:bg-surface-3 hover:text-ink-2 group-hover:opacity-100"
         role="button"
         :title="t.tabs.renameTitle"
         :aria-label="t.tabs.renameTitle"
@@ -72,7 +72,7 @@ function commitEdit(): void {
       >
       <span
         v-if="store.documents.length > 1 && editingId !== doc.id"
-        class="tab-action rounded px-1 text-xs text-zinc-400 opacity-0 hover:bg-zinc-300 hover:text-zinc-700 group-hover:opacity-100 dark:hover:bg-zinc-700"
+        class="tab-action rounded-sm px-1 text-xs text-ink-3 opacity-0 hover:bg-surface-3 hover:text-ink-2 group-hover:opacity-100"
         role="button"
         :title="t.tabs.closeTitle"
         :aria-label="t.tabs.closeTitle"
@@ -83,7 +83,7 @@ function commitEdit(): void {
 
     <button
       type="button"
-      class="shrink-0 px-3 py-2 text-lg text-zinc-500 hover:text-accent"
+      class="shrink-0 px-3 py-2 text-lg text-ink-3 hover:text-accent"
       :title="t.tabs.newDocTitle"
       @click="store.newDocument()"
     >

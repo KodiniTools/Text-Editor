@@ -45,17 +45,17 @@ function nudge(direction: 1 | -1): void {
 
 <template>
   <div
-    class="stepper flex h-7 items-stretch overflow-hidden rounded-md border border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-800"
+    class="stepper flex h-7 items-stretch overflow-hidden rounded-sm border border-line-strong bg-surface-1"
     role="group"
     :aria-label="label"
   >
     <span
-      class="flex items-center justify-end px-1.5 text-xs tabular-nums leading-none text-zinc-700 dark:text-zinc-200"
+      class="flex items-center justify-end px-1.5 text-xs tabular-nums leading-none text-ink-2"
       :style="{ minWidth: width }"
       aria-live="polite"
       >{{ display }}</span
     >
-    <span class="flex flex-col border-l border-zinc-300 dark:border-zinc-600">
+    <span class="flex flex-col border-l border-line-strong">
       <button
         type="button"
         class="spin-btn"
@@ -77,7 +77,7 @@ function nudge(direction: 1 | -1): void {
       </button>
       <button
         type="button"
-        class="spin-btn border-t border-zinc-300 dark:border-zinc-600"
+        class="spin-btn border-t border-line-strong"
         :disabled="!canDecrease"
         :title="decreaseLabel"
         :aria-label="decreaseLabel"
@@ -100,6 +100,6 @@ function nudge(direction: 1 | -1): void {
 
 <style scoped>
 .spin-btn {
-  @apply flex w-5 flex-1 items-center justify-center bg-zinc-50 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-30 dark:bg-zinc-700/40 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-100;
+  @apply flex w-5 flex-1 items-center justify-center bg-surface-2 text-ink-3 transition-colors hover:bg-surface-3 hover:text-ink disabled:cursor-not-allowed disabled:opacity-30;
 }
 </style>
