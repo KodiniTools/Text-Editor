@@ -224,6 +224,7 @@ src/
     NumberStepper.vue ShortcutHelp.vue  MarkdownPreview.vue
   views/EditorView.vue        Layout + Verdrahtung
 tests/                        Vitest-Specs
+docs/DESIGN-SYSTEM.md         Design-Tokens, Komponenten-Inventar, Befunde (mit datei:zeile)
 ```
 
 ## Eigene Schriften
