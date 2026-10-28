@@ -8,6 +8,7 @@ import { useI18n } from '@/i18n'
 import { usePageFormatLabel } from '@/composables/usePageFormatLabel'
 import { useToast } from '@/composables/useToast'
 import { useAnchoredMenu } from '@/composables/useAnchoredMenu'
+import { useShareDocument, type ShareFormat } from '@/composables/useShareDocument'
 import { pageRenderOptions } from '@/utils/pageRenderOptions'
 import { buildHtmlDocument } from '@/utils/exportHtml'
 import { htmlToMarkdown } from '@/utils/htmlToMarkdown'
@@ -72,6 +73,24 @@ const {
   toggle: toggleDownload,
   close: closeDownload,
 } = useAnchoredMenu(192)
+
+/* ---------- Teilen ---------- */
+// Eigenes Menue mit denselben Formaten wie "Speichern"; die Datei geht an den
+// System-Dialog (Web Share API) statt in den Download-Ordner.
+const {
+  open: shareOpen,
+  anchorEl: shareAnchor,
+  menuEl: shareMenu,
+  style: shareStyle,
+  toggle: toggleShare,
+  close: closeShare,
+} = useAnchoredMenu(192)
+const { share, sharing } = useShareDocument()
+
+function shareAs(format: ShareFormat): void {
+  closeShare()
+  void share(format)
+}
 
 /* ---------- Bild einfuegen ---------- */
 function triggerImage(): void {
@@ -330,6 +349,48 @@ defineExpose({ download, copyAll, triggerImport })
           {{ t.toolbar.backupRestore }}
           <span class="block text-xs text-ink-3">{{ t.toolbar.backupRestoreHint }}</span>
         </button>
+      </div>
+    </Teleport>
+
+    <button
+      ref="shareAnchor"
+      type="button"
+      class="tb-btn"
+      :title="t.toolbar.shareTitle"
+      :aria-expanded="shareOpen"
+      :disabled="sharing || isEmpty"
+      @click="toggleShare"
+    >
+      {{ t.toolbar.share }} ▾
+    </button>
+    <Teleport to="#modal-portal">
+      <div
+        v-if="shareOpen"
+        ref="shareMenu"
+        class="fixed z-dialog w-48 overflow-y-auto rounded-md border border-line bg-surface-1 p-1 shadow-overlay"
+        :style="shareStyle"
+      >
+        <button type="button" class="menu-item" @click="shareAs('txt')">
+          {{ t.toolbar.asTxt }}
+        </button>
+        <button type="button" class="menu-item" @click="shareAs('md')">
+          {{ t.toolbar.asMd }}
+        </button>
+        <button type="button" class="menu-item leading-tight" @click="shareAs('html')">
+          {{ t.toolbar.asHtml }}
+          <span class="block text-xs text-ink-3">{{ t.toolbar.asHtmlHint }}</span>
+        </button>
+        <button type="button" class="menu-item leading-tight" @click="shareAs('html-source')">
+          {{ t.toolbar.asHtmlSource }}
+          <span class="block text-xs text-ink-3">{{ t.toolbar.asHtmlSourceHint }}</span>
+        </button>
+        <button type="button" class="menu-item leading-tight" @click="shareAs('pdf')">
+          {{ t.toolbar.asPdf }}
+          <span class="block text-xs text-ink-3">{{ pageFormatLabel }}</span>
+        </button>
+        <p class="mt-1 border-t border-line px-2 pt-1.5 text-xs text-ink-3">
+          {{ t.toolbar.shareHint }}
+        </p>
       </div>
     </Teleport>
 
