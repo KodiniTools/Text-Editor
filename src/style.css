@@ -252,7 +252,8 @@ body
 
 /*
  * Druck-/PDF-Ausgabe. Am Bildschirm ist #print-root unsichtbar; beim Drucken
- * wird alles andere ausgeblendet und nur der Dokumenttext im gewaehlten
+ * wird alles andere ausgeblendet und nur der Dokumenttext samt frei platzierten
+ * Bildern (absolut, content-relativ; siehe utils/printLayout) im gewaehlten
  * Papierformat (via @page, gesetzt in EditorView) ausgegeben -- mit derselben
  * Typografie wie im Editor.
  */

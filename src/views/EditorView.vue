@@ -7,6 +7,7 @@ import { useFileDrop } from '@/composables/useFileDrop'
 import { useI18n } from '@/i18n'
 import { pageSizeCss } from '@/utils/pageFormats'
 import { pageRenderOptions } from '@/utils/pageRenderOptions'
+import { printImageStyle, printRootStyle } from '@/utils/printLayout'
 import { exportPdf } from '@/utils/exportPdf'
 import { isBackupFile, isHtmlFile, isImageFile, isTextFile, readFileAsText } from '@/utils/files'
 import { htmlFileToSource } from '@/utils/richText'
@@ -250,6 +251,10 @@ function openPreview(): void {
 // Bereinigtes HTML der aktiven Seite (inkl. Inline-Fett/Kursiv/Farbe) -- nur im
 // Druck sichtbar.
 const printHtml = computed(() => store.activeHtml)
+// Frei platzierte Bilder liegen nicht im HTML, sondern separat im Store (wie
+// bei Vorschau/PDF/HTML-Export) -- fuer den Druck absolut im Container platzieren.
+const printImages = computed(() => store.activeImages)
+const printStyle = computed(() => printRootStyle(printImages.value))
 
 /**
  * Haelt die `@page`-Regel (Papiergroesse + Ausrichtung) im Kopf des Dokuments
@@ -550,7 +555,16 @@ useKeyboardShortcuts({
       Schrift, Groesse, Zeilenabstand, Laufweite und Ausrichtung mitgedruckt
       werden. Die Papiergroesse steuert die @page-Regel (siehe syncPageStyle).
     -->
-    <!-- eslint-disable-next-line vue/no-v-html -- Inhalt ist bereits bereinigt (store.activeHtml) -->
-    <div id="print-root" aria-hidden="true" v-html="printHtml" />
+    <div id="print-root" aria-hidden="true" :style="printStyle">
+      <!-- eslint-disable-next-line vue/no-v-html -- Inhalt ist bereits bereinigt (store.activeHtml) -->
+      <div v-html="printHtml" />
+      <img
+        v-for="img in printImages"
+        :key="img.id"
+        :src="img.src"
+        alt=""
+        :style="printImageStyle(img)"
+      />
+    </div>
   </div>
 </template>
