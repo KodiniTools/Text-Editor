@@ -12,6 +12,7 @@ import {
   pageLineStepPx,
   type PageRenderOptions,
 } from './renderPages'
+import { downloadBlob } from './files'
 
 export interface PdfExportOptions extends PageRenderOptions {
   /** Dateiname ohne Endung. */
@@ -30,11 +31,27 @@ export function safeFileName(name: string): string {
   return clean || 'dokument'
 }
 
+/** Ergebnis der PDF-Erzeugung: das Dokument als Blob plus Seitenzahl. */
+export interface PdfResult {
+  blob: Blob
+  pages: number
+}
+
 /**
  * Baut die Seiten (unsichtbar), rastert sie und speichert das PDF.
  * Gibt die Anzahl der erzeugten Seiten zurueck.
  */
 export async function exportPdf(opts: PdfExportOptions): Promise<number> {
+  const { blob, pages } = await renderPdf(opts)
+  downloadBlob(blob, `${safeFileName(opts.fileName)}.pdf`, 'application/pdf')
+  return pages
+}
+
+/**
+ * Erzeugt das PDF als Blob, ohne es zu speichern -- Grundlage fuer Download
+ * (exportPdf) und Teilen (Web Share API).
+ */
+export async function renderPdf(opts: PdfExportOptions): Promise<PdfResult> {
   // jsPDF und html2canvas sind gross und werden nur beim Export gebraucht --
   // deshalb erst hier dynamisch laden (eigener Chunk, nicht im Startbundle).
   const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
@@ -121,8 +138,7 @@ export async function exportPdf(opts: PdfExportOptions): Promise<number> {
       pdf.addImage(img, 'PNG', 0, 0, opts.widthMm, opts.heightMm)
     }
 
-    pdf.save(`${safeFileName(opts.fileName)}.pdf`)
-    return pages.length
+    return { blob: pdf.output('blob'), pages: pages.length }
   } finally {
     document.body.removeChild(root)
   }
