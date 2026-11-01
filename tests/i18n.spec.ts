@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { de, en } from '@/i18n/messages'
-import { LOCALES, messages, setLocale, useI18n } from '@/i18n'
+import { LOCALES, detectLocale, messages, setLocale, useI18n } from '@/i18n'
 import { transformGroups } from '@/utils/transformRegistry'
 
 /** Sammelt alle Schluesselpfade eines verschachtelten Nachrichtenobjekts. */
@@ -131,6 +131,14 @@ describe('Sprachwechsel', () => {
     expect(document.documentElement.lang).toBe('en')
     setLocale('de')
     expect(document.documentElement.lang).toBe('de')
+  })
+
+  it('Startsprache: ?lang vor gespeicherter Sprache, sonst Deutsch', () => {
+    localStorage.setItem('locale', 'de')
+    expect(detectLocale('?lang=en')).toBe('en')
+    expect(detectLocale('?lang=fr')).toBe('de')
+    localStorage.clear()
+    expect(detectLocale('')).toBe('de')
   })
 
   it('ignoriert unbekannte Sprachen', () => {

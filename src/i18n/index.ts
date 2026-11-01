@@ -41,18 +41,16 @@ function readStored(): Locale | null {
   return null
 }
 
-/** Bevorzugte Sprache: gespeichert > Browser > Deutsch. */
-function detectLocale(): Locale {
-  const stored = readStored()
-  if (stored) return stored
-  if (typeof navigator !== 'undefined') {
-    const langs = navigator.languages ?? [navigator.language]
-    for (const l of langs) {
-      if (typeof l === 'string' && l.toLowerCase().startsWith('en')) return 'en'
-      if (typeof l === 'string' && l.toLowerCase().startsWith('de')) return 'de'
-    }
-  }
-  return 'de'
+/**
+ * Bevorzugte Sprache: ?lang=de|en > gespeichert > Deutsch.
+ * Die URL ohne Parameter ist die deutsche Fassung (hreflang de/x-default),
+ * Englisch liegt unter ?lang=en -- daher kein Rueckgriff auf die Browsersprache,
+ * sonst saehe ein Crawler mit englischer Browsersprache unter der DE-URL Englisch.
+ */
+export function detectLocale(search = globalThis.location?.search ?? ''): Locale {
+  const fromUrl = new URLSearchParams(search).get('lang')
+  if (isLocale(fromUrl)) return fromUrl
+  return readStored() ?? 'de'
 }
 
 const locale = ref<Locale>(detectLocale())
@@ -61,8 +59,11 @@ const locale = ref<Locale>(detectLocale())
 // schreiben, damit Navigation/Footer/Cookie-Banner (die ihn beim Laden lesen)
 // dieselbe Sprache zeigen -- sonst faenden sie nichts vor und fielen auf Deutsch
 // zurueck, waehrend der Editor z. B. Englisch anzeigt.
+// Eine Sprache aus ?lang wird immer gespeichert (Vorrang vor der alten Wahl).
 try {
-  if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, locale.value)
+  if (!localStorage.getItem(STORAGE_KEY) || locale.value !== readStored()) {
+    localStorage.setItem(STORAGE_KEY, locale.value)
+  }
 } catch {
   /* localStorage evtl. blockiert */
 }

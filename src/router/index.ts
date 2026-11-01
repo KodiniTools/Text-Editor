@@ -1,6 +1,12 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { watch } from 'vue'
+import {
+  createRouter,
+  createWebHistory,
+  type RouteLocationNormalized,
+  type RouteRecordRaw,
+} from 'vue-router'
 import LandingView from '@/views/LandingView.vue'
-import { messages } from '@/i18n'
+import { messages, useI18n, type Locale } from '@/i18n'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -15,6 +21,11 @@ declare module 'vue-router' {
 }
 
 const SITE_URL = 'https://kodinitools.com/texteditor/'
+
+/** Absolute URL einer Seite: Deutsch ohne Parameter, Englisch mit ?lang=en. */
+export function localizedUrl(path: string, locale: Locale): string {
+  return `${SITE_URL}${path}${locale === 'en' ? '?lang=en' : ''}`
+}
 
 export const routes: RouteRecordRaw[] = [
   {
@@ -59,23 +70,55 @@ export const router = createRouter({
   },
 })
 
-router.afterEach((to) => {
-  if (typeof document === 'undefined') return
-  // Die App-Shell (Editor) scrollt nicht als Seite; Landing/Blog schon.
-  document.documentElement.classList.toggle('ktx-scroll', to.meta.scroll === true)
-
+/** Titel, Beschreibung, robots, Canonical und hreflang einer Route in der aktiven Sprache. */
+function applyRouteHead(to: RouteLocationNormalized): void {
   const key = to.meta.metaKey
   if (!key) return
   const meta = messages().landing.meta[key]
+  const locale = useI18n().locale.value
   document.title = meta.title
   setMeta('description', meta.description)
   if (to.meta.robots) setMeta('robots', to.meta.robots)
   if (to.meta.canonical !== undefined) {
+    const path = to.meta.canonical
     document
       .querySelector('link[rel="canonical"]')
-      ?.setAttribute('href', SITE_URL + to.meta.canonical)
+      ?.setAttribute('href', localizedUrl(path, locale))
+    // hreflang nur auf indexierbaren Seiten (auf noindex ohne Wirkung)
+    const indexable = !/\bnoindex\b/.test(to.meta.robots ?? '')
+    setAlternate('de', indexable ? localizedUrl(path, 'de') : null)
+    setAlternate('en', indexable ? localizedUrl(path, 'en') : null)
+    setAlternate('x-default', indexable ? localizedUrl(path, 'de') : null)
   }
+}
+
+router.afterEach((to) => {
+  if (typeof document === 'undefined') return
+  // Die App-Shell (Editor) scrollt nicht als Seite; Landing/Blog schon.
+  document.documentElement.classList.toggle('ktx-scroll', to.meta.scroll === true)
+  applyRouteHead(to)
 })
+
+// Sprachwechsel: Titel, Canonical usw. der aktuellen Route neu setzen
+watch(useI18n().locale, () => {
+  if (typeof document !== 'undefined') applyRouteHead(router.currentRoute.value)
+})
+
+/** Setzt/entfernt <link rel="alternate" hreflang>; href = null entfernt den Link. */
+function setAlternate(hreflang: string, href: string | null): void {
+  let el = document.head.querySelector(`link[rel="alternate"][hreflang="${hreflang}"]`)
+  if (!href) {
+    el?.remove()
+    return
+  }
+  if (!el) {
+    el = document.createElement('link')
+    el.setAttribute('rel', 'alternate')
+    el.setAttribute('hreflang', hreflang)
+    document.head.appendChild(el)
+  }
+  el.setAttribute('href', href)
+}
 
 function setMeta(name: string, content: string): void {
   document.querySelector(`meta[name="${name}"]`)?.setAttribute('content', content)
