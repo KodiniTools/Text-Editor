@@ -199,3 +199,32 @@ describe('blogArticles', () => {
     expect(getBlogArticlesNewestFirst()[0]!.url.de).toBe(BLOG_URL)
   })
 })
+
+describe('Sprach-URLs (?lang=en)', () => {
+  it('Canonical und hreflang folgen Route und Sprache', async () => {
+    const canonical = (): string | null | undefined =>
+      document.querySelector('link[rel="canonical"]')?.getAttribute('href')
+    const alternates = (): string[] =>
+      [...document.querySelectorAll('link[rel="alternate"][hreflang]')].map(
+        (l) => `${l.getAttribute('hreflang')}=${l.getAttribute('href')}`,
+      )
+    document.head.innerHTML =
+      '<link rel="canonical" href="https://kodinitools.com/texteditor/" /><meta name="description" content="" /><meta name="robots" content="" />'
+    setLocale('de')
+    await appRouter.push('/funktionen')
+    await appRouter.isReady()
+    expect(canonical()).toBe('https://kodinitools.com/texteditor/funktionen')
+    expect(alternates()).toEqual([
+      'de=https://kodinitools.com/texteditor/funktionen',
+      'en=https://kodinitools.com/texteditor/funktionen?lang=en',
+      'x-default=https://kodinitools.com/texteditor/funktionen',
+    ])
+    setLocale('en')
+    await new Promise((r) => setTimeout(r))
+    expect(canonical()).toBe('https://kodinitools.com/texteditor/funktionen?lang=en')
+    expect(document.documentElement.lang).toBe('en')
+    await appRouter.push('/app')
+    expect(alternates()).toEqual([])
+    setLocale('de')
+  })
+})
