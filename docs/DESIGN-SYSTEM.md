@@ -1,14 +1,14 @@
 # Design-System des Kodini Texteditors
 
 Extrahiert aus dem Repository `KodiniTools/Text-Editor`. Jeder Wert nennt seine Quelle als `datei:zeile`. Werte, die nicht direkt im Code stehen, sondern abgeleitet oder gezählt sind, tragen die Markierung **[Annahme]**.
-Diese Markdown-Fassung ist aus der Artifact-Version 2 der Doku abgeleitet; die Artifact-Fassung wird wöchentlich aktualisiert und ist die führende Quelle.
+Diese Markdown-Fassung ist aus der Artifact-Version 2.2 der Doku abgeleitet; die Artifact-Fassung wird wöchentlich aktualisiert und ist die führende Quelle.
 
-|         |                                                      |
-| ------- | ---------------------------------------------------- |
-| Stand   | 2026-10-12                                           |
-| Commit  | `0a9208b` (main, Merge #73)                          |
-| Stack   | Vue 3.4 · Tailwind 3.4 · Vite 5 · Pinia 2 · Vitest 2 |
-| Version | 2 (ersetzt v1 vom 2026-10-06, Commit `f09f3b3`)      |
+|         |                                                                                                           |
+| ------- | --------------------------------------------------------------------------------------------------------- |
+| Stand   | 2026-11-02                                                                                                |
+| Commit  | `dba5301` (main, Merge #77)                                                                               |
+| Stack   | Vue 3.4 · Tailwind 3.4 · Vite 5 · Pinia 2 · Vitest 2                                                      |
+| Version | 2.2 (v2.1 vom 2026-10-19 auf `02b6e2d`; v2 vom 2026-10-12 auf `0a9208b`; v1 vom 2026-10-06 auf `f09f3b3`) |
 
 Inhalt:
 
@@ -39,8 +39,10 @@ Zwischen `f09f3b3` und `0a9208b` wurden zwei Pull Requests gemerged (#72 Doku, #
 - **11 Ui-Bausteine** unter `src/components/ui/` ersetzen Dialog, Toast, kbd und die meisten lokalen Button-Klassen. Werkzeug-, Format- und Tab-Leiste bleiben eigenes Markup auf denselben Tokens (`src/components/ui/README.md:47-51`).
 - **Wächter-Tests** verhindern die Rückkehr der alten Welt: `tests/designTokens.spec.ts` (20 Tests), `tests/buttonContrast.spec.ts` (3), `src/design-system/__tests__/tokens-v2.spec.ts` (17). Alle 40 laufen auf `0a9208b` grün.
 - **Supreme** liegt jetzt gebündelt in drei Gewichten (400/500/700) unter `src/assets/fonts/` statt als einzelner Regular-Schnitt vom Server.
-- **Befunde:** von 17 (3 kritisch) auf 14 (0 kritisch, 8 Warnung, 6 Hinweis). Erledigt sind unter anderem die drei Farbsysteme, die Tailwind-Grau-Literale, die Radien- und Schattenstreuung, Supreme nur als Regular, die fünf lokalen Button-Definitionen und die Toast-/Fehlerfarben ohne Token. Die Partials, die Dokument-/Export-Farben und die doppelt gepflegte Popover-Breite bleiben.
-- **Neu dazugekommen:** `docs/DESIGN-SYSTEM.md` aus PR #72 beschreibt noch den v1-Stand (Befund 10.8), und die Mono-Schrift aus den Tokens wird nirgends geladen (10.6).
+- **Befunde:** von 17 (3 kritisch) auf 13 offene (0 kritisch, 7 Warnung, 6 Hinweis). Erledigt sind unter anderem die drei Farbsysteme, die Tailwind-Grau-Literale, die Radien- und Schattenstreuung, Supreme nur als Regular, die fünf lokalen Button-Definitionen und die Toast-/Fehlerfarben ohne Token. Die Partials, die Dokument-/Export-Farben und die doppelt gepflegte Popover-Breite bleiben.
+- **Neu dazugekommen:** die Mono-Schrift aus den Tokens wird nirgends geladen (10.6).
+- **Version 2.1 (2026-10-19):** PR #74 hat `docs/DESIGN-SYSTEM.md` auf diesen Stand gebracht; Befund 10.8 ist damit erledigt. Tailwind-Config, globale Styles, `index.html` und alle Vue-Komponenten sind seit `0a9208b` unverändert, alle Quellenangaben gelten weiter.
+- **Version 2.2 (2026-11-02):** PR #75 (Teilen über Web Share API), #76 (Bilder im Druck) und #77 (englische Fassung unter `?lang=en`) ändern keine Tokens, Tailwind-Config oder globalen Stilregeln. Neu im Inventar ist das Dropdown „Teilen“ in der Werkzeugleiste (`src/components/EditorToolbar.vue:355-396`), ein Klon des Speichern-Menüs auf denselben Klassen. `#print-root` bekommt einen Container mit absolut platzierten Bildern (`src/views/EditorView.vue:558-567`, `src/utils/printLayout.ts`, keine Farbliterale). Zeilenangaben für `EditorToolbar.vue` und `EditorView.vue` wurden nachgezogen; Befunde unverändert (13 offen).
 
 ## 1 Überblick & Architektur
 
@@ -53,7 +55,7 @@ Es gibt **eine Quelle der Wahrheit**: 71 CSS-Variablen im Namespace `--ds-*` (`t
 | verschiedene Hex-Literale außerhalb der Token in `src/` + `index.html` (vorher 32)                               | 15      |
 | `rgba()`-Literale außerhalb der Token (vorher ~60)                                                               | 6       |
 | Ui-Bausteine + App-SFCs im Inventar                                                                              | 11 + 19 |
-| Befunde (0 kritisch, 8 Warnung, 6 Hinweis)                                                                       | 14      |
+| offene Befunde (0 kritisch, 7 Warnung, 6 Hinweis), 1 erledigt                                                    | 13      |
 
 | Schicht                       | Datei                                                  | Zweck                                                                                                                                                                                                                      |
 | ----------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -172,9 +174,9 @@ Sieben Stufen mit Token-Namen; Tailwind bindet `text-xs…3xl` daran und hängt 
 | Token                    | Größe                 | Zeilenhöhe | Typische Verwendung                                                                                      | Quelle                                                                                                |
 | ------------------------ | --------------------- | ---------- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `--ds-text-xs`           | 12px                  | 1.5        | Labels (`.fb-label`), Statusleiste, Menü-Hinweise, Tab-Aktionen, Badge, kbd, TOC-Titel                   | `tokens-v2.css:51 · FormatBar.vue:706 · StatusBar.vue:20 · UiKbd.vue:34 · features.css:29,191`        |
-| `--ds-text-sm`           | 13px                  | 1.5        | `.tb-btn`, Menüeinträge, Eingaben, Tabs, UiButton sm, Callout, Toast, Select-Label                       | `tokens-v2.css:52 · EditorToolbar.vue:490 · DocumentTabs.vue:39 · UiButton.vue:133 · UiToast.vue:134` |
+| `--ds-text-sm`           | 13px                  | 1.5        | `.tb-btn`, Menüeinträge, Eingaben, Tabs, UiButton sm, Callout, Toast, Select-Label                       | `tokens-v2.css:52 · EditorToolbar.vue:551 · DocumentTabs.vue:39 · UiButton.vue:133 · UiToast.vue:134` |
 | `--ds-text-md`           | 14px                  | 1.5        | UiButton md, UiSelect, UiTextField, Nav-Links, Fließtext in Karten                                       | `tokens-v2.css:53 · UiButton.vue:67 · UiSelect.vue:116 · landing.css:77,314`                          |
-| `--ds-text-lg`           | 16px                  | 1.5        | Body, UiButton lg, Dialog-/Panel-Titel, Hero-Untertitel, Landing-Buttons, FAQ-Frage, Drop-Overlay-Titel  | `tokens-v2.css:54 · style.css:84 · UiDialog.vue:149 · landing.css:138,160,357 · EditorView.vue:444`   |
+| `--ds-text-lg`           | 16px                  | 1.5        | Body, UiButton lg, Dialog-/Panel-Titel, Hero-Untertitel, Landing-Buttons, FAQ-Frage, Drop-Overlay-Titel  | `tokens-v2.css:54 · style.css:84 · UiDialog.vue:149 · landing.css:138,160,357 · EditorView.vue:449`   |
 | `--ds-text-xl`           | 20px                  | 1.25       | Logo, Feature-Titel, Blog-Titel                                                                          | `tokens-v2.css:55 · landing.css:61,306,528`                                                           |
 | `--ds-text-2xl`          | 24px                  | 1.25       | Abschnittstitel, Schrittnummer, Stat-Zahl, Artikel-Titel; Untergrenze der Hero-Clamp                     | `tokens-v2.css:56 · landing.css:237,301 · features.css:78,309`                                        |
 | `--ds-text-3xl`          | 32px                  | 1.25       | Obergrenze von `clamp(2xl, 4vw, 3xl)` für Hero-, CTA- und Features-Titel                                 | `tokens-v2.css:57 · landing.css:125,567 · features.css:38,566`                                        |
@@ -212,22 +214,22 @@ Die Tailwind-Spacing-Skala (`p-2`, `gap-1.5` …) bleibt das Standard-4px-Raster
 
 ### 4.2 Editor-App
 
-| Ort                                       | Werte                                                                                                                             | Quelle                                                                                                                    |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Leisten (Tabs, Werkzeuge, Format, Status) | Tabs `px-2 gap-1`; Werkzeuge `px-2 py-1.5 gap-1`; Format `gap-x-3 gap-y-2 px-2 py-1.5`; Status `px-4 py-1.5 gap-x-4`              | `DocumentTabs.vue:33 · EditorToolbar.vue:275 · FormatBar.vue:199 · StatusBar.vue:20`                                      |
-| Leisten-Knöpfe                            | `.tb-btn px-3 py-1.5` (ohne feste Höhe); `.seg-btn h-7 px-2`; Icon-Variante `h-7 w-7` mit `h-3.5 w-3.5`-SVG; Tab `px-3 py-2`      | `EditorToolbar.vue:490 · FormatBar.vue:716,288 · DocumentTabs.vue:39`                                                     |
-| Felder in Leisten                         | `.fb-select h-7 px-2`; `.stepper h-7`; `.fr-input h-7 px-2`; Farbwähler `h-7 w-8`; Swatch `h-5 w-5`                               | `FormatBar.vue:709,508,490 · NumberStepper.vue:48 · FindReplace.vue:113`                                                  |
-| Gruppen / Trenner                         | `.fb-group gap-1.5`; `.fb-divider mx-0.5 h-6 w-px`; Toolbar-Trenner `mx-1 h-5 w-px`                                               | `FormatBar.vue:703,712 · EditorToolbar.vue:381`                                                                           |
-| Menüs / Popover                           | `p-1` (Speichern), `p-2` (Werkzeuge, Link, Bild-Link); Einträge `px-2 py-1.5`; Abstand zum Anker 4px, Rand 8px, Mindesthöhe 160px | `EditorToolbar.vue:301,496 · TransformMenu.vue:32 · FormatBar.vue:672 · EditorArea.vue:122 · useAnchoredMenu.ts:21,30,32` |
-| Menübreiten                               | w-48 (192) · w-64 (256) · w-72 (288 CSS vs 280 JS)                                                                                | `EditorToolbar.vue:74,301 · TransformMenu.vue:14,32 · FormatBar.vue:146,672`                                              |
-| Suche/Ersetzen                            | `px-4 py-3 gap-2`; Optionen `gap-3`                                                                                               | `FindReplace.vue:55,94`                                                                                                   |
-| Markdown-Vorschau                         | Kopf `px-3 py-1.5`; Inhalt `px-6 py-5`; Absätze `mb-3`, Listen `pl-6`                                                             | `MarkdownPreview.vue:39,72,106-113`                                                                                       |
-| Toasts                                    | Stapel `bottom-4 right-4 gap-2`, Breite `min(22rem, 100vw − 2rem)`; UiToast `max-width 400px`, padding `12 12 12 16`              | `ToastHost.vue:12 · UiToast.vue:104-105`                                                                                  |
-| Editor-Textblock (Bildschirmmodus)        | `1.25rem max(1.5rem, calc((100% − 48rem)/2))`; Lesebreite 48rem                                                                   | `EditorArea.vue:446-448`                                                                                                  |
-| Seitenmodus                               | Backdrop `padding 1rem`; Vorschau-Bühne `py-4`                                                                                    | `EditorArea.vue:466 · PagePreview.vue:161`                                                                                |
-| Fokus-Modus                               | Pills `right-4 top-4` / `bottom-4`; Scroll-Freiraum unten 84px (Konstante)                                                        | `EditorView.vue:457,482,94`                                                                                               |
-| Drop-Overlay                              | `p-6`; Karte `px-8 py-6`, Icon `h-9 w-9`                                                                                          | `EditorView.vue:429-434`                                                                                                  |
-| Druck / PDF / HTML-Export                 | Seitenrand 18mm; HTML-Wrapper `margin 2rem auto; padding 0 1rem` (unverändert seit v1)                                            | `EditorView.vue · renderPages.ts · exportHtml.ts`                                                                         |
+| Ort                                       | Werte                                                                                                                                     | Quelle                                                                                                                    |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Leisten (Tabs, Werkzeuge, Format, Status) | Tabs `px-2 gap-1`; Werkzeuge `px-2 py-1.5 gap-1`; Format `gap-x-3 gap-y-2 px-2 py-1.5`; Status `px-4 py-1.5 gap-x-4`                      | `DocumentTabs.vue:33 · EditorToolbar.vue:294 · FormatBar.vue:199 · StatusBar.vue:20`                                      |
+| Leisten-Knöpfe                            | `.tb-btn px-3 py-1.5` (ohne feste Höhe); `.seg-btn h-7 px-2`; Icon-Variante `h-7 w-7` mit `h-3.5 w-3.5`-SVG; Tab `px-3 py-2`              | `EditorToolbar.vue:551 · FormatBar.vue:716,288 · DocumentTabs.vue:39`                                                     |
+| Felder in Leisten                         | `.fb-select h-7 px-2`; `.stepper h-7`; `.fr-input h-7 px-2`; Farbwähler `h-7 w-8`; Swatch `h-5 w-5`                                       | `FormatBar.vue:709,508,490 · NumberStepper.vue:48 · FindReplace.vue:113`                                                  |
+| Gruppen / Trenner                         | `.fb-group gap-1.5`; `.fb-divider mx-0.5 h-6 w-px`; Toolbar-Trenner `mx-1 h-5 w-px`                                                       | `FormatBar.vue:703,712 · EditorToolbar.vue:442`                                                                           |
+| Menüs / Popover                           | `p-1` (Speichern, Teilen), `p-2` (Werkzeuge, Link, Bild-Link); Einträge `px-2 py-1.5`; Abstand zum Anker 4px, Rand 8px, Mindesthöhe 160px | `EditorToolbar.vue:320,557 · TransformMenu.vue:32 · FormatBar.vue:672 · EditorArea.vue:122 · useAnchoredMenu.ts:21,30,32` |
+| Menübreiten                               | w-48 (192) · w-64 (256) · w-72 (288 CSS vs 280 JS)                                                                                        | `EditorToolbar.vue:75,87,320,370 · TransformMenu.vue:14,32 · FormatBar.vue:146,672`                                       |
+| Suche/Ersetzen                            | `px-4 py-3 gap-2`; Optionen `gap-3`                                                                                                       | `FindReplace.vue:55,94`                                                                                                   |
+| Markdown-Vorschau                         | Kopf `px-3 py-1.5`; Inhalt `px-6 py-5`; Absätze `mb-3`, Listen `pl-6`                                                                     | `MarkdownPreview.vue:39,72,106-113`                                                                                       |
+| Toasts                                    | Stapel `bottom-4 right-4 gap-2`, Breite `min(22rem, 100vw − 2rem)`; UiToast `max-width 400px`, padding `12 12 12 16`                      | `ToastHost.vue:12 · UiToast.vue:104-105`                                                                                  |
+| Editor-Textblock (Bildschirmmodus)        | `1.25rem max(1.5rem, calc((100% − 48rem)/2))`; Lesebreite 48rem                                                                           | `EditorArea.vue:446-448`                                                                                                  |
+| Seitenmodus                               | Backdrop `padding 1rem`; Vorschau-Bühne `py-4`                                                                                            | `EditorArea.vue:466 · PagePreview.vue:161`                                                                                |
+| Fokus-Modus                               | Pills `right-4 top-4` / `bottom-4`; Scroll-Freiraum unten 84px (Konstante)                                                                | `EditorView.vue:462,487,95`                                                                                               |
+| Drop-Overlay                              | `p-6`; Karte `px-8 py-6`, Icon `h-9 w-9`                                                                                                  | `EditorView.vue:434-439`                                                                                                  |
+| Druck / PDF / HTML-Export                 | Seitenrand 18mm; HTML-Wrapper `margin 2rem auto; padding 0 1rem` (unverändert seit v1)                                                    | `EditorView.vue · renderPages.ts · exportHtml.ts`                                                                         |
 
 ### 4.3 Ui-Bausteine
 
@@ -277,10 +279,10 @@ Drei Token plus voll gerundet; `rounded-xl/2xl/3xl` sind per Test verboten (`des
 
 | Token                               | Wert                                            | Verwendung                                                                                                                                                              | Quelle                                                                                                                                                    |
 | ----------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--ds-radius-sm` (`rounded-sm`)     | 6px                                             | Leisten-Knöpfe, Felder, Menüeinträge, Swatches, Tab-Aktionen, UiButton/IconButton sm, UiKbd, Code, TOC-Link, Shortcut-Item                                              | `tokens-v2.css:79 · EditorToolbar.vue:490,496 · FormatBar.vue:709,716 · UiButton.vue:132 · UiKbd.vue:30 · features.css:210,491`                           |
-| `--ds-radius-md` (`rounded-md`)     | 10px                                            | UiButton/IconButton md, UiSelect, UiTextField, UiSegmentedControl, UiToast, UiCallout, Dropdowns/Popover, Landing-Buttons, Icon-Boxen, Subsection/Category/Tag-Box, pre | `tokens-v2.css:80 · UiButton.vue:63 · UiToast.vue:108 · EditorToolbar.vue:301 · landing.css:163,291 · features.css:336,420,458 · MarkdownPreview.vue:129` |
-| `--ds-radius-lg` (`rounded-lg`)     | 16px                                            | UiDialog, UiPanel, Drop-Overlay-Karte, Feature-/Blog-/Overview-Karten, FAQ, Hero-Bild, Hero-Stats, TOC-Box, Artikel-Abschnitt                                           | `tokens-v2.css:81 · UiDialog.vue:123 · UiPanel.vue:43 · EditorView.vue:432 · landing.css:227,279,338,431 · features.css:66,119,186,278`                   |
-| `--ds-radius-full` (`rounded-full`) | 999px                                           | Fokus-/Zoom-Pills, Seitenzahl-Badge, Blog-Tag, Badge, Tag-Pill, Panel-Zähler, Scrollbar-Daumen, Nav-Unterstrich, Listenpunkte                                           | `tokens-v2.css:82 · EditorView.vue:457,482 · PagePreview.vue:168 · landing.css:95,520 · features.css:28,472 · style.css:247`                              |
+| `--ds-radius-sm` (`rounded-sm`)     | 6px                                             | Leisten-Knöpfe, Felder, Menüeinträge, Swatches, Tab-Aktionen, UiButton/IconButton sm, UiKbd, Code, TOC-Link, Shortcut-Item                                              | `tokens-v2.css:79 · EditorToolbar.vue:551,557 · FormatBar.vue:709,716 · UiButton.vue:132 · UiKbd.vue:30 · features.css:210,491`                           |
+| `--ds-radius-md` (`rounded-md`)     | 10px                                            | UiButton/IconButton md, UiSelect, UiTextField, UiSegmentedControl, UiToast, UiCallout, Dropdowns/Popover, Landing-Buttons, Icon-Boxen, Subsection/Category/Tag-Box, pre | `tokens-v2.css:80 · UiButton.vue:63 · UiToast.vue:108 · EditorToolbar.vue:320 · landing.css:163,291 · features.css:336,420,458 · MarkdownPreview.vue:129` |
+| `--ds-radius-lg` (`rounded-lg`)     | 16px                                            | UiDialog, UiPanel, Drop-Overlay-Karte, Feature-/Blog-/Overview-Karten, FAQ, Hero-Bild, Hero-Stats, TOC-Box, Artikel-Abschnitt                                           | `tokens-v2.css:81 · UiDialog.vue:123 · UiPanel.vue:43 · EditorView.vue:437 · landing.css:227,279,338,431 · features.css:66,119,186,278`                   |
+| `--ds-radius-full` (`rounded-full`) | 999px                                           | Fokus-/Zoom-Pills, Seitenzahl-Badge, Blog-Tag, Badge, Tag-Pill, Panel-Zähler, Scrollbar-Daumen, Nav-Unterstrich, Listenpunkte                                           | `tokens-v2.css:82 · EditorView.vue:462,487 · PagePreview.vue:168 · landing.css:95,520 · features.css:28,472 · style.css:247`                              |
 | Ohne Token                          | 2 · 3 · 4 · 5 · 9999px · 50% · `calc(sm − 2px)` | Blatt im Seitenmodus; mark; Bild-Griff (Touch 5); Link-Badge; Bild-Knöpfe; Range-Daumen; Segment-Option sm                                                              | `EditorArea.vue:481,353,422,408,370,388 · style.css:384,426 · UiSegmentedControl.vue:158`                                                                 |
 | Partials                            | 0.5 / 0.75 / 1rem, 26px, 50%                    | Cookie-Buttons, -Kategorien, -Modal, Toggle (unverändert)                                                                                                               | `cookie-banner.html:79,216,155,269,281`                                                                                                                   |
 
@@ -288,7 +290,7 @@ Drei Token plus voll gerundet; `rounded-xl/2xl/3xl` sind per Test verboten (`des
 
 | Token                                    | Dunkel                                                                                                         | Hell                                                                                                 | Verwendung                                                                                                                                | Quelle                                                                                                                                                      |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--ds-shadow-overlay` (`shadow-overlay`) | `0 8px 24px rgba(0,0,0,.35)`                                                                                   | `0 8px 24px rgba(20,33,58,.12)`                                                                      | UiDialog, UiToast, Dropdowns/Popover, Drop-Overlay-Karte, Fokus-/Zoom-Pills, Seitenzahl-Badge, Blatt im Seitenmodus                       | `tokens-v2.css:46,139 · UiDialog.vue:126 · UiToast.vue:111 · EditorToolbar.vue:301 · EditorView.vue:432,457,482 · PagePreview.vue:168 · EditorArea.vue:480` |
+| `--ds-shadow-overlay` (`shadow-overlay`) | `0 8px 24px rgba(0,0,0,.35)`                                                                                   | `0 8px 24px rgba(20,33,58,.12)`                                                                      | UiDialog, UiToast, Dropdowns/Popover, Drop-Overlay-Karte, Fokus-/Zoom-Pills, Seitenzahl-Badge, Blatt im Seitenmodus                       | `tokens-v2.css:46,139 · UiDialog.vue:126 · UiToast.vue:111 · EditorToolbar.vue:320 · EditorView.vue:437,462,487 · PagePreview.vue:168 · EditorArea.vue:480` |
 | `--ds-focus-ring` (`shadow-focus`)       | `0 0 0 2px surface-0, 0 0 0 4px accent` (in Light-Blöcken erneut deklariert, weil `var()` dort aufgelöst wird) | alle Ui-Bausteine, Felder, Landing-Links/-Buttons/-Karten, Range-Slider; `focus:ring-*` ist verboten | `tokens-v2.css:45,138,166,12-13 · UiButton.vue:84 · FormatBar.vue:709 · landing.css:102,196 · style.css:446 · designTokens.spec.ts:70-72` |
 | Ohne Token                               | `0 1px 3px rgb(0 0 0/.3)` ×3, `0 1px 2px rgb(0 0 0/.35)`; Backdrop `rgba(0,0,0,.5)`                            | Bild-Griff, -Löschen, -Link, Link-Badge; Dialog-Hintergrund                                          | `EditorArea.vue:356,375,391,411 · UiDialog.vue:113`                                                                                       |
 | Verboten per Test                        | `shadow-sm…2xl`, `backdrop-blur`, `bg-gradient-*`, `hover:scale`, `hover:-translate-y`                         | —                                                                                                    | `designTokens.spec.ts:60-64`                                                                                                              |
@@ -310,7 +312,7 @@ Die Token kennen drei Breakpoints (phone 480, tablet 768, desktop 1024; `tokens-
 | Query                              | Welt                          | Wirkung                                                                                                                                       | Quelle                                                                           |
 | ---------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Tailwind `sm:` (≥640)              | Editor                        | Format-Trenner sichtbar; Shortcut-Grid 2-spaltig                                                                                              | `FormatBar.vue:712 · ShortcutHelp.vue:120`                                       |
-| Tailwind `md:` (≥768)              | Editor                        | Markdown-Vorschau neben statt unter dem Editor                                                                                                | `EditorView.vue:401,416`                                                         |
+| Tailwind `md:` (≥768)              | Editor                        | Markdown-Vorschau neben statt unter dem Editor                                                                                                | `EditorView.vue:406,421`                                                         |
 | `(max-width: 640px)`               | Editor / Landing              | `.hbar-scroll` wird horizontal scrollende Zeile; Landing: Hero-Titel 2xl, Buttons volle Breite, Abschnitte `space-12 space-5`, Blog 1-spaltig | `style.css:455-470 · landing.css:633-684`                                        |
 | `(min-width: 768px)`               | Landing                       | Hero zweispaltig, Bild sichtbar (max 400px)                                                                                                   | `landing.css:583-608`                                                            |
 | `(max-width: 768px)`               | Landing / Features / Partials | Header gestapelt, Nav wischbar; Features: Hero, Overview, Artikel kompakter, Grids 1-spaltig, Shortcuts 2-spaltig                             | `landing.css:614-631 · features.css:592-633 · nav.html:299,585 · footer.html:84` |
@@ -325,19 +327,19 @@ Die Token kennen drei Breakpoints (phone 480, tablet 768, desktop 1024; `tokens-
 
 Fünf Token (`tokens-v2.css:107-111`), vier davon als Tailwind-Klassen (`tailwind.config.js:110-115`). Alle teleportierten Ebenen liegen in `#modal-portal`, dessen eigener Stacking-Context (`z-backdrop` = 1000) sie gemeinsam über die globale Navigation hebt, aber unter dem Cookie-Banner hält (`style.css:177-184 · App.vue:20`).
 
-| z             | Token / Klasse                   | Element                                                                                   | Quelle                                                                                  |
-| ------------- | -------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| 1             | —                                | Hero-Inhalt                                                                               | `landing.css:121`                                                                       |
-| 5             | —                                | Frei platzierte Bilder                                                                    | `EditorArea.vue:329`                                                                    |
-| 40            | Tailwind `z-40`                  | Fokus-Pill, Zoom-Pill (absolut im Editorbereich)                                          | `EditorView.vue:457,482`                                                                |
-| 50            | Tailwind `z-50` / literal        | Drop-Overlay; Landing-Hero-Navigation (sticky)                                            | `EditorView.vue:429 · landing.css:36`                                                   |
-| 100 / 200     | —                                | Globale Navigation / ihre Dropdowns (Partial)                                             | `nav.html:79,200`                                                                       |
-| 500           | `--ds-z-topbar` (`z-topbar`)     | ungenutzt                                                                                 | `tokens-v2.css:107`                                                                     |
-| 900           | `--ds-z-player`                  | ungenutzt (Playlist-Generator-Erbe)                                                       | `tokens-v2.css:108`                                                                     |
-| 1000          | `--ds-z-backdrop` (`z-backdrop`) | `#modal-portal`; UiDialog-Backdrop                                                        | `style.css:183 · UiDialog.vue:108`                                                      |
-| 1001          | `--ds-z-dialog` (`z-dialog`)     | Speichern-Menü, Werkzeuge-Menü, Link-Popover, Bild-Link-Popover (alle in `#modal-portal`) | `EditorToolbar.vue:301 · TransformMenu.vue:32 · FormatBar.vue:672 · EditorArea.vue:122` |
-| 9999          | `--ds-z-toast` (`z-toast`)       | Toast-Stapel                                                                              | `ToastHost.vue:12`                                                                      |
-| 10000 / 10001 | —                                | Cookie-Banner / -Modal (von der App erzwungen)                                            | `style.css:186-195 · cookie-banner.html:14,147`                                         |
+| z             | Token / Klasse                   | Element                                                                                                | Quelle                                                                                  |
+| ------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| 1             | —                                | Hero-Inhalt                                                                                            | `landing.css:121`                                                                       |
+| 5             | —                                | Frei platzierte Bilder                                                                                 | `EditorArea.vue:329`                                                                    |
+| 40            | Tailwind `z-40`                  | Fokus-Pill, Zoom-Pill (absolut im Editorbereich)                                                       | `EditorView.vue:462,487`                                                                |
+| 50            | Tailwind `z-50` / literal        | Drop-Overlay; Landing-Hero-Navigation (sticky)                                                         | `EditorView.vue:434 · landing.css:36`                                                   |
+| 100 / 200     | —                                | Globale Navigation / ihre Dropdowns (Partial)                                                          | `nav.html:79,200`                                                                       |
+| 500           | `--ds-z-topbar` (`z-topbar`)     | ungenutzt                                                                                              | `tokens-v2.css:107`                                                                     |
+| 900           | `--ds-z-player`                  | ungenutzt (Playlist-Generator-Erbe)                                                                    | `tokens-v2.css:108`                                                                     |
+| 1000          | `--ds-z-backdrop` (`z-backdrop`) | `#modal-portal`; UiDialog-Backdrop                                                                     | `style.css:183 · UiDialog.vue:108`                                                      |
+| 1001          | `--ds-z-dialog` (`z-dialog`)     | Speichern-Menü, Teilen-Menü, Werkzeuge-Menü, Link-Popover, Bild-Link-Popover (alle in `#modal-portal`) | `EditorToolbar.vue:320 · TransformMenu.vue:32 · FormatBar.vue:672 · EditorArea.vue:122` |
+| 9999          | `--ds-z-toast` (`z-toast`)       | Toast-Stapel                                                                                           | `ToastHost.vue:12`                                                                      |
+| 10000 / 10001 | —                                | Cookie-Banner / -Modal (von der App erzwungen)                                                         | `style.css:186-195 · cookie-banner.html:14,147`                                         |
 
 ## 9 Komponenten-Inventar
 
@@ -419,7 +421,7 @@ Kopie aus dem Collage Maker ohne `UiFileList`; einzige Ergänzung ist `UiDialog 
 
 - **Props:** `keys: string[]` (`:9-11`)
 - **Stil:** min 24×22, `surface-2`, Rahmen `border-strong` mit 2px Unterkante, `radius-sm`, `text-xs` 600, Schrift inherit (nicht mono) (`:20-38`)
-- **Einsatz:** ShortcutHelp, EditorView (Esc-Chip) (`ShortcutHelp.vue:135 · EditorView.vue:471`)
+- **Einsatz:** ShortcutHelp, EditorView (Esc-Chip) (`ShortcutHelp.vue:135 · EditorView.vue:476`)
 
 ### 9.2 Editor-Shell (eigenes Markup auf Tokens)
 
@@ -433,12 +435,13 @@ Kopie aus dem Collage Maker ohne `UiFileList`; einzige Ergänzung ist `UiDialog 
 
 #### EditorToolbar `src/components/EditorToolbar.vue`
 
-- **Leiste:** `hbar-scroll flex-wrap gap-1 border-b border-line bg-surface-1 px-2 py-1.5` (`:275`)
-- **`.tb-btn`:** `rounded-sm px-3 py-1.5 text-sm font-medium text-ink-2 transition-colors`; hover: bg-surface-2 · disabled: opacity-40 · aktiv (Toggle): text-accent · destruktiv: text-danger, disabled text-ink-3 (`:489-491,339,364,417,427`)
-- **`.tb-start`:** Outline-Variante: `border border-accent font-semibold text-accent hover:bg-accent-soft` (`:492-494,460`)
-- **Trenner:** `mx-1 h-5 w-px bg-line` (`:381,402,409`)
-- **Dropdown „Speichern“:** Teleport `#modal-portal`, `fixed z-dialog w-48 rounded-md border border-line bg-surface-1 p-1 shadow-overlay`; Position via `useAnchoredMenu(192)` (`:74,297-334`)
-- **`.menu-item`:** `block w-full rounded-sm px-2 py-1.5 text-left text-sm text-ink-2 hover:bg-surface-2`; Untertitel `text-xs text-ink-3`; Trennlinie `my-1 h-px bg-line` (`:495-497,312,323`)
+- **Leiste:** `hbar-scroll flex-wrap gap-1 border-b border-line bg-surface-1 px-2 py-1.5` (`:294`)
+- **`.tb-btn`:** `rounded-sm px-3 py-1.5 text-sm font-medium text-ink-2 transition-colors`; hover: bg-surface-2 · disabled: opacity-40 · aktiv (Toggle): text-accent · destruktiv: text-danger, disabled text-ink-3 (`:550-552,400,425,478,488`)
+- **`.tb-start`:** Outline-Variante: `border border-accent font-semibold text-accent hover:bg-accent-soft` (`:553-555,521`)
+- **Trenner:** `mx-1 h-5 w-px bg-line` (`:442,463,470`)
+- **Dropdown „Speichern“:** Teleport `#modal-portal`, `fixed z-dialog w-48 rounded-md border border-line bg-surface-1 p-1 shadow-overlay`; Position via `useAnchoredMenu(192)` (`:75,316-353`)
+- **Dropdown „Teilen“ (neu, PR #75):** gleiche Klassen und Breite wie „Speichern“ (`w-48`, `useAnchoredMenu(192)`), fünf `.menu-item` plus Hinweiszeile `mt-1 border-t border-line px-2 pt-1.5 text-xs text-ink-3`; Trigger `.tb-btn`, `disabled` während des Teilens und bei leerem Dokument (`:87,355-396`)
+- **`.menu-item`:** `block w-full rounded-sm px-2 py-1.5 text-left text-sm text-ink-2 hover:bg-surface-2`; Untertitel `text-xs text-ink-3`; Trennlinie `my-1 h-px bg-line` (`:556-558,331,342`)
 
 #### TransformMenu `src/components/TransformMenu.vue`
 
@@ -500,10 +503,10 @@ Kopie aus dem Collage Maker ohne `UiFileList`; einzige Ergänzung ist `UiDialog 
 
 #### EditorView `src/views/EditorView.vue`
 
-- **Seite:** `relative flex h-full flex-col bg-surface-0 text-ink`; Layout Editor | Markdown ab `md:` mit `border-line` (`:373,401-416`)
-- **Drop-Overlay:** `absolute inset-0 z-50 bg-accent-soft p-6`; Karte `rounded-lg border-2 border-dashed border-accent bg-surface-1 px-8 py-6 shadow-overlay`, Icon `h-9 w-9 text-accent`, Titel `text-lg font-semibold` (`:429-445`)
-- **Fokus-Pill „Verlassen“:** `absolute right-4 top-4 z-40 rounded-full border border-line bg-surface-1 px-4 py-2 text-sm font-medium text-ink shadow-overlay hover:bg-surface-2` + `UiKbd ['Esc']` (`:457-471`)
-- **Zoom-Pill:** `absolute bottom-4 left-1/2 z-40 rounded-full border border-line bg-surface-1 px-2 py-1.5 shadow-overlay`; `UiIconButton size="sm" round` ±, Wert `min-w-[3.25rem] text-sm font-medium tabular-nums`, Trenner `h-5 w-px bg-line`, `UiButton size="sm" variant="ghost"` Reset (`:482-526`)
+- **Seite:** `relative flex h-full flex-col bg-surface-0 text-ink`; Layout Editor | Markdown ab `md:` mit `border-line` (`:378,406-421`)
+- **Drop-Overlay:** `absolute inset-0 z-50 bg-accent-soft p-6`; Karte `rounded-lg border-2 border-dashed border-accent bg-surface-1 px-8 py-6 shadow-overlay`, Icon `h-9 w-9 text-accent`, Titel `text-lg font-semibold` (`:434-450`)
+- **Fokus-Pill „Verlassen“:** `absolute right-4 top-4 z-40 rounded-full border border-line bg-surface-1 px-4 py-2 text-sm font-medium text-ink shadow-overlay hover:bg-surface-2` + `UiKbd ['Esc']` (`:462-476`)
+- **Zoom-Pill:** `absolute bottom-4 left-1/2 z-40 rounded-full border border-line bg-surface-1 px-2 py-1.5 shadow-overlay`; `UiIconButton size="sm" round` ±, Wert `min-w-[3.25rem] text-sm font-medium tabular-nums`, Trenner `h-5 w-px bg-line`, `UiButton size="sm" variant="ghost"` Reset (`:487-531`)
 
 #### PreviewView `src/views/PreviewView.vue`
 
@@ -575,13 +578,13 @@ Die drei vendored Partials sind seit v1 unverändert (Indigo `#6366f1`, `partial
 
 #### **Warnung** 10.3 Zwei lokale Klassen doppelt definiert
 
-- `.tb-btn` in `EditorToolbar.vue:489-491` und `TransformMenu.vue:55-57` (Kopie ohne `disabled`-Zustand)
-- `.menu-item` in `EditorToolbar.vue:495-497` (hover `surface-2`) und `TransformMenu.vue:58-60` (ohne Hover; im Template `hover:bg-accent-soft hover:text-accent`, `:44`). Zwei Menüs, zwei Hover-Optiken.
+- `.tb-btn` in `EditorToolbar.vue:550-552` und `TransformMenu.vue:55-57` (Kopie ohne `disabled`-Zustand)
+- `.menu-item` in `EditorToolbar.vue:556-558` (hover `surface-2`) und `TransformMenu.vue:58-60` (ohne Hover; im Template `hover:bg-accent-soft hover:text-accent`, `:44`). Zwei Menüs, zwei Hover-Optiken.
 - Von den fünf Button-Definitionen aus v1 sind drei durch `UiButton` ersetzt (`.fr-btn`, `.pv-btn`, Primär-Button).
 
 #### **Warnung** 10.4 Kontrollhöhen in den Leisten uneinheitlich
 
-Die Tokens kennen 28 / 36 / 40 px. In den Leisten stehen `h-7` = 28 (`.seg-btn`, `.fb-select`, `.stepper`, `.fr-input`, `FormatBar.vue:709,716 · NumberStepper.vue:48 · FindReplace.vue:113`) neben `.tb-btn` ohne feste Höhe (`py-1.5 text-sm` ≈ 31–32 px, `EditorToolbar.vue:490`) und Tabs `py-2 text-sm` (`DocumentTabs.vue:39`). `UiButton size="sm"` (28) und `UiIconButton size="sm"` (28) sitzen daneben in FindReplace und der Zoom-Pill; UiTextField ist 40. Die Touch-Regel vergrößert nur die alten Klassen, nicht die Ui-Bausteine (`style.css:483-493`), und listet mit `.fr-btn` eine Klasse, die es nicht mehr gibt (`style.css:486`).
+Die Tokens kennen 28 / 36 / 40 px. In den Leisten stehen `h-7` = 28 (`.seg-btn`, `.fb-select`, `.stepper`, `.fr-input`, `FormatBar.vue:709,716 · NumberStepper.vue:48 · FindReplace.vue:113`) neben `.tb-btn` ohne feste Höhe (`py-1.5 text-sm` ≈ 31–32 px, `EditorToolbar.vue:551`) und Tabs `py-2 text-sm` (`DocumentTabs.vue:39`). `UiButton size="sm"` (28) und `UiIconButton size="sm"` (28) sitzen daneben in FindReplace und der Zoom-Pill; UiTextField ist 40. Die Touch-Regel vergrößert nur die alten Klassen, nicht die Ui-Bausteine (`style.css:483-493`), und listet mit `.fr-btn` eine Klasse, die es nicht mehr gibt (`style.css:486`).
 
 #### **Warnung** 10.5 Breakpoints: Token und CSS passen nicht zusammen
 
@@ -595,9 +598,9 @@ Token: 480 / 768 / 1024 (`tokens-v2.json:474-480`). CSS: 640 (`style.css:455 · 
 
 Geladen sind 400 / 500 / 700 (`style.css:37-58`); `--ds-weight-semibold` = 600 ist das Gewicht für Primär-Buttons, Dialog-/Panel-Titel, Badges, kbd und alle Landing-Titel (`UiButton.vue:95 · UiDialog.vue:150 · landing.css:161,307`). Der Browser interpoliert es laut Kommentar aus 500/700 (`style.css:35-36`); tatsächlich wählt er den nächsten geladenen Schnitt (500 oder 700), echte Interpolation gibt es nur bei variablen Fonts **[Annahme]**. Der Test prüft nur 400/500/700 (`designTokens.spec.ts:112-118`).
 
-#### **Warnung** 10.8 `docs/DESIGN-SYSTEM.md` beschreibt den alten Stand
+#### **Erledigt** 10.8 `docs/DESIGN-SYSTEM.md` beschrieb den alten Stand
 
-Die mit PR #72 eingecheckte Markdown-Fassung (Commit `f09f3b3`, „drei Stilwelten“, `zinc`-Token) wurde von PR #73 am selben Tag überholt und blieb im Repo als aktuelle Doku verlinkt (`README.md:227`). Erledigt mit dieser Fassung (Version 2); offen bleibt, dass die Markdown-Datei bei jeder neuen Artifact-Version manuell nachgezogen werden muss.
+Die mit PR #72 eingecheckte Markdown-Fassung (Commit `f09f3b3`, „drei Stilwelten“, `zinc`-Token) wurde von PR #73 überholt. Seit PR #74 (gemergt 2026-10-16, Commit `02b6e2d`) entspricht `docs/DESIGN-SYSTEM.md:1-12` dieser Version 2. Offen bleibt nur, dass die Markdown-Datei bei jeder neuen Artifact-Version manuell nachgezogen werden muss.
 
 #### **Hinweis** 10.9 Literale außerhalb der Token
 
@@ -607,12 +610,12 @@ Die mit PR #72 eingecheckte Markdown-Fassung (Commit `f09f3b3`, „drei Stilwelt
 
 #### **Hinweis** 10.10 Magische Zahlen
 
-- Layout: Hero `calc(100vh − 130px)` (`landing.css:109`), `scroll-margin-top 80px` (`:263`), TOC `top 90px` (`features.css:180`), FAQ `max-height 300px` (`landing.css:392`), `FOCUS_BAR_INSET = 84` (`EditorView.vue:94`), Menü-Mindesthöhe 160 (`useAnchoredMenu.ts:32`)
+- Layout: Hero `calc(100vh − 130px)` (`landing.css:109`), `scroll-margin-top 80px` (`:263`), TOC `top 90px` (`features.css:180`), FAQ `max-height 300px` (`landing.css:392`), `FOCUS_BAR_INSET = 84` (`EditorView.vue:95`), Menü-Mindesthöhe 160 (`useAnchoredMenu.ts:32`)
 - Größen ohne Token: Icon-Boxen 56 / 40 (`landing.css:289 · features.css:300`), UiEmptyState-Icon 40 (`UiEmptyState.vue:35`), UiKbd 24×22 (`UiKbd.vue:24-25`), Panel-Zähler 20 (`UiPanel.vue:67`), Dialog 440 / 720 (`UiDialog.vue:117,133`), Toast 400 (`UiToast.vue:104`), Container 800 / 700 / 600 / 550 / 540 / 500 / 400 / 320 (Abschnitt 4.4)
 
 #### **Hinweis** 10.11 Ebenen gemischt aus Token und Tailwind-Standard
 
-Dropdowns und Toasts nutzen `z-dialog` / `z-toast`; Drop-Overlay `z-50` und die Pills `z-40` (`EditorView.vue:429,457,482`) sowie die Landing-Navigation `z-index: 50` (`landing.css:36`) stammen aus der Tailwind-Standardskala. `--ds-z-topbar` (500) und `--ds-z-player` (900) sind ungenutzt. Der Shortcut-Dialog liegt jetzt durch `#modal-portal` korrekt über der globalen Navigation (v1-Befund erledigt).
+Dropdowns und Toasts nutzen `z-dialog` / `z-toast`; Drop-Overlay `z-50` und die Pills `z-40` (`EditorView.vue:434,462,487`) sowie die Landing-Navigation `z-index: 50` (`landing.css:36`) stammen aus der Tailwind-Standardskala. `--ds-z-topbar` (500) und `--ds-z-player` (900) sind ungenutzt. Der Shortcut-Dialog liegt jetzt durch `#modal-portal` korrekt über der globalen Navigation (v1-Befund erledigt).
 
 #### **Hinweis** 10.12 Kopien von Token-Werten und ungenutzte Token
 
@@ -622,7 +625,7 @@ Dropdowns und Toasts nutzen `z-dialog` / `z-toast`; Drop-Overlay `z-50` und die 
 
 #### **Hinweis** 10.13 Tailwind-Arbitrary-Values und doppelte Popover-Breite
 
-`min-w-[10rem]` (`FormatBar.vue:205`), `min-w-[3.25rem]` (`EditorView.vue:502`), `w-[min(22rem,calc(100vw-2rem))]` (`ToastHost.vue:12`). Link-Popover: `useAnchoredMenu(280)` (`FormatBar.vue:146`) vs `w-72` = 288px (`:672`); Speichern 192/`w-48` und Werkzeuge 256/`w-64` stimmen überein. `tokens-v2.ts` (`themeColorsV2`, `breakpointsV2`, `controlSizesV2`) wird nur vom Kontrast-Test genutzt.
+`min-w-[10rem]` (`FormatBar.vue:205`), `min-w-[3.25rem]` (`EditorView.vue:507`), `w-[min(22rem,calc(100vw-2rem))]` (`ToastHost.vue:12`). Link-Popover: `useAnchoredMenu(280)` (`FormatBar.vue:146`) vs `w-72` = 288px (`:672`); Speichern und Teilen 192/`w-48` sowie Werkzeuge 256/`w-64` stimmen überein. `tokens-v2.ts` (`themeColorsV2`, `breakpointsV2`, `controlSizesV2`) wird nur vom Kontrast-Test genutzt.
 
 #### **Hinweis** 10.14 Sechs Ui-Bausteine ohne Verwendung
 
@@ -639,4 +642,4 @@ Dropdowns und Toasts nutzen `z-dialog` / `z-toast`; Drop-Overlay `z-50` und die 
 
 ---
 
-_Design-System-Extraktion · Repo KodiniTools/Text-Editor · Version 2 · Commit 0a9208b · 2026-10-12 · Neue Fassungen erscheinen unter demselben Artifact-Link. v1 (f09f3b3, 2026-10-06) beschrieb den Stand vor der Migration auf Tokens v2._
+_Design-System-Extraktion · Repo KodiniTools/Text-Editor · Version 2.2 · Commit dba5301 · 2026-11-02 · Neue Fassungen erscheinen unter demselben Artifact-Link. v1 (f09f3b3, 2026-10-06) beschrieb den Stand vor der Migration auf Tokens v2._
