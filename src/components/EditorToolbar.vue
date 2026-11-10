@@ -12,8 +12,9 @@ import { useShareDocument, type ShareFormat } from '@/composables/useShareDocume
 import { pageRenderOptions } from '@/utils/pageRenderOptions'
 import { buildHtmlDocument } from '@/utils/exportHtml'
 import { htmlToMarkdown } from '@/utils/htmlToMarkdown'
-import { safeFileName } from '@/utils/exportPdf'
-import { downloadBlob, isHtmlFile, readFileAsText } from '@/utils/files'
+import { isHtmlFile, readFileAsText } from '@/utils/files'
+import { useSaveDialog } from '@/composables/useSaveDialog'
+import { writeSaveTarget, type SaveExt } from '@/utils/saveFile'
 import { htmlFileToSource } from '@/utils/richText'
 
 const store = useEditorStore()
@@ -86,6 +87,31 @@ const {
   close: closeShare,
 } = useAnchoredMenu(192)
 const { share, sharing } = useShareDocument()
+const { requestSave } = useSaveDialog()
+
+/**
+ * Gemeinsamer Speicherpfad aller Exporte: Menue schliessen, "Speichern unter"
+ * (Dateiname, ggf. Speicherort) abfragen, dann Inhalt erzeugen und schreiben.
+ * Der Inhalt entsteht erst NACH dem Dialog, damit er den aktuellen Stand hat.
+ * Rueckgabe: false bei Abbruch oder Fehler (Hinweis ist dann schon gezeigt).
+ */
+async function saveAs(
+  base: string,
+  ext: SaveExt,
+  type: string,
+  content: () => BlobPart,
+): Promise<boolean> {
+  closeDownload()
+  const target = await requestSave({ base, ext, type })
+  if (!target) return false
+  try {
+    await writeSaveTarget(target, content(), type)
+    return true
+  } catch {
+    showToast(t.value.toast.saveFailed, { type: 'error' })
+    return false
+  }
+}
 
 function shareAs(format: ShareFormat): void {
   closeShare()
@@ -128,37 +154,31 @@ function onFileChosen(e: Event): void {
 }
 
 /* ---------- Export ---------- */
-function download(ext: 'txt' | 'md'): void {
+async function download(ext: 'txt' | 'md'): Promise<void> {
   const doc = store.activeDoc
   if (!doc) return
   // .md: echtes Markdown (Ueberschriften/Fett/Kursiv/Listen bleiben erhalten).
   // .txt: reiner Text.
-  const content = ext === 'md' ? htmlToMarkdown(store.activeHtml) : store.activePlain
   const type = ext === 'md' ? 'text/markdown;charset=utf-8' : 'text/plain;charset=utf-8'
-  const name = `${safeFileName(store.activeTitle || t.value.doc.untitled)}.${ext}`
-  downloadBlob(content, name, type)
-  closeDownload()
-  showToast(ext === 'md' ? t.value.toast.savedMd : t.value.toast.savedTxt, { key: 'save' })
+  const ok = await saveAs(store.activeTitle || t.value.doc.untitled, ext, type, () =>
+    ext === 'md' ? htmlToMarkdown(store.activeHtml) : store.activePlain,
+  )
+  if (ok) showToast(ext === 'md' ? t.value.toast.savedMd : t.value.toast.savedTxt, { key: 'save' })
 }
 
 /**
  * HTML-Export: eigenstaendiges Dokument mit derselben Typografie wie
  * Vorschau/PDF -- aber echter, auswaehlbarer Text (kein Rasterbild).
  */
-function exportHtml(): void {
-  const opts = pageRenderOptions(store.settings, store.activeContent, store.activeImages)
-  const html = buildHtmlDocument({
-    ...opts,
-    title: store.activeTitle || t.value.doc.untitled,
-    lang: document.documentElement.lang || 'de',
-  })
-  downloadBlob(
-    html,
-    `${safeFileName(store.activeTitle || 'dokument')}.html`,
-    'text/html;charset=utf-8',
+async function exportHtml(): Promise<void> {
+  const ok = await saveAs(store.activeTitle || 'dokument', 'html', 'text/html;charset=utf-8', () =>
+    buildHtmlDocument({
+      ...pageRenderOptions(store.settings, store.activeContent, store.activeImages),
+      title: store.activeTitle || t.value.doc.untitled,
+      lang: document.documentElement.lang || 'de',
+    }),
   )
-  closeDownload()
-  showToast(t.value.toast.savedHtml, { key: 'save' })
+  if (ok) showToast(t.value.toast.savedHtml, { key: 'save' })
 }
 
 /**
@@ -166,16 +186,16 @@ function exportHtml(): void {
  * Text 1:1, ohne den WYSIWYG-Wrapper (kein <head>, kein Kodini-CSS). Gedacht fuer
  * HTML-Fragmente/Partials, die als Quelltext geoeffnet und bearbeitet wurden.
  */
-function exportHtmlSource(): void {
+async function exportHtmlSource(): Promise<void> {
   const doc = store.activeDoc
   if (!doc) return
-  downloadBlob(
-    store.activePlain,
-    `${safeFileName(store.activeTitle || 'dokument')}.html`,
+  const ok = await saveAs(
+    store.activeTitle || 'dokument',
+    'html',
     'text/html;charset=utf-8',
+    () => store.activePlain,
   )
-  closeDownload()
-  showToast(t.value.toast.savedHtmlSource, { key: 'save' })
+  if (ok) showToast(t.value.toast.savedHtmlSource, { key: 'save' })
 }
 
 function exportPdf(): void {
@@ -184,16 +204,15 @@ function exportPdf(): void {
 }
 
 /* ---------- Sicherung (Backup / Restore) ---------- */
-function exportBackup(): void {
-  const data = store.exportBackup()
+async function exportBackup(): Promise<void> {
   const date = new Date().toISOString().slice(0, 10)
-  downloadBlob(
-    JSON.stringify(data, null, 2),
-    `kodini-texteditor-sicherung-${date}.json`,
-    'application/json',
-  )
-  closeDownload()
-  showToast(t.value.toast.backupSaved(data.documents.length), { key: 'backup' })
+  let count = 0
+  const ok = await saveAs(`kodini-texteditor-sicherung-${date}`, 'json', 'application/json', () => {
+    const data = store.exportBackup()
+    count = data.documents.length
+    return JSON.stringify(data, null, 2)
+  })
+  if (ok) showToast(t.value.toast.backupSaved(count), { key: 'backup' })
 }
 
 function triggerRestore(): void {

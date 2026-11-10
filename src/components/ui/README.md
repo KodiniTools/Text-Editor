@@ -38,6 +38,7 @@ import { UiButton, UiPanel, UiTextField } from '@/components/ui'
 | Stelle                                           | Komponente                                                |
 | ------------------------------------------------ | --------------------------------------------------------- |
 | Tastaturkürzel (`ShortcutHelp`)                  | `UiDialog size="lg"` (Teleport `#modal-portal`), `UiKbd`  |
+| Speichern unter (`SaveDialog`)                   | `UiDialog`, `UiTextField`, `UiCallout`, `UiButton`        |
 | Toasts (`ToastHost`)                             | `UiToast` (Teleport, z-toast)                             |
 | Suchen/Ersetzen                                  | `UiButton variant="secondary" size="sm"`, `UiIconButton`  |
 | Link-Popover (Formatleiste, Bild)                | `UiButton` primary / danger                               |
