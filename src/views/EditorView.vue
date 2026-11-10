@@ -8,7 +8,9 @@ import { useI18n } from '@/i18n'
 import { pageSizeCss } from '@/utils/pageFormats'
 import { pageRenderOptions } from '@/utils/pageRenderOptions'
 import { printImageStyle, printRootStyle } from '@/utils/printLayout'
-import { exportPdf } from '@/utils/exportPdf'
+import { renderPdf } from '@/utils/exportPdf'
+import { writeSaveTarget } from '@/utils/saveFile'
+import { useSaveDialog } from '@/composables/useSaveDialog'
 import { isBackupFile, isHtmlFile, isImageFile, isTextFile, readFileAsText } from '@/utils/files'
 import { htmlFileToSource } from '@/utils/richText'
 import { handoffContent, handoffDocumentName, readHandoff } from '@/utils/handoff'
@@ -25,12 +27,14 @@ import EditorArea from '@/components/EditorArea.vue'
 import FindReplace from '@/components/FindReplace.vue'
 import StatusBar from '@/components/StatusBar.vue'
 import ShortcutHelp from '@/components/ShortcutHelp.vue'
+import SaveDialog from '@/components/SaveDialog.vue'
 import MarkdownPreview from '@/components/MarkdownPreview.vue'
 import { LIMITS } from '@/stores/editor'
 
 const store = useEditorStore()
 const { t } = useI18n()
 const { showToast } = useToast()
+const { requestSave } = useSaveDialog()
 const route = useRoute()
 const router = useRouter()
 
@@ -286,15 +290,24 @@ function printDocument(): void {
 const exporting = ref(false)
 async function exportPdfDocument(): Promise<void> {
   if (exporting.value) return
+  // Ziel ZUERST abfragen: der System-Dialog braucht die Nutzergeste, die nach
+  // dem (langen) Rastern verfallen waere.
+  const target = await requestSave({
+    base: store.activeTitle || 'dokument',
+    ext: 'pdf',
+    type: 'application/pdf',
+  })
+  if (!target) return
   exporting.value = true
   try {
     // Schrift vor dem Rastern sicher laden, sonst faellt der Export auf eine
     // Ersatzschrift zurueck.
     await loadFont(findFont(store.settings.fontFamily))
-    await exportPdf({
+    const { blob } = await renderPdf({
       ...pageRenderOptions(store.settings, store.activeContent, store.activeImages),
-      fileName: store.activeTitle || 'dokument',
+      fileName: target.fileName,
     })
+    await writeSaveTarget(target, blob, 'application/pdf')
     showToast(t.value.toast.pdfDone, { key: 'pdf' })
   } catch {
     showToast(t.value.toast.pdfFailed, { type: 'error' })
@@ -402,6 +415,7 @@ useKeyboardShortcuts({
     <FindReplace v-if="showFind" ref="findRef" :editor="editorApi" @close="toggleFind" />
 
     <ShortcutHelp v-if="showHelp" @close="showHelp = false" />
+    <SaveDialog />
 
     <div class="flex min-h-0 flex-1 flex-col md:flex-row">
       <div class="min-h-0 min-w-0 flex-1">
