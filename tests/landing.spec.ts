@@ -224,7 +224,15 @@ describe('Sprach-URLs (?lang=en)', () => {
     expect(canonical()).toBe('https://kodinitools.com/texteditor/funktionen?lang=en')
     expect(document.documentElement.lang).toBe('en')
     await appRouter.push('/app')
-    expect(alternates()).toEqual([])
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(
+      'index, follow',
+    )
+    expect(canonical()).toBe('https://kodinitools.com/texteditor/app?lang=en')
+    expect(alternates()).toEqual([
+      'de=https://kodinitools.com/texteditor/app',
+      'en=https://kodinitools.com/texteditor/app?lang=en',
+      'x-default=https://kodinitools.com/texteditor/app',
+    ])
     setLocale('de')
   })
 })

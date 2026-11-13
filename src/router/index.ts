@@ -40,7 +40,7 @@ export const routes: RouteRecordRaw[] = [
     path: '/app',
     name: 'editor',
     component: () => import('@/views/EditorView.vue'),
-    meta: { metaKey: 'app', canonical: 'app', robots: 'noindex, follow' },
+    meta: { metaKey: 'app', canonical: 'app', robots: 'index, follow' },
   },
   {
     path: '/funktionen',
