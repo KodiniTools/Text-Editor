@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" class="ktx-scroll">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -33,6 +33,23 @@
         if (dark) document.documentElement.classList.add('dark')
       } catch (e) {
         document.documentElement.setAttribute('data-theme', 'light')
+      }
+      // Seitenlayout vor dem ersten Paint: Landing/Funktionen/Blog scrollen als
+      // ganze Seite (html.ktx-scroll, oben statisch gesetzt; siehe style.css).
+      // Ohne die Klasse gilt die feste App-Shell (body = 100 % hoch), in der
+      // #app schrumpft und der Footer schon im ersten Viewport steht; setzt erst
+      // der Router die Klasse, springt der Footer ans Seitenende -- ein grosser
+      // Layout-Shift (CLS 0,18). Nur die Shell-Routen /app und /preview
+      // (src/router/index.ts, meta.scroll) legen die Klasse hier wieder ab; der
+      // Router (afterEach) haelt sie danach weiter aktuell.
+      try {
+        var base = '%BASE_URL%'
+        var route = location.pathname.slice(base.length).replace(/^\/+/, '')
+        if (/^(app|preview)(\/|$)/.test(route)) {
+          document.documentElement.classList.remove('ktx-scroll')
+        }
+      } catch (e) {
+        /* Klasse bleibt: scrollende Seite ist der sichere Fallback */
       }
     </script>
     <meta name="format-detection" content="telephone=no" />
@@ -105,7 +122,10 @@
     <!-- ===== Kritisches CSS fuer das statische Skelett (Prerender) ===== -->
     <style>
       .ktx-prerender {
-        min-height: 60vh;
+        /* Mindestens eine Fensterhoehe (wie die echte Startseite): Footer und
+           Cookie-Banner liegen damit schon vor dem Mount unterhalb des
+           sichtbaren Bereichs und springen beim Austausch nicht (CLS). */
+        min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
