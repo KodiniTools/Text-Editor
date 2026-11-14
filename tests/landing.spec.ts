@@ -6,6 +6,22 @@ import { setLocale } from '@/i18n'
 import LandingView from '@/views/LandingView.vue'
 import BlogView from '@/views/BlogView.vue'
 import FeaturesView from '@/views/FeaturesView.vue'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+/** Breite/Hoehe einer WebP-Datei (VP8X-, VP8- oder VP8L-Chunk). */
+function readWebpSize(path: string): { width: number; height: number } {
+  const b = readFileSync(path)
+  const chunk = b.toString('ascii', 12, 16)
+  if (chunk === 'VP8X') return { width: 1 + b.readUIntLE(24, 3), height: 1 + b.readUIntLE(27, 3) }
+  if (chunk === 'VP8 ')
+    return { width: b.readUInt16LE(26) & 0x3fff, height: b.readUInt16LE(28) & 0x3fff }
+  if (chunk === 'VP8L') {
+    const bits = b.readUInt32LE(21)
+    return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 }
+  }
+  throw new Error(`Unbekanntes WebP-Format: ${path}`)
+}
 
 const BLOG_URL = 'https://kodinitools.com/blog/texteditor-online/'
 
@@ -180,6 +196,21 @@ describe('Hero-Bild', () => {
     document.documentElement.setAttribute('data-theme', 'dark')
     await flushPromises()
     expect(img().attributes('src')).toBe('/texteditor/image/hero-dark.webp')
+    wrapper.unmount()
+  })
+
+  it('width/height entsprechen dem echten Seitenverhaeltnis der Dateien', async () => {
+    // Lighthouse (Best Practices) bemaengelt sonst "Bilder mit falschem
+    // Seitenverhaeltnis"; stimmige Attribute reservieren zudem die richtige
+    // Hoehe vor dem Laden (kein Layout-Shift).
+    const wrapper = await mountAt('/', LandingView)
+    const img = wrapper.find('img.hero-image')
+    const width = Number(img.attributes('width'))
+    const height = Number(img.attributes('height'))
+    for (const name of ['hero-light.webp', 'hero-dark.webp']) {
+      const file = readWebpSize(join(__dirname, '..', 'public', 'image', name))
+      expect(width / height, name).toBeCloseTo(file.width / file.height, 2)
+    }
     wrapper.unmount()
   })
 
