@@ -4,6 +4,42 @@ import { readFileSync } from 'node:fs'
 import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
+import { localizeHtml } from './src/utils/localizeHtml'
+import { MESSAGES } from './src/i18n/messages'
+
+/** Öffentliche URL der deutschen Startseite (wie SITE_URL in src/router/index.ts). */
+const SITE_URL = 'https://kodinitools.com/texteditor/'
+
+/**
+ * Schreibt neben dist/index.html eine englische Fassung dist/index.en.html mit
+ * englischem <html lang>, Titel, Description, Canonical (?lang=en) sowie og:* und twitter:*.
+ * nginx liefert sie für /texteditor/?lang=en aus, damit Crawler ohne JavaScript schon im
+ * HTML Englisch sehen. Laufzeit-i18n und die deutsche index.html bleiben unverändert.
+ */
+function localizedIndexHtml(): Plugin {
+  return {
+    name: 'localized-index-html',
+    apply: 'build',
+    enforce: 'post',
+    generateBundle(_options, bundle) {
+      const index = bundle['index.html']
+      if (!index || index.type !== 'asset') {
+        this.error('localized-index-html: index.html fehlt im Bundle')
+      }
+      const html =
+        typeof index.source === 'string' ? index.source : new TextDecoder().decode(index.source)
+      this.emitFile({
+        type: 'asset',
+        fileName: 'index.en.html',
+        source: localizeHtml(html, {
+          lang: 'en',
+          ...MESSAGES.en.landing.meta.start,
+          canonical: `${SITE_URL}?lang=en`,
+        }),
+      })
+    },
+  }
+}
 
 /**
  * Bindet die globalen Seiten-Bausteine (Navigation, Footer, Cookie-Banner,
@@ -32,6 +68,7 @@ export default defineConfig({
   plugins: [
     vue(),
     injectPartials(),
+    localizedIndexHtml(),
     /**
      * PWA / Offline. Erzeugt einen Service Worker, der die App-Shell und alle
      * gebauten Assets vorab cacht -- danach laeuft der Editor vollstaendig
