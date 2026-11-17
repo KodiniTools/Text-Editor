@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { escapeHtml, localizeHtml } from '@/utils/localizeHtml'
 import { MESSAGES } from '@/i18n/messages'
+import { EN_PAGES, SITE_URL } from '@/utils/enPages'
 
 // Prüft die englische Sprachfassung, die der Build als dist/index.en.html schreibt
 // (nginx liefert sie für ?lang=en aus), gegen die echte index.html.
@@ -94,4 +95,42 @@ test('maskiert Sonderzeichen und bricht bei fehlenden oder doppelten Pflicht-Tag
     /description/,
   )
   assert.throws(() => localizeHtml('<html lang="de"><title>x</title>', head), /head/)
+})
+
+test('jede englische Seite des Builds hat eigenen Titel, Description, Canonical und hreflang', () => {
+  assert.deepEqual(
+    EN_PAGES.map((page) => page.file),
+    ['index.en.html', 'app.en.html', 'funktionen.en.html', 'blog.en.html'],
+  )
+  assert.equal(SITE_URL, DE_URL)
+  const titles = new Set<string>()
+  for (const { file, path, metaKey } of EN_PAGES) {
+    const page = MESSAGES.en.landing.meta[metaKey]
+    const deUrl = `${SITE_URL}${path}`
+    const url = `${deUrl}?lang=en`
+    const out = localizeHtml(html, {
+      lang: 'en',
+      ...page,
+      canonical: url,
+      alternates: { de: deUrl, en: url, 'x-default': deUrl },
+    })
+    assert.equal(lang(out), 'en', file)
+    assert.equal(title(out), page.title, file)
+    assert.equal(meta(out, 'description'), page.description, file)
+    assert.equal(canonical(out), url, file)
+    assert.deepEqual(
+      hreflangs(out).map((link) => pick(link, /\shref="([^"]*)"/i)),
+      [deUrl, url, deUrl],
+      file,
+    )
+    titles.add(page.title)
+  }
+  assert.equal(titles.size, EN_PAGES.length)
+})
+
+test('alternates: unbekannter hreflang-Wert bricht ab', () => {
+  assert.throws(
+    () => localizeHtml(html, { lang: 'en', ...EN, canonical: EN_URL, alternates: { fr: EN_URL } }),
+    /hreflang="fr"/,
+  )
 })

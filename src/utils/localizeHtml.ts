@@ -12,6 +12,11 @@ export interface LocalizedHead {
   description: string
   /** Absolute kanonische URL dieser Sprachfassung. */
   canonical: string
+  /**
+   * Optional: neue Ziele für vorhandene hreflang-Links (Schlüssel = hreflang-Wert).
+   * Für Unterseiten nötig, weil die Vorlage auf die Startseite zeigt.
+   */
+  alternates?: Record<string, string>
 }
 
 const ESCAPES: Record<string, string> = {
@@ -65,7 +70,7 @@ const metaTag = (name: string): RegExp =>
 /**
  * Liefert `html` mit dem Head für `head.lang`. Pflicht: `<html lang>`, `<title>`,
  * meta description und canonical. og:* und twitter:title/description werden angepasst,
- * wenn vorhanden. hreflang-Links und der Body bleiben unverändert.
+ * wenn vorhanden. hreflang-Links ändern sich nur über `head.alternates`, der Body nie.
  */
 export function localizeHtml(html: string, head: LocalizedHead): string {
   // Nur bis </head> bearbeiten: <title> in einem SVG im Body darf nicht getroffen werden.
@@ -112,6 +117,16 @@ export function localizeHtml(html: string, head: LocalizedHead): string {
   ]
   for (const [name, value] of optional) {
     out = setTagAttr(out, metaTag(name), 'content', value, false, `meta ${name}`)
+  }
+  for (const [hreflang, href] of Object.entries(head.alternates ?? {})) {
+    out = setTagAttr(
+      out,
+      new RegExp(`<link\\b[^>]*\\shreflang="${escapeRegExp(hreflang)}"[^>]*>`),
+      'href',
+      href,
+      true,
+      `link hreflang="${hreflang}"`,
+    )
   }
   return out + rest
 }

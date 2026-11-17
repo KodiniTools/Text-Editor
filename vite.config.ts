@@ -6,15 +6,15 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { localizeHtml } from './src/utils/localizeHtml'
 import { MESSAGES } from './src/i18n/messages'
-
-/** Öffentliche URL der deutschen Startseite (wie SITE_URL in src/router/index.ts). */
-const SITE_URL = 'https://kodinitools.com/texteditor/'
+import { EN_PAGES, SITE_URL } from './src/utils/enPages'
 
 /**
- * Schreibt neben dist/index.html eine englische Fassung dist/index.en.html mit
- * englischem <html lang>, Titel, Description, Canonical (?lang=en) sowie og:* und twitter:*.
- * nginx liefert sie für /texteditor/?lang=en aus, damit Crawler ohne JavaScript schon im
- * HTML Englisch sehen. Laufzeit-i18n und die deutsche index.html bleiben unverändert.
+ * Schreibt neben dist/index.html je Seite aus EN_PAGES eine englische Fassung mit
+ * englischem <html lang>, Titel, Description, Canonical (?lang=en), hreflang sowie og:* und
+ * twitter:*. nginx liefert sie für /texteditor/?lang=en, /texteditor/app?lang=en,
+ * /texteditor/funktionen?lang=en und /texteditor/blog?lang=en aus, damit Crawler ohne
+ * JavaScript schon im HTML Englisch sehen. Laufzeit-i18n und die deutsche index.html bleiben
+ * unverändert.
  */
 function localizedIndexHtml(): Plugin {
   return {
@@ -28,15 +28,19 @@ function localizedIndexHtml(): Plugin {
       }
       const html =
         typeof index.source === 'string' ? index.source : new TextDecoder().decode(index.source)
-      this.emitFile({
-        type: 'asset',
-        fileName: 'index.en.html',
-        source: localizeHtml(html, {
-          lang: 'en',
-          ...MESSAGES.en.landing.meta.start,
-          canonical: `${SITE_URL}?lang=en`,
-        }),
-      })
+      for (const { file, path, metaKey } of EN_PAGES) {
+        const url = `${SITE_URL}${path}`
+        this.emitFile({
+          type: 'asset',
+          fileName: file,
+          source: localizeHtml(html, {
+            lang: 'en',
+            ...MESSAGES.en.landing.meta[metaKey],
+            canonical: `${url}?lang=en`,
+            alternates: { de: url, en: `${url}?lang=en`, 'x-default': url },
+          }),
+        })
+      }
     },
   }
 }
@@ -89,6 +93,9 @@ export default defineConfig({
         // Alle gebauten Dateien vorab cachen -- auch die faul geladenen
         // PDF-Chunks (jspdf/html2canvas), damit der Export offline funktioniert.
         globPatterns: ['**/*.{js,css,html,ico,svg,woff,woff2,json,webp}'],
+        // Englische Sprachfassungen (*.en.html) sind nur für Crawler ohne JavaScript:
+        // die App-Shell ist index.html, sie müssen nicht in den Offline-Cache.
+        globIgnores: ['**/*.en.html'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
