@@ -286,7 +286,7 @@ Die Seite laeuft unter der globalen KodiniTools-Navigation (Eintrag unter **Tool
 gemeinsamen Footer und dem DSGVO-Cookie-Banner samt Google Consent Mode v2.
 
 - Die Bausteine liegen als eigene Dateien unter [`partials/`](partials/) (`nav.html`,
-  `footer.html`, `cookie-banner.html`, `consent-mode.html`).
+  `footer.html`; seit 20.11.2026 ohne Cookie-Banner und Consent Mode, da KodiniTools kein Tracking einsetzt).
 - Ein kleiner Vite-Schritt (`injectPartials` in `vite.config.ts`) bindet sie beim Build ueber
   Platzhalter `<!--INJECT:name-->` direkt in `index.html` ein. `dist/` bleibt damit
   **selbsttragend** – kein SSI, kein zusaetzlicher Request. Zum Aktualisieren die Datei unter
