@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { escapeHtml, localizeHtml } from '@/utils/localizeHtml'
 import { MESSAGES } from '@/i18n/messages'
-import { EN_PAGES, SITE_URL } from '@/utils/enPages'
+import { DE_PAGES, EN_PAGES, SITE_URL } from '@/utils/enPages'
 
 // Prüft die englische Sprachfassung, die der Build als dist/index.en.html schreibt
 // (nginx liefert sie für ?lang=en aus), gegen die echte index.html.
@@ -126,6 +126,28 @@ test('jede englische Seite des Builds hat eigenen Titel, Description, Canonical 
     titles.add(page.title)
   }
   assert.equal(titles.size, EN_PAGES.length)
+})
+
+test('deutsche Unterseiten haben eigenen Titel und Canonical auf sich selbst', () => {
+  assert.deepEqual(
+    DE_PAGES.map((page) => page.file),
+    ['funktionen.html', 'blog.html'],
+  )
+  for (const { file, path, metaKey } of DE_PAGES) {
+    const page = MESSAGES.de.landing.meta[metaKey]
+    const url = `${SITE_URL}${path}`
+    const out = localizeHtml(html, {
+      lang: 'de',
+      ...page,
+      canonical: url,
+      alternates: { de: url, en: `${url}?lang=en`, 'x-default': url },
+    })
+    assert.equal(lang(out), 'de', file)
+    assert.equal(title(out), page.title, file)
+    assert.notEqual(page.title, DE.title, file)
+    assert.equal(canonical(out), url, file)
+    assert.equal(meta(out, 'og:url'), url, file)
+  }
 })
 
 test('alternates: unbekannter hreflang-Wert bricht ab', () => {
