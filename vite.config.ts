@@ -6,7 +6,7 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { localizeHtml } from './src/utils/localizeHtml'
 import { MESSAGES } from './src/i18n/messages'
-import { EN_PAGES, SITE_URL } from './src/utils/enPages'
+import { DE_PAGES, EN_PAGES, SITE_URL } from './src/utils/enPages'
 
 /**
  * Schreibt neben dist/index.html je Seite aus EN_PAGES eine englische Fassung mit
@@ -37,6 +37,20 @@ function localizedIndexHtml(): Plugin {
             lang: 'en',
             ...MESSAGES.en.landing.meta[metaKey],
             canonical: `${url}?lang=en`,
+            alternates: { de: url, en: `${url}?lang=en`, 'x-default': url },
+          }),
+        })
+      }
+      // Deutsche Unterseiten (funktionen.html, blog.html): eigener Kopf statt Startseite.
+      for (const { file, path, metaKey } of DE_PAGES) {
+        const url = `${SITE_URL}${path}`
+        this.emitFile({
+          type: 'asset',
+          fileName: file,
+          source: localizeHtml(html, {
+            lang: 'de',
+            ...MESSAGES.de.landing.meta[metaKey],
+            canonical: url,
             alternates: { de: url, en: `${url}?lang=en`, 'x-default': url },
           }),
         })
@@ -95,7 +109,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,svg,woff,woff2,json,webp}'],
         // Englische Sprachfassungen (*.en.html) sind nur für Crawler ohne JavaScript:
         // die App-Shell ist index.html, sie müssen nicht in den Offline-Cache.
-        globIgnores: ['**/*.en.html'],
+        // Gleiches gilt für die deutschen Unterseiten-Köpfe aus DE_PAGES.
+        globIgnores: ['**/*.en.html', ...DE_PAGES.map((page) => page.file)],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,

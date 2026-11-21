@@ -21,3 +21,13 @@ export const EN_PAGES: readonly EnPage[] = [
   { file: 'funktionen.en.html', path: 'funktionen', metaKey: 'features' },
   { file: 'blog.en.html', path: 'blog', metaKey: 'blog' },
 ]
+
+/**
+ * Deutsche Unterseiten mit eigenem statischem Kopf (Titel, Description, Canonical auf sich
+ * selbst, Texte aus `MESSAGES.de.landing.meta`). Ohne Datei liefert nginx die index.html der
+ * Startseite (Canonical /texteditor/). /app fehlt bewusst: reine App-Seite.
+ */
+export const DE_PAGES: readonly EnPage[] = [
+  { file: 'funktionen.html', path: 'funktionen', metaKey: 'features' },
+  { file: 'blog.html', path: 'blog', metaKey: 'blog' },
+]
