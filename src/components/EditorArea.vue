@@ -465,7 +465,7 @@ defineExpose({
   justify-content: center;
   overflow: auto;
   padding: 1rem;
-  background: var(--ds-surface-2);
+  background: var(--kt-layout-desk, var(--ds-surface-2));
 }
 
 .page-canvas {

@@ -4,6 +4,8 @@ import App from './App.vue'
 import { router } from './router'
 import { loadGlobalNav } from './utils/globalNav'
 import './style.css'
+import './styles/kodini-layout.css'
+import './styles/kodini-header.css'
 
 createApp(App).use(createPinia()).use(router).mount('#app')
 

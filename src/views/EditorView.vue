@@ -388,7 +388,7 @@ useKeyboardShortcuts({
 </script>
 
 <template>
-  <div class="relative flex h-full flex-col bg-surface-0 text-ink">
+  <div class="kodini-editor-shell relative flex h-full flex-col bg-surface-0 text-ink">
     <!-- Nur fuer Suchmaschinen/Screenreader: eine eindeutige Ueberschrift und
          Kurzbeschreibung der Seite (visuell ausgeblendet). -->
     <h1 class="sr-only">{{ t.seo.heading }}</h1>
