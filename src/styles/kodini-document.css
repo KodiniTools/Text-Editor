@@ -1,0 +1,48 @@
+/* Bildschirmdarstellung rund um das Dokument, ohne Einfluss auf Seitenmasse. */
+@media screen {
+  .kodini-editor-shell .plain-scroll {
+    background-color: var(--ds-surface-1);
+  }
+
+  .kodini-editor-shell .page-backdrop .page-sheet,
+  .kodini-preview-view .kodini-preview-desk .kodini-pdf-page {
+    outline: 1px solid var(--ds-border-strong);
+  }
+
+  .kodini-editor-shell .page-backdrop .page-break-guide {
+    border-block-start-color: var(--ds-text-3);
+  }
+
+  .kodini-editor-shell :is(.kodini-document-tabs, .kodini-status-bar) {
+    background-color: var(--ds-surface-1);
+  }
+
+  .kodini-editor-shell .kodini-document-tabs .kodini-document-tab-active {
+    background-color: var(--ds-accent-soft);
+    color: var(--kt-layout-heading-accent);
+  }
+
+  .kodini-document-tabs :is(button, input):focus-visible {
+    outline: 2px solid var(--kt-layout-heading-accent);
+    outline-offset: -2px;
+  }
+
+  .kodini-document-tabs .tab-action:focus-visible,
+  .kodini-document-tabs .kodini-document-tab-active .tab-action {
+    opacity: 1;
+  }
+
+  .kodini-editor-shell .kodini-markdown-preview > header,
+  .kodini-preview-view > header {
+    background: linear-gradient(90deg, var(--ds-surface-1), var(--ds-surface-2));
+  }
+
+  .kodini-preview-view .kodini-preview-desk {
+    background-color: var(--kt-layout-desk);
+  }
+
+  .kodini-preview-view .kodini-page-counter {
+    border-color: var(--ds-border-strong);
+    color: var(--kt-layout-heading-accent);
+  }
+}

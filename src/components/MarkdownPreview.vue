@@ -35,7 +35,10 @@ async function copyMarkdown(): Promise<void> {
 </script>
 
 <template>
-  <section class="flex min-h-0 flex-col bg-surface-1" :aria-label="t.markdownPreview.title">
+  <section
+    class="kodini-markdown-preview flex min-h-0 flex-col bg-surface-1"
+    :aria-label="t.markdownPreview.title"
+  >
     <header class="flex items-center justify-between gap-2 border-b border-line px-3 py-1.5">
       <span class="text-xs font-semibold uppercase tracking-wide text-ink-2">
         {{ t.markdownPreview.title }}

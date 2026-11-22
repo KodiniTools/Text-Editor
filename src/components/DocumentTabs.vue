@@ -30,7 +30,7 @@ function commitEdit(): void {
 
 <template>
   <div
-    class="hbar-scroll flex items-center gap-1 overflow-x-auto border-b border-line bg-surface-2 px-2"
+    class="kodini-document-tabs hbar-scroll flex items-center gap-1 overflow-x-auto border-b border-line bg-surface-2 px-2"
   >
     <button
       v-for="doc in store.documents"
@@ -39,7 +39,7 @@ function commitEdit(): void {
       class="group flex shrink-0 items-center gap-2 border-b-2 px-3 py-2 text-sm transition-colors"
       :class="
         doc.id === store.activeId
-          ? 'border-accent text-accent'
+          ? 'kodini-document-tab-active border-accent text-accent'
           : 'border-transparent text-ink-2 hover:text-ink'
       "
       @click="store.switchDocument(doc.id)"
