@@ -6,6 +6,7 @@ import { useI18n } from '@/i18n'
 import { pageSizeCss } from '@/utils/pageFormats'
 import { usePageFormatLabel } from '@/composables/usePageFormatLabel'
 import PagePreview from '@/components/PagePreview.vue'
+import PrintRoot from '@/components/PrintRoot.vue'
 import { UiButton } from '@/components/ui'
 
 /**
@@ -107,5 +108,8 @@ function printDocument(): void {
     <div class="min-h-0 flex-1">
       <PagePreview />
     </div>
+
+    <!-- Ohne #print-root blendet @media print alles aus: leere Druckseite. -->
+    <PrintRoot />
   </div>
 </template>
