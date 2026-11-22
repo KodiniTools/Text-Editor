@@ -409,41 +409,65 @@ body
   touch-action: manipulation;
 }
 
-/* Range-Slider im System-Look (Spur Rahmenfarbe, Daumen Akzent, Fokus-Ring).
-   Vertikales Scrollen bleibt moeglich, horizontales Ziehen bewegt den Regler. */
+/* Range-Slider: duenne Spur (2px) und kleiner runder Knopf (12px) im Akzent.
+   Das Eingabefeld selbst bleibt transparent und 18px hoch (Trefffläche), die
+   Spur wird ueber die Pseudo-Elemente gezeichnet -- so bleibt der Regler
+   schlank, egal welche Hoehe das Feld hat. Vertikales Scrollen bleibt
+   moeglich, horizontales Ziehen bewegt den Regler. */
 #app input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
-  height: 6px;
-  border-radius: var(--ds-radius-full);
-  background: var(--ds-border-strong);
+  height: 18px;
+  background: transparent;
   outline: none;
   touch-action: pan-y;
+}
+#app input[type='range']::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: var(--ds-radius-full);
+  background: var(--ds-border-strong);
 }
 #app input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
+  /* Knopf mittig auf der Spur: (Spur 2px - Knopf 12px) / 2 */
+  margin-top: -5px;
   border-radius: 50%;
   background: var(--ds-accent);
   border: 2px solid var(--ds-surface-1);
+  box-shadow: var(--ds-shadow-overlay);
   cursor: pointer;
+  transition: transform var(--ds-duration) var(--ds-ease);
 }
-#app input[type='range']::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--ds-accent);
-  border: 2px solid var(--ds-surface-1);
-  cursor: pointer;
+#app input[type='range']:hover::-webkit-slider-thumb,
+#app input[type='range']:active::-webkit-slider-thumb {
+  transform: scale(1.15);
 }
 #app input[type='range']::-moz-range-track {
-  height: 6px;
+  height: 2px;
   border-radius: var(--ds-radius-full);
   background: var(--ds-border-strong);
 }
-#app input[type='range']:focus-visible {
+#app input[type='range']::-moz-range-progress {
+  height: 2px;
+  border-radius: var(--ds-radius-full);
+  background: var(--ds-accent);
+}
+#app input[type='range']::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ds-accent);
+  border: 2px solid var(--ds-surface-1);
+  box-shadow: var(--ds-shadow-overlay);
+  cursor: pointer;
+}
+#app input[type='range']:focus-visible::-webkit-slider-thumb {
+  box-shadow: var(--ds-focus-ring);
+}
+#app input[type='range']:focus-visible::-moz-range-thumb {
   box-shadow: var(--ds-focus-ring);
 }
 
@@ -519,16 +543,14 @@ body
     opacity: 1;
     padding: 4px 6px;
   }
-  #app input[type='range'] {
-    height: 8px;
-  }
   #app input[type='range']::-webkit-slider-thumb {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
+    margin-top: -7px;
   }
   #app input[type='range']::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
   }
 }
 
