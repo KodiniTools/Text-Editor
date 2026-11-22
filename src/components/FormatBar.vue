@@ -196,7 +196,7 @@ defineExpose({ openLinkEditor })
 
 <template>
   <div
-    class="hbar-scroll flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-surface-2 px-2 py-1.5"
+    class="kodini-format-bar hbar-scroll flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-surface-2 px-2 py-1.5"
   >
     <!-- Schriftart -->
     <label class="fb-group">
@@ -669,7 +669,7 @@ defineExpose({ openLinkEditor })
     <div
       v-if="linkOpen"
       ref="linkMenu"
-      class="fixed z-dialog w-72 rounded-md border border-line bg-surface-1 p-2 shadow-overlay"
+      class="kodini-tool-menu fixed z-dialog w-72 rounded-md border border-line bg-surface-1 p-2 shadow-overlay"
       :style="linkStyle"
     >
       <label class="mb-1 block text-xs font-semibold text-ink-2">

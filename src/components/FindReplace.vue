@@ -52,7 +52,7 @@ defineExpose({ focus, next, prev })
 </script>
 
 <template>
-  <div class="flex flex-col gap-2 border-b border-line bg-surface-2 px-4 py-3">
+  <div class="kodini-find-panel flex flex-col gap-2 border-b border-line bg-surface-2 px-4 py-3">
     <div class="flex flex-wrap items-center gap-2">
       <input
         ref="queryInput"
