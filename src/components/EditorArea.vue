@@ -268,7 +268,7 @@ defineExpose({
       <div
         v-if="imageLinkOpen"
         ref="imageLinkMenu"
-        class="fixed z-dialog w-64 rounded-md border border-line bg-surface-1 p-2 shadow-overlay"
+        class="kodini-tool-menu fixed z-dialog w-64 rounded-md border border-line bg-surface-1 p-2 shadow-overlay"
         :style="imageLinkStyle"
         role="dialog"
         :aria-label="t.editor.imageLink"

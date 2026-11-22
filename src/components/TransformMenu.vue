@@ -29,7 +29,7 @@ function choose(fn: Transform): void {
     <div
       v-if="open"
       ref="menuEl"
-      class="fixed z-dialog w-64 overflow-y-auto rounded-md border border-line bg-surface-1 p-2 shadow-overlay"
+      class="kodini-tool-menu fixed z-dialog w-64 overflow-y-auto rounded-md border border-line bg-surface-1 p-2 shadow-overlay"
       :style="style"
     >
       <p class="px-2 pb-1 text-xs text-ink-3">{{ t.transformMenu.hint }}</p>

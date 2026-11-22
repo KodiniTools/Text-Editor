@@ -310,7 +310,7 @@ defineExpose({ download, copyAll, triggerImport })
 
 <template>
   <div
-    class="hbar-scroll flex flex-wrap items-center gap-1 border-b border-line bg-surface-1 px-2 py-1.5"
+    class="kodini-toolbar hbar-scroll flex flex-wrap items-center gap-1 border-b border-line bg-surface-1 px-2 py-1.5"
   >
     <button type="button" class="tb-btn" :title="t.toolbar.newTitle" @click="newDocument">
       {{ t.toolbar.new }}
@@ -336,7 +336,7 @@ defineExpose({ download, copyAll, triggerImport })
       <div
         v-if="downloadOpen"
         ref="downloadMenu"
-        class="fixed z-dialog w-48 overflow-y-auto rounded-md border border-line bg-surface-1 p-1 shadow-overlay"
+        class="kodini-tool-menu fixed z-dialog w-48 overflow-y-auto rounded-md border border-line bg-surface-1 p-1 shadow-overlay"
         :style="downloadStyle"
       >
         <button type="button" class="menu-item" @click="download('txt')">
@@ -386,7 +386,7 @@ defineExpose({ download, copyAll, triggerImport })
       <div
         v-if="shareOpen"
         ref="shareMenu"
-        class="fixed z-dialog w-48 overflow-y-auto rounded-md border border-line bg-surface-1 p-1 shadow-overlay"
+        class="kodini-tool-menu fixed z-dialog w-48 overflow-y-auto rounded-md border border-line bg-surface-1 p-1 shadow-overlay"
         :style="shareStyle"
       >
         <button type="button" class="menu-item" @click="shareAs('txt')">

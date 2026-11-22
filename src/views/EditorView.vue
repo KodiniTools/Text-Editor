@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/styles/kodini-controls.css'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useEditorStore } from '@/stores/editor'
@@ -445,10 +446,10 @@ useKeyboardShortcuts({
     -->
     <div
       v-if="dropActive"
-      class="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-accent-soft p-6"
+      class="kodini-drop-overlay pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-accent-soft p-6"
     >
       <div
-        class="rounded-lg border-2 border-dashed border-accent bg-surface-1 px-8 py-6 text-center shadow-overlay"
+        class="kodini-drop-panel rounded-lg border-2 border-dashed border-accent bg-surface-1 px-8 py-6 text-center shadow-overlay"
       >
         <svg viewBox="0 0 24 24" class="mx-auto mb-2 h-9 w-9 text-accent" aria-hidden="true">
           <path
