@@ -77,7 +77,7 @@ function printDocument(): void {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col bg-surface-2">
+  <div class="kodini-preview-view flex h-full min-h-0 flex-col bg-surface-2">
     <header
       class="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-line bg-surface-1 px-4 py-2"
     >

@@ -154,7 +154,10 @@ watch(fontList, rebuild)
 
 <template>
   <div class="relative h-full">
-    <div ref="viewport" class="h-full overflow-y-auto border-l border-line bg-surface-2">
+    <div
+      ref="viewport"
+      class="kodini-preview-desk h-full overflow-y-auto border-l border-line bg-surface-2"
+    >
       <!-- Buehne: nimmt die skalierte Hoehe der Seiten ein, damit korrekt gescrollt wird. -->
       <div
         ref="stage"
@@ -165,7 +168,7 @@ watch(fontList, rebuild)
 
     <!-- Seitenzahl der gerade sichtbaren Seite (schwebend, unten rechts). -->
     <div
-      class="pointer-events-none absolute bottom-3 right-3 rounded-full border border-line bg-surface-1 px-3 py-1 text-xs font-medium text-ink shadow-overlay"
+      class="kodini-page-counter pointer-events-none absolute bottom-3 right-3 rounded-full border border-line bg-surface-1 px-3 py-1 text-xs font-medium text-ink shadow-overlay"
       aria-live="polite"
     >
       {{ t.previewView.pageOf(currentPage, pageCount) }}

@@ -6,6 +6,7 @@ import { loadGlobalNav } from './utils/globalNav'
 import './style.css'
 import './styles/kodini-layout.css'
 import './styles/kodini-header.css'
+import './styles/kodini-document.css'
 
 createApp(App).use(createPinia()).use(router).mount('#app')
 

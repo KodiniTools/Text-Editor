@@ -17,7 +17,7 @@ const pageFormatLabel = usePageFormatLabel()
 
 <template>
   <div
-    class="hbar-scroll flex flex-wrap items-center gap-x-4 gap-y-1 whitespace-nowrap border-t border-line bg-surface-2 px-4 py-1.5 text-xs text-ink-3"
+    class="kodini-status-bar hbar-scroll flex flex-wrap items-center gap-x-4 gap-y-1 whitespace-nowrap border-t border-line bg-surface-2 px-4 py-1.5 text-xs text-ink-3"
   >
     <span>{{ stats.words }} {{ t.status.words }}</span>
     <span>{{ stats.characters }} {{ t.status.characters }}</span>
