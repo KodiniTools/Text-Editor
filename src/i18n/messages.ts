@@ -194,7 +194,7 @@ export const de = {
     orientationLandscape: 'Querformat',
     pageDefaultHint: '(Standard)',
     zoom: 'Zoom',
-    zoomTitle: 'Zoom der Seiten-Ansicht',
+    zoomTitle: 'Zoom der Seiten-Ansicht (Doppelklick: 100 %)',
     zoomReset: 'Zoom auf 100 % zurücksetzen',
   },
   stepper: {
@@ -925,7 +925,7 @@ export const en: Messages = {
     orientationLandscape: 'Landscape',
     pageDefaultHint: '(default)',
     zoom: 'Zoom',
-    zoomTitle: 'Zoom of the page view',
+    zoomTitle: 'Zoom of the page view (double-click: 100%)',
     zoomReset: 'Reset zoom to 100%',
   },
   stepper: {

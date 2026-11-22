@@ -626,16 +626,19 @@ defineExpose({ openLinkEditor })
         @input="
           store.updateSettings({ pageZoom: Number(($event.target as HTMLInputElement).value) })
         "
+        @dblclick="store.updateSettings({ pageZoom: 1 })"
       />
-      <button
-        type="button"
-        class="fb-label tabular-nums hover:text-accent"
-        :title="t.format.zoomReset"
-        :aria-label="t.format.zoomReset"
-        @click="store.updateSettings({ pageZoom: 1 })"
-      >
-        {{ Math.round(store.settings.pageZoom * 100) }}%
-      </button>
+      <!-- Prozentwert als Zahlenfeld mit Spinner, Schritt 10 % (LIMITS.zoom.step). -->
+      <NumberStepper
+        :model-value="Math.round(store.settings.pageZoom * 100)"
+        :min="Math.round(LIMITS.zoom.min * 100)"
+        :max="Math.round(LIMITS.zoom.max * 100)"
+        :step="Math.round(LIMITS.zoom.step * 100)"
+        unit="%"
+        :label="t.format.zoom"
+        width="2.75rem"
+        @update:model-value="store.updateSettings({ pageZoom: $event / 100 })"
+      />
     </div>
 
     <span class="fb-divider" />
@@ -718,7 +721,8 @@ defineExpose({ openLinkEditor })
 .seg-active {
   @apply border-accent bg-accent-soft text-accent;
 }
+/* Optik des Reglers (duenne Spur, runder Knopf) kommt zentral aus style.css. */
 .zoom-range {
-  @apply h-1 w-24 cursor-pointer accent-accent;
+  @apply w-24 cursor-pointer;
 }
 </style>
