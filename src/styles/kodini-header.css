@@ -1,0 +1,105 @@
+/* Gilt für den eingebetteten und den live nachgeladenen Navigations-Partial. */
+#global-nav-slot .global-nav {
+  --nav-bg: var(--ds-surface-0);
+  --nav-text: var(--ds-text);
+  --nav-text-hover: var(--kt-layout-heading-accent);
+  --nav-bg-hover: var(--ds-surface-2);
+  --nav-border: var(--ds-border);
+  --dropdown-bg: var(--ds-surface-1);
+  --dropdown-border: var(--ds-border);
+  --accent-color: var(--ds-accent);
+  background-color: var(--nav-bg) !important;
+  border-bottom-color: var(--nav-border);
+}
+
+#global-nav-slot .global-nav .global-nav-dropdown-menu {
+  background-color: var(--dropdown-bg) !important;
+}
+
+#global-nav-slot .global-nav :is(.global-nav-link, .global-nav-dropdown-toggle):hover,
+#global-nav-slot .global-nav :is(.global-nav-dropdown-item, .global-nav-theme-toggle):hover {
+  background-color: var(--nav-bg-hover) !important;
+  color: var(--nav-text-hover);
+  transform: none;
+}
+
+#global-nav-slot .global-nav .global-nav-lang-btn.active {
+  background-color: var(--ds-accent) !important;
+  color: var(--ds-on-accent);
+}
+
+#global-nav-slot .global-nav :is(a, button):focus-visible {
+  outline: 2px solid var(--kt-layout-heading-accent);
+  outline-offset: -2px;
+}
+
+.landing-page .landing-header {
+  background-color: var(--ds-surface-0);
+}
+
+.landing-page .landing-header.scrolled {
+  box-shadow: 0 1px 0 var(--ds-border);
+}
+
+.landing-page .landing-header .header-content {
+  max-width: var(--kt-layout-width);
+  gap: var(--ds-space-4);
+}
+
+.landing-page .landing-header .header-logo {
+  flex: 0 0 auto;
+}
+
+.landing-page .landing-header .header-logo img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.landing-page .landing-header .header-nav {
+  gap: clamp(6px, 1.4vw, 16px);
+}
+
+.landing-page .landing-header .nav-link {
+  padding: 7px 10px;
+  border-radius: var(--ds-radius-sm);
+}
+
+.landing-page .landing-header .nav-link:is(:hover, .active) {
+  color: var(--kt-layout-heading-accent);
+  background: var(--ds-surface-2);
+}
+
+.landing-page .landing-header .nav-link.active::after {
+  display: none;
+}
+
+.landing-page .landing-header .nav-link-editor {
+  color: var(--ds-on-accent);
+  background: var(--ds-accent);
+}
+
+.landing-page .landing-header .nav-link-editor:hover {
+  color: var(--ds-on-accent);
+  background: var(--ds-accent-hover);
+}
+
+@media (max-width: 768px) {
+  #global-nav-slot .global-nav .global-nav-links {
+    background-color: var(--ds-surface-0) !important;
+  }
+
+  .landing-page .landing-header .header-content {
+    gap: var(--ds-space-2);
+  }
+
+  .landing-page .landing-header .header-nav {
+    padding: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #global-nav-slot .global-nav .global-nav-dropdown-menu {
+    transition: none;
+  }
+}

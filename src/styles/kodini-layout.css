@@ -1,0 +1,91 @@
+/* Grundflächen und Abstände für den Texteditor. */
+:root {
+  --kt-layout-glow: #163548;
+  --kt-layout-desk: #0d1729;
+  --kt-layout-heading-accent: #f2c77d;
+  --kt-layout-width: 1180px;
+  --kt-layout-gutter: clamp(16px, 4vw, 48px);
+  --kt-layout-section-space: clamp(36px, 6vw, 72px);
+}
+
+:root[data-theme='light'] {
+  --kt-layout-glow: #d8ecf0;
+  --kt-layout-desk: #e7edf4;
+  --kt-layout-heading-accent: #79521c;
+}
+
+.landing-page .landing-main .hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  gap: clamp(24px, 5vw, 64px);
+  padding: clamp(44px, 7vw, 88px) var(--kt-layout-gutter);
+  background: radial-gradient(ellipse at 84% 38%, var(--kt-layout-glow), var(--ds-surface-0) 73%);
+}
+
+.landing-page .landing-main .hero-content {
+  max-width: 650px;
+  text-align: left;
+  z-index: auto;
+}
+
+.landing-page .landing-main .hero-title {
+  font-size: clamp(2.25rem, 5vw, 4.75rem);
+  overflow-wrap: anywhere;
+}
+
+.landing-page .landing-main .hero-highlight {
+  display: block;
+  color: var(--kt-layout-heading-accent);
+}
+
+.landing-page .landing-main .hero-subtitle {
+  margin-inline: 0;
+}
+
+.landing-page .landing-main .hero-actions {
+  justify-content: flex-start;
+}
+
+.landing-page .landing-main .hero-visual {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+}
+
+.landing-page .landing-main .hero-image-frame {
+  padding: clamp(12px, 2vw, 24px);
+  background: var(--ds-surface-1);
+  border: var(--ds-border-width) solid var(--ds-border);
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow-overlay);
+}
+
+.landing-page .landing-main .hero-image {
+  max-width: 280px;
+}
+
+.landing-page .landing-main :is(.features, .guide-section, .faq-section, .blog-section) {
+  width: 100%;
+  max-width: calc(var(--kt-layout-width) + 2 * var(--kt-layout-gutter));
+  padding: var(--kt-layout-section-space) var(--kt-layout-gutter);
+}
+
+.landing-page .landing-main :is(.features-grid, .guide-grid) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+
+@media (min-width: 768px) {
+  .landing-page .landing-main .hero {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    padding-inline: max(var(--kt-layout-gutter), calc((100% - var(--kt-layout-width)) / 2));
+  }
+
+  .landing-page .landing-main .hero-visual {
+    justify-self: end;
+  }
+}
+
+.kodini-editor-shell {
+  min-width: 0;
+}
