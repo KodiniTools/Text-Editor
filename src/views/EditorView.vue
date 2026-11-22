@@ -8,7 +8,6 @@ import { useFileDrop } from '@/composables/useFileDrop'
 import { useI18n } from '@/i18n'
 import { pageSizeCss } from '@/utils/pageFormats'
 import { pageRenderOptions } from '@/utils/pageRenderOptions'
-import { printImageStyle, printRootStyle } from '@/utils/printLayout'
 import { renderPdf } from '@/utils/exportPdf'
 import { writeSaveTarget } from '@/utils/saveFile'
 import { useSaveDialog } from '@/composables/useSaveDialog'
@@ -22,6 +21,7 @@ import type { Transform } from '@/utils/textTransforms'
 import { UiButton, UiIconButton, UiKbd } from '@/components/ui'
 
 import DocumentTabs from '@/components/DocumentTabs.vue'
+import PrintRoot from '@/components/PrintRoot.vue'
 import EditorToolbar from '@/components/EditorToolbar.vue'
 import FormatBar from '@/components/FormatBar.vue'
 import EditorArea from '@/components/EditorArea.vue'
@@ -253,13 +253,6 @@ function openPreview(): void {
 }
 
 /* ---------- Drucken / Als PDF ---------- */
-// Bereinigtes HTML der aktiven Seite (inkl. Inline-Fett/Kursiv/Farbe) -- nur im
-// Druck sichtbar.
-const printHtml = computed(() => store.activeHtml)
-// Frei platzierte Bilder liegen nicht im HTML, sondern separat im Store (wie
-// bei Vorschau/PDF/HTML-Export) -- fuer den Druck absolut im Container platzieren.
-const printImages = computed(() => store.activeImages)
-const printStyle = computed(() => printRootStyle(printImages.value))
 
 /**
  * Haelt die `@page`-Regel (Papiergroesse + Ausrichtung) im Kopf des Dokuments
@@ -564,22 +557,7 @@ useKeyboardShortcuts({
       </UiButton>
     </div>
 
-    <!--
-      Druck-/PDF-Ausgabe: am Bildschirm ausgeblendet, beim Drucken das einzig
-      Sichtbare. Nutzt dieselben --editor-*-Variablen wie der Editor, damit
-      Schrift, Groesse, Zeilenabstand, Laufweite und Ausrichtung mitgedruckt
-      werden. Die Papiergroesse steuert die @page-Regel (siehe syncPageStyle).
-    -->
-    <div id="print-root" aria-hidden="true" :style="printStyle">
-      <!-- eslint-disable-next-line vue/no-v-html -- Inhalt ist bereits bereinigt (store.activeHtml) -->
-      <div v-html="printHtml" />
-      <img
-        v-for="img in printImages"
-        :key="img.id"
-        :src="img.src"
-        alt=""
-        :style="printImageStyle(img)"
-      />
-    </div>
+    <!-- Druckausgabe: am Bildschirm ausgeblendet, beim Drucken das einzig Sichtbare. -->
+    <PrintRoot />
   </div>
 </template>
