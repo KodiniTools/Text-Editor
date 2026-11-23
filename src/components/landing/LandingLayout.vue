@@ -2,7 +2,6 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, type RouteLocationRaw } from 'vue-router'
 import { useI18n } from '@/i18n'
-import kodiniLogo from '@/assets/brand/kodini-logo.webp'
 import '@/styles/landing.css'
 
 /**
@@ -49,7 +48,6 @@ onBeforeUnmount(() => window.removeEventListener('scroll', handleScroll))
     <header class="landing-header" :class="{ scrolled: isScrolled }">
       <div class="header-content">
         <RouterLink :to="{ name: 'landing' }" class="header-logo">
-          <img :src="kodiniLogo" alt="" width="32" height="32" />
           <span>Texteditor</span>
         </RouterLink>
         <nav class="header-nav" :aria-label="t.landing.nav.label">
