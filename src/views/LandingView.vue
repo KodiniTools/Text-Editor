@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from '@/i18n'
 import LandingLayout from '@/components/landing/LandingLayout.vue'
 import LandingIcon, { type LandingIconName } from '@/components/landing/LandingIcon.vue'
-import { useDocumentTheme } from '@/composables/useDocumentTheme'
 
 const { t } = useI18n()
 
@@ -20,17 +19,13 @@ const featureCards = computed(() =>
 
 const guideSteps = computed(() => t.value.landing.guide.steps)
 
-// Hero-Bild je Theme aus public/image (zum Austauschen nur die Dateien ersetzen).
-// Fehlt eine Datei, wird der Bildbereich ausgeblendet statt ein kaputtes Bild zu zeigen.
-// width/height muessen zum echten Seitenverhaeltnis der Datei passen (reserviert
+// Ein Hero-Bild fuer beide Themes aus public/image (zum Austauschen nur die Datei ersetzen).
+// Fehlt die Datei, wird der Bildbereich ausgeblendet statt ein kaputtes Bild zu zeigen.
+// width/height muessen zum echten Seitenverhaeltnis (1:1) der Datei passen (reserviert
 // die Hoehe vor dem Laden, kein Layout-Shift; Test in tests/landing.spec.ts).
-const HERO_LIGHT = { file: 'hero-light.webp', width: 1535, height: 1535 }
-const HERO_DARK = { file: 'hero-dark.webp', width: 640, height: 905 }
-const { isDark } = useDocumentTheme()
-const heroImage = computed(() => (isDark.value ? HERO_DARK : HERO_LIGHT))
-const heroSrc = computed(() => `${import.meta.env.BASE_URL}image/${heroImage.value.file}`)
+const HERO_IMAGE = { file: 'hero.webp', width: 1535, height: 1535 }
+const heroSrc = `${import.meta.env.BASE_URL}image/${HERO_IMAGE.file}`
 const heroFailed = ref(false)
-watch(heroSrc, () => (heroFailed.value = false))
 
 const activeFaq = ref<number | null>(null)
 function toggleFaq(index: number): void {
@@ -59,12 +54,11 @@ function toggleFaq(index: number): void {
       <div v-if="!heroFailed" class="hero-visual">
         <div class="hero-image-frame">
           <img
-            :key="heroSrc"
             :src="heroSrc"
             :alt="t.landing.hero.imageAlt"
             class="hero-image"
-            :width="heroImage.width"
-            :height="heroImage.height"
+            :width="HERO_IMAGE.width"
+            :height="HERO_IMAGE.height"
             fetchpriority="high"
             decoding="async"
             @error="heroFailed = true"

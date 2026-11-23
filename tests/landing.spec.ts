@@ -188,34 +188,28 @@ describe('EditorToolbar', () => {
 })
 
 describe('Hero-Bild', () => {
-  it('waehlt das Bild passend zum Theme und wechselt mit', async () => {
+  it('zeigt in beiden Themes dasselbe Bild', async () => {
     document.documentElement.setAttribute('data-theme', 'light')
     const wrapper = await mountAt('/', LandingView)
     const img = () => wrapper.find('img.hero-image')
-    expect(img().attributes('src')).toBe('/texteditor/image/hero-light.webp')
+    expect(img().attributes('src')).toBe('/texteditor/image/hero.webp')
     document.documentElement.setAttribute('data-theme', 'dark')
     await flushPromises()
-    expect(img().attributes('src')).toBe('/texteditor/image/hero-dark.webp')
+    expect(img().attributes('src')).toBe('/texteditor/image/hero.webp')
     wrapper.unmount()
   })
 
-  it('width/height entsprechen dem echten Seitenverhaeltnis der Dateien', async () => {
+  it('width/height entsprechen dem echten Seitenverhaeltnis 1:1 der Datei', async () => {
     // Lighthouse (Best Practices) bemaengelt sonst "Bilder mit falschem
     // Seitenverhaeltnis"; stimmige Attribute reservieren zudem die richtige
     // Hoehe vor dem Laden (kein Layout-Shift).
     const wrapper = await mountAt('/', LandingView)
-    // Hell und Dunkel haben eigene Dateien mit eigenem Seitenverhaeltnis.
-    for (const theme of ['light', 'dark'] as const) {
-      document.documentElement.setAttribute('data-theme', theme)
-      await flushPromises()
-      const img = wrapper.find('img.hero-image')
-      const name = `hero-${theme}.webp`
-      expect(img.attributes('src')).toBe(`/texteditor/image/${name}`)
-      const width = Number(img.attributes('width'))
-      const height = Number(img.attributes('height'))
-      const file = readWebpSize(join(__dirname, '..', 'public', 'image', name))
-      expect(width / height, name).toBeCloseTo(file.width / file.height, 2)
-    }
+    const img = wrapper.find('img.hero-image')
+    const width = Number(img.attributes('width'))
+    const height = Number(img.attributes('height'))
+    expect(width / height).toBe(1)
+    const file = readWebpSize(join(__dirname, '..', 'public', 'image', 'hero.webp'))
+    expect(width / height).toBeCloseTo(file.width / file.height, 2)
     wrapper.unmount()
   })
 

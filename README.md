@@ -20,10 +20,10 @@ Farbschema (hell/dunkel), Abstaende, Karten, Buttons und FAQ sind 1:1 aus der Vi
 uebernommen (`src/styles/landing.css`, gekapselt unter `.landing-page`). Hell/Dunkel folgt `data-theme`
 der globalen Navigation. Keine Icon-Fonts, nur Inline-SVG (`components/landing/LandingIcon.vue`).
 
-Hero-Bild: `public/image/hero-light.webp` und `public/image/hero-dark.webp` (je nach Design, wird bei
-einem Wechsel sofort getauscht). Empfohlen 832 × 1248 px, WebP, < 100 KB; angezeigt mit max. 320 px
-Breite ab 768 px Bildschirmbreite. Zum Austauschen die Dateien gleichen Namens ersetzen; fehlt eine
-Datei, wird der Bildbereich ausgeblendet.
+Hero-Bild: `public/image/hero.webp`, ein Bild fuer helles und dunkles Theme. Seitenverhaeltnis 1:1
+(aktuell 1535 × 1535 px), WebP; fuellt den Bildrahmen rechts im Hero randlos. Zum Austauschen die Datei
+gleichen Namens ersetzen (bei anderem Seitenverhaeltnis `HERO_IMAGE` in `src/views/LandingView.vue`
+anpassen); fehlt die Datei, wird der Bildbereich ausgeblendet.
 
 ## Funktionen
 
