@@ -50,12 +50,6 @@
   flex: 0 0 auto;
 }
 
-.landing-page .landing-header .header-logo img {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
-}
-
 .landing-page .landing-header .header-nav {
   gap: clamp(6px, 1.4vw, 16px);
 }
