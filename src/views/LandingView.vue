@@ -22,10 +22,13 @@ const guideSteps = computed(() => t.value.landing.guide.steps)
 
 // Hero-Bild je Theme aus public/image (zum Austauschen nur die Dateien ersetzen).
 // Fehlt eine Datei, wird der Bildbereich ausgeblendet statt ein kaputtes Bild zu zeigen.
+// width/height muessen zum echten Seitenverhaeltnis der Datei passen (reserviert
+// die Hoehe vor dem Laden, kein Layout-Shift; Test in tests/landing.spec.ts).
+const HERO_LIGHT = { file: 'hero-light.webp', width: 1535, height: 1535 }
+const HERO_DARK = { file: 'hero-dark.webp', width: 640, height: 905 }
 const { isDark } = useDocumentTheme()
-const heroSrc = computed(
-  () => `${import.meta.env.BASE_URL}image/hero-${isDark.value ? 'dark' : 'light'}.webp`,
-)
+const heroImage = computed(() => (isDark.value ? HERO_DARK : HERO_LIGHT))
+const heroSrc = computed(() => `${import.meta.env.BASE_URL}image/${heroImage.value.file}`)
 const heroFailed = ref(false)
 watch(heroSrc, () => (heroFailed.value = false))
 
@@ -60,8 +63,8 @@ function toggleFaq(index: number): void {
             :src="heroSrc"
             :alt="t.landing.hero.imageAlt"
             class="hero-image"
-            width="640"
-            height="905"
+            :width="heroImage.width"
+            :height="heroImage.height"
             fetchpriority="high"
             decoding="async"
             @error="heroFailed = true"

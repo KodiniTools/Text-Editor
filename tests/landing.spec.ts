@@ -204,10 +204,15 @@ describe('Hero-Bild', () => {
     // Seitenverhaeltnis"; stimmige Attribute reservieren zudem die richtige
     // Hoehe vor dem Laden (kein Layout-Shift).
     const wrapper = await mountAt('/', LandingView)
-    const img = wrapper.find('img.hero-image')
-    const width = Number(img.attributes('width'))
-    const height = Number(img.attributes('height'))
-    for (const name of ['hero-light.webp', 'hero-dark.webp']) {
+    // Hell und Dunkel haben eigene Dateien mit eigenem Seitenverhaeltnis.
+    for (const theme of ['light', 'dark'] as const) {
+      document.documentElement.setAttribute('data-theme', theme)
+      await flushPromises()
+      const img = wrapper.find('img.hero-image')
+      const name = `hero-${theme}.webp`
+      expect(img.attributes('src')).toBe(`/texteditor/image/${name}`)
+      const width = Number(img.attributes('width'))
+      const height = Number(img.attributes('height'))
       const file = readWebpSize(join(__dirname, '..', 'public', 'image', name))
       expect(width / height, name).toBeCloseTo(file.width / file.height, 2)
     }
