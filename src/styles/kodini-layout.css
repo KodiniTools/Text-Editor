@@ -53,8 +53,11 @@
   max-width: 440px;
 }
 
+/* Das Bild fuellt die Karte randlos; die Karte rundet und beschneidet es. */
 .landing-page .landing-main .hero-image-frame {
-  padding: clamp(12px, 2vw, 24px);
+  display: block;
+  padding: 0;
+  overflow: hidden;
   background: var(--ds-surface-1);
   border: var(--ds-border-width) solid var(--ds-border);
   border-radius: var(--ds-radius-lg);
@@ -62,7 +65,12 @@
 }
 
 .landing-page .landing-main .hero-image {
-  max-width: 280px;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  border: 0;
+  border-radius: 0;
 }
 
 .landing-page .landing-main :is(.features, .guide-section, .faq-section, .blog-section) {
