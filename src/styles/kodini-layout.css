@@ -121,6 +121,15 @@
     font-weight: 400;
   }
 
+  /* Auch Leisten-Texte mit font-semibold per @apply (.fb-label, .tb-start, Format-Chip)
+     sollen Regular sein: Tailwind liest die Gewichte aus --ds-weight-*. */
+  .kodini-editor-shell
+    :is(.kodini-document-tabs, .kodini-toolbar, .kodini-format-bar, .kodini-status-bar) {
+    --ds-weight-medium: 400;
+    --ds-weight-semibold: 400;
+    --ds-weight-bold: 400;
+  }
+
   .landing-page .landing-main .hero-actions .btn-primary {
     background: #8f6320;
     color: #fff;
@@ -148,5 +157,11 @@
   .kodini-editor-shell .page-sheet .editor-rich:empty::before,
   .kodini-editor-shell .page-sheet .editor-rich:has(> br:only-child)::before {
     color: #475870;
+  }
+
+  /* Links auf dem weissen Blatt: im dunklen Theme waere --ds-link (#6aaef5) auf
+     Weiss nur etwa 2,5:1. Deshalb der Link-Wert des hellen Themes. */
+  .kodini-editor-shell .page-sheet .editor-rich a {
+    color: #0f5aa8;
   }
 }

@@ -465,7 +465,8 @@ defineExpose({
   justify-content: center;
   overflow: auto;
   padding: 1rem;
-  background: var(--kt-layout-desk, var(--ds-surface-2));
+  /* nur die Farbe: der Verlauf aus kodini-layout.css liegt als background-image darueber */
+  background-color: var(--kt-layout-desk, var(--ds-surface-2));
 }
 
 .page-canvas {
