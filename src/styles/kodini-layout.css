@@ -1,99 +1,167 @@
 /* Grundflächen und Abstände für den Texteditor. */
 :root {
-  --kt-layout-glow: #163548;
-  --kt-layout-desk: #0d1729;
-  --kt-layout-heading-accent: #f2c77d;
-  --kt-layout-width: 1180px;
-  --kt-layout-gutter: clamp(16px, 4vw, 48px);
+  --kt-layout-glow: #12364b;
+  --kt-layout-desk: #0c1628;
+  --kt-layout-heading-accent: #d4a257;
+  --kt-layout-width: 1240px;
+  --kt-layout-gutter: clamp(12px, 3vw, 24px);
   --kt-layout-section-space: clamp(36px, 6vw, 72px);
 }
 
 :root[data-theme='light'] {
-  --kt-layout-glow: #d8ecf0;
-  --kt-layout-desk: #e7edf4;
-  --kt-layout-heading-accent: #79521c;
+  --kt-layout-glow: #dbeef4;
+  --kt-layout-desk: #e1e8ee;
+  --kt-layout-heading-accent: #80551c;
 }
 
-.landing-page .landing-main .hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  min-height: 0;
-  gap: clamp(24px, 5vw, 64px);
-  padding: clamp(44px, 7vw, 88px) var(--kt-layout-gutter);
-  background: radial-gradient(ellipse at 84% 38%, var(--kt-layout-glow), var(--ds-surface-0) 73%);
-}
+@media screen {
+  .landing-page .landing-main,
+  .kodini-editor-shell {
+    background-image: radial-gradient(ellipse at 74% 0%, var(--kt-layout-glow), transparent 48rem);
+  }
 
-.landing-page .landing-main .hero-content {
-  max-width: 650px;
-  text-align: left;
-  z-index: auto;
-}
+  .landing-page .landing-main {
+    --ds-weight-medium: 400;
+    --ds-weight-semibold: 400;
+    --ds-weight-bold: 400;
+  }
 
-.landing-page .landing-main .hero-title {
-  font-size: clamp(2.25rem, 5vw, 4.75rem);
-  overflow-wrap: anywhere;
-}
-
-.landing-page .landing-main .hero-highlight {
-  display: block;
-  color: var(--kt-layout-heading-accent);
-}
-
-.landing-page .landing-main .hero-subtitle {
-  margin-inline: 0;
-}
-
-.landing-page .landing-main .hero-actions {
-  justify-content: flex-start;
-}
-
-.landing-page .landing-main .hero-visual {
-  display: block;
-  width: 100%;
-  max-width: 440px;
-}
-
-/* Das Bild fuellt die Karte randlos; die Karte rundet und beschneidet es. */
-.landing-page .landing-main .hero-image-frame {
-  display: block;
-  padding: 0;
-  overflow: hidden;
-  background: var(--ds-surface-1);
-  border: var(--ds-border-width) solid var(--ds-border);
-  border-radius: var(--ds-radius-lg);
-  box-shadow: var(--ds-shadow-overlay);
-}
-
-.landing-page .landing-main .hero-image {
-  display: block;
-  width: 100%;
-  max-width: none;
-  height: auto;
-  border: 0;
-  border-radius: 0;
-}
-
-.landing-page .landing-main :is(.features, .guide-section, .faq-section, .blog-section) {
-  width: 100%;
-  max-width: calc(var(--kt-layout-width) + 2 * var(--kt-layout-gutter));
-  padding: var(--kt-layout-section-space) var(--kt-layout-gutter);
-}
-
-.landing-page .landing-main :is(.features-grid, .guide-grid) {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-}
-
-@media (min-width: 768px) {
   .landing-page .landing-main .hero {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    padding-inline: max(var(--kt-layout-gutter), calc((100% - var(--kt-layout-width)) / 2));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    align-items: center;
+    gap: clamp(16px, 4vw, 40px);
+    width: min(var(--kt-layout-width), calc(100% - 2 * var(--kt-layout-gutter)));
+    margin: clamp(16px, 3vw, 32px) auto 0;
+    padding: clamp(18px, 4vw, 55px);
+    background: linear-gradient(130deg, var(--ds-surface-1) 46%, var(--kt-layout-glow));
+    border: var(--ds-border-width) solid var(--ds-border-strong);
+    border-radius: 18px;
+  }
+
+  .landing-page .landing-main .hero-content {
+    max-width: 650px;
+    text-align: left;
+    z-index: auto;
+  }
+
+  .landing-page .landing-main .hero-title {
+    font-size: clamp(2.25rem, 5vw, 4.75rem);
+    overflow-wrap: anywhere;
+    letter-spacing: -0.045em;
+  }
+
+  .landing-page .landing-main .hero-highlight {
+    display: block;
+    color: inherit;
+  }
+
+  .landing-page .landing-main .hero-subtitle {
+    margin-inline: 0;
+  }
+
+  .landing-page .landing-main .hero-actions {
+    justify-content: flex-start;
   }
 
   .landing-page .landing-main .hero-visual {
-    justify-self: end;
+    display: block;
+    width: 100%;
+    min-width: 0;
   }
-}
 
-.kodini-editor-shell {
-  min-width: 0;
+  /* Das Bild fuellt die Karte randlos; die Karte rundet und beschneidet es. */
+  .landing-page .landing-main .hero-image-frame {
+    display: block;
+    padding: 0;
+    overflow: hidden;
+    background: var(--ds-surface-1);
+    border: var(--ds-border-width) solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
+    box-shadow: var(--ds-shadow-overlay);
+  }
+
+  .landing-page .landing-main .hero-image {
+    display: block;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .landing-page .landing-main :is(.features, .guide-section, .faq-section, .blog-section) {
+    width: 100%;
+    max-width: calc(var(--kt-layout-width) + 2 * var(--kt-layout-gutter));
+    padding: var(--kt-layout-section-space) var(--kt-layout-gutter);
+  }
+
+  .landing-page .landing-main :is(.features-grid, .guide-grid) {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  }
+
+  @media (min-width: 768px) {
+    .landing-page .landing-main .hero {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    }
+
+    .landing-page .landing-main .hero-visual {
+      justify-self: end;
+    }
+  }
+
+  .kodini-editor-shell {
+    min-width: 0;
+  }
+
+  .kodini-editor-shell
+    :is(.kodini-document-tabs, .kodini-toolbar, .kodini-format-bar, .kodini-status-bar)
+    :is(button, select, input, label, .font-semibold) {
+    font-weight: 400;
+  }
+
+  /* Auch Leisten-Texte mit font-semibold per @apply (.fb-label, .tb-start, Format-Chip)
+     sollen Regular sein: Tailwind liest die Gewichte aus --ds-weight-*. */
+  .kodini-editor-shell
+    :is(.kodini-document-tabs, .kodini-toolbar, .kodini-format-bar, .kodini-status-bar) {
+    --ds-weight-medium: 400;
+    --ds-weight-semibold: 400;
+    --ds-weight-bold: 400;
+  }
+
+  .landing-page .landing-main .hero-actions .btn-primary {
+    background: #8f6320;
+    color: #fff;
+    border-color: #ad7d38;
+  }
+
+  .landing-page .landing-main .hero-actions .btn-primary:hover {
+    background: #79531a;
+  }
+
+  .landing-page .landing-main .feature-title {
+    color: var(--kt-layout-heading-accent);
+  }
+
+  .kodini-editor-shell .page-backdrop,
+  .kodini-editor-shell .plain-scroll {
+    background-image: radial-gradient(ellipse at top, var(--kt-layout-glow), transparent 85%);
+  }
+
+  .kodini-editor-shell .page-backdrop .page-sheet {
+    background-color: #fff;
+    color: #202e41;
+  }
+
+  .kodini-editor-shell .page-sheet .editor-rich:empty::before,
+  .kodini-editor-shell .page-sheet .editor-rich:has(> br:only-child)::before {
+    color: #475870;
+  }
+
+  /* Links auf dem weissen Blatt: im dunklen Theme waere --ds-link (#6aaef5) auf
+     Weiss nur etwa 2,5:1. Deshalb der Link-Wert des hellen Themes. */
+  .kodini-editor-shell .page-sheet .editor-rich a {
+    color: #0f5aa8;
+  }
 }
