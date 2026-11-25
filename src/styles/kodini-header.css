@@ -1,31 +1,82 @@
-/* Gilt für den eingebetteten und den live nachgeladenen Navigations-Partial. */
+/* Texteditor-Header für das globale Partial und die lokale Seitennavigation. */
+#global-nav-slot .global-nav,
+.landing-page .landing-header {
+  --kt-header-bg: color-mix(in srgb, var(--ds-surface-1) 87%, var(--kt-layout-glow));
+  --kt-header-border: color-mix(in srgb, var(--ds-border-strong) 84%, var(--kt-layout-glow));
+  --kt-header-gold: #8f6320;
+  --kt-header-gold-hover: #79531a;
+}
+
 #global-nav-slot .global-nav {
-  --nav-bg: var(--ds-surface-0);
+  --nav-bg: var(--kt-header-bg);
   --nav-text: var(--ds-text);
   --nav-text-hover: var(--kt-layout-heading-accent);
   --nav-bg-hover: var(--ds-surface-2);
-  --nav-border: var(--ds-border);
+  --nav-border: var(--kt-header-border);
   --dropdown-bg: var(--ds-surface-1);
-  --dropdown-border: var(--ds-border);
-  --accent-color: var(--ds-accent);
-  background-color: var(--nav-bg) !important;
+  --dropdown-border: var(--kt-header-border);
+  --accent-color: var(--kt-layout-heading-accent);
+  background: var(--nav-bg) !important;
   border-bottom-color: var(--nav-border);
 }
 
-#global-nav-slot .global-nav .global-nav-dropdown-menu {
-  background-color: var(--dropdown-bg) !important;
+#global-nav-slot .global-nav .global-nav-container {
+  max-width: calc(var(--kt-layout-width) + 2 * var(--kt-layout-gutter));
+  padding-inline: var(--kt-layout-gutter);
 }
 
-#global-nav-slot .global-nav :is(.global-nav-link, .global-nav-dropdown-toggle):hover,
-#global-nav-slot .global-nav :is(.global-nav-dropdown-item, .global-nav-theme-toggle):hover {
-  background-color: var(--nav-bg-hover) !important;
-  color: var(--nav-text-hover);
+#global-nav-slot .global-nav :is(a, button) {
+  font-family: var(--ds-font-sans);
+  font-weight: 400;
+}
+
+#global-nav-slot .global-nav .global-nav-brand:hover {
   transform: none;
 }
 
-#global-nav-slot .global-nav .global-nav-lang-btn.active {
-  background-color: var(--ds-accent) !important;
-  color: var(--ds-on-accent);
+#global-nav-slot .global-nav .global-nav-dropdown-menu {
+  background: var(--dropdown-bg) !important;
+  border-color: var(--dropdown-border);
+}
+
+#global-nav-slot
+  .global-nav
+  :is(.global-nav-link, .global-nav-dropdown-toggle, .global-nav-dropdown-item):hover,
+#global-nav-slot .global-nav .global-nav-dropdown-toggle[aria-expanded='true'] {
+  background: var(--nav-bg-hover) !important;
+  color: var(--nav-text-hover);
+  transform: none;
+  box-shadow: none;
+}
+
+@media (min-width: 769px) {
+  #global-nav-slot .global-nav .global-nav-dropdown-item:hover {
+    padding-inline-start: 20px;
+  }
+}
+
+#global-nav-slot .global-nav :is(.global-nav-theme-toggle, .global-nav-lang-switcher) {
+  background: var(--ds-surface-1);
+  border-color: var(--nav-border);
+}
+
+#global-nav-slot .global-nav .global-nav-theme-toggle {
+  min-width: 40px;
+  min-height: 40px;
+  color: var(--nav-text);
+}
+
+#global-nav-slot .global-nav .global-nav-theme-toggle:hover {
+  background: var(--nav-bg-hover) !important;
+  border-color: var(--accent-color);
+  box-shadow: none;
+}
+
+/* Doppelte ID mit !important: style.css setzt die Textfarbe aller Partial-Elemente
+   per body > :not(#app) … * { color: var(--ds-text) !important } (Spezifitaet 1,6,2). */
+#global-nav-slot#global-nav-slot .global-nav .global-nav-lang-btn.active {
+  background: var(--kt-header-gold) !important;
+  color: #fff !important;
 }
 
 #global-nav-slot .global-nav :is(a, button):focus-visible {
@@ -34,11 +85,13 @@
 }
 
 .landing-page .landing-header {
-  background-color: var(--ds-surface-0);
+  background: var(--kt-header-bg);
+  border-bottom-color: var(--kt-header-border);
+  padding-inline: var(--kt-layout-gutter);
 }
 
 .landing-page .landing-header.scrolled {
-  box-shadow: 0 1px 0 var(--ds-border);
+  box-shadow: 0 1px 0 var(--kt-header-border);
 }
 
 .landing-page .landing-header .header-content {
@@ -51,17 +104,28 @@
 }
 
 .landing-page .landing-header .header-nav {
-  gap: clamp(6px, 1.4vw, 16px);
+  min-width: 0;
+  gap: clamp(4px, 1vw, 12px);
+}
+
+.landing-page .landing-header :is(.header-logo, .nav-link) {
+  font-weight: 400;
 }
 
 .landing-page .landing-header .nav-link {
-  padding: 7px 10px;
-  border-radius: var(--ds-radius-sm);
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--ds-radius-md);
 }
 
 .landing-page .landing-header .nav-link:is(:hover, .active) {
   color: var(--kt-layout-heading-accent);
   background: var(--ds-surface-2);
+  border-color: var(--kt-header-border);
+}
+
+.landing-page .landing-header .nav-link.active {
+  border-bottom-color: var(--kt-layout-heading-accent);
 }
 
 .landing-page .landing-header .nav-link.active::after {
@@ -69,18 +133,18 @@
 }
 
 .landing-page .landing-header .nav-link-editor {
-  color: var(--ds-on-accent);
-  background: var(--ds-accent);
+  color: #fff;
+  background: var(--kt-header-gold);
 }
 
 .landing-page .landing-header .nav-link-editor:hover {
-  color: var(--ds-on-accent);
-  background: var(--ds-accent-hover);
+  color: #fff;
+  background: var(--kt-header-gold-hover);
 }
 
 @media (max-width: 768px) {
   #global-nav-slot .global-nav .global-nav-links {
-    background-color: var(--ds-surface-0) !important;
+    background: var(--nav-bg) !important;
   }
 
   .landing-page .landing-header .header-content {
@@ -93,7 +157,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #global-nav-slot .global-nav .global-nav-dropdown-menu {
+  #global-nav-slot .global-nav :is(a, button, .global-nav-dropdown-menu),
+  .landing-page .landing-header :is(.header-logo, .nav-link) {
     transition: none;
   }
 }
