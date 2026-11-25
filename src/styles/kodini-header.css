@@ -72,9 +72,11 @@
   box-shadow: none;
 }
 
-#global-nav-slot .global-nav .global-nav-lang-btn.active {
+/* Doppelte ID mit !important: style.css setzt die Textfarbe aller Partial-Elemente
+   per body > :not(#app) … * { color: var(--ds-text) !important } (Spezifitaet 1,6,2). */
+#global-nav-slot#global-nav-slot .global-nav .global-nav-lang-btn.active {
   background: var(--kt-header-gold) !important;
-  color: #fff;
+  color: #fff !important;
 }
 
 #global-nav-slot .global-nav :is(a, button):focus-visible {
