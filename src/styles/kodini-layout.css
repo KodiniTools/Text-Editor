@@ -6,18 +6,51 @@
   --kt-layout-width: 1240px;
   --kt-layout-gutter: clamp(12px, 3vw, 24px);
   --kt-layout-section-space: clamp(36px, 6vw, 72px);
+  /* Goldverlauf fuer alle Gold-Schaltflaechen (Landing, Header, Dialoge, Vorschau). */
+  --kt-gold-1: #9c6c26;
+  --kt-gold-2: #7a5218;
+  --kt-gold-3: #4a2f0a;
+  --kt-gold-gradient: linear-gradient(
+    180deg,
+    var(--kt-gold-1),
+    var(--kt-gold-2) 50%,
+    var(--kt-gold-3)
+  );
+  --kt-gold-gradient-hover: linear-gradient(180deg, var(--kt-gold-2), var(--kt-gold-3));
+  --kt-landing-bg: #0a1324;
+  --kt-landing-light-cyan: rgb(105 215 233 / 16%);
+  --kt-landing-light-blue: rgb(72 160 216 / 18%);
+  --kt-landing-highlight: #48a0d8;
+  --kt-landing-subtitle: #69d7e9;
 }
 
 :root[data-theme='light'] {
   --kt-layout-glow: #dbeef4;
   --kt-layout-desk: #e1e8ee;
   --kt-layout-heading-accent: #80551c;
+  --kt-landing-bg: #f6f5f1;
+  --kt-landing-light-cyan: rgb(8 106 128 / 10%);
+  --kt-landing-light-blue: rgb(0 88 160 / 9%);
+  --kt-landing-highlight: #0058a0;
+  --kt-landing-subtitle: #086a80;
 }
 
 @media screen {
-  .landing-page .landing-main,
   .kodini-editor-shell {
     background-image: radial-gradient(ellipse at 74% 0%, var(--kt-layout-glow), transparent 48rem);
+  }
+
+  /* Seitenhintergrund mit zwei Lichtverlaeufen oben: cyan rechts, blau links. */
+  .landing-page,
+  .landing-page .landing-main {
+    background-color: var(--kt-landing-bg);
+  }
+
+  .landing-page .landing-main {
+    background-image:
+      radial-gradient(42rem 42rem at 100% 0%, var(--kt-landing-light-cyan), transparent 70%),
+      radial-gradient(42rem 42rem at 0% 0%, var(--kt-landing-light-blue), transparent 70%);
+    background-repeat: no-repeat;
   }
 
   .landing-page .landing-main {
@@ -46,19 +79,24 @@
     z-index: auto;
   }
 
+  /* Hauptueberschrift: Dunkelgold, Hervorhebung im Logo-Blau. */
   .landing-page .landing-main .hero-title {
-    font-size: clamp(2.25rem, 5vw, 4.75rem);
+    font-size: clamp(2.25rem, 5.25vw, 4.5rem);
+    line-height: 1.05;
     overflow-wrap: anywhere;
     letter-spacing: -0.045em;
+    color: var(--kt-layout-heading-accent);
   }
 
   .landing-page .landing-main .hero-highlight {
     display: block;
-    color: inherit;
+    color: var(--kt-landing-highlight);
   }
 
   .landing-page .landing-main .hero-subtitle {
     margin-inline: 0;
+    font-size: 16px;
+    color: var(--kt-landing-subtitle);
   }
 
   .landing-page .landing-main .hero-actions {
@@ -131,18 +169,46 @@
     --ds-weight-bold: 400;
   }
 
-  .landing-page .landing-main .hero-actions .btn-primary {
-    background: #8f6320;
-    color: #fff;
-    border-color: #ad7d38;
-  }
-
-  .landing-page .landing-main .hero-actions .btn-primary:hover {
-    background: #79531a;
-  }
-
   .landing-page .landing-main .feature-title {
     color: var(--kt-layout-heading-accent);
+    font-size: 16px;
+  }
+
+  .landing-page .landing-main .section-title {
+    font-size: 24px;
+  }
+
+  .landing-page .landing-main .feature-card {
+    border-radius: 16px;
+    background: linear-gradient(160deg, var(--ds-surface-1) 55%, var(--kt-layout-glow));
+  }
+
+  /* Buttons: 40 px, Radius 10 px, 16 px Schrift. Primaer Goldverlauf,
+     sekundaer dezenter Flaechenverlauf (Hierarchie bleibt erkennbar). */
+  .landing-page .landing-main :is(.btn-primary, .btn-secondary) {
+    min-height: 40px;
+    padding-block: 0;
+    padding-inline: 18px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+
+  .landing-page .landing-main .btn-primary {
+    background: var(--kt-gold-gradient);
+    color: #fff;
+    border-color: var(--kt-gold-3);
+  }
+
+  .landing-page .landing-main .btn-primary:hover {
+    background: var(--kt-gold-gradient-hover);
+  }
+
+  .landing-page .landing-main .btn-secondary {
+    background: linear-gradient(180deg, var(--ds-surface-1), var(--ds-surface-2));
+  }
+
+  .landing-page .landing-main .btn-secondary:hover {
+    background: linear-gradient(180deg, var(--ds-surface-2), var(--ds-surface-2));
   }
 
   .kodini-editor-shell .page-backdrop,
