@@ -113,13 +113,13 @@
 }
 
 #modal-portal :is(.kodini-tool-menu, .ui-dialog) .ui-button--primary:not(:disabled) {
-  background: #8f6320;
-  border-color: #ad7d38;
+  background: var(--kt-gold-gradient);
+  border-color: var(--kt-gold-3);
   color: #fff;
 }
 
 #modal-portal :is(.kodini-tool-menu, .ui-dialog) .ui-button--primary:not(:disabled):hover {
-  background: #79531a;
+  background: var(--kt-gold-gradient-hover);
 }
 
 .kodini-find-panel :is(button, input):focus-visible,

@@ -3,8 +3,6 @@
 .landing-page .landing-header {
   --kt-header-bg: color-mix(in srgb, var(--ds-surface-1) 87%, var(--kt-layout-glow));
   --kt-header-border: color-mix(in srgb, var(--ds-border-strong) 84%, var(--kt-layout-glow));
-  --kt-header-gold: #8f6320;
-  --kt-header-gold-hover: #79531a;
 }
 
 #global-nav-slot .global-nav {
@@ -75,7 +73,7 @@
 /* Doppelte ID mit !important: style.css setzt die Textfarbe aller Partial-Elemente
    per body > :not(#app) … * { color: var(--ds-text) !important } (Spezifitaet 1,6,2). */
 #global-nav-slot#global-nav-slot .global-nav .global-nav-lang-btn.active {
-  background: var(--kt-header-gold) !important;
+  background: var(--kt-gold-gradient) !important;
   color: #fff !important;
 }
 
@@ -112,10 +110,22 @@
   font-weight: 400;
 }
 
+/* Leiste oben: 56 px (55 px Inhalt + 1 px Unterkante), Links als Tabs. */
+.landing-page .landing-header {
+  padding-block: 0;
+}
+
+.landing-page .landing-header .header-content {
+  min-height: 55px;
+}
+
 .landing-page .landing-header .nav-link {
-  padding: 8px 10px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
   border: 1px solid transparent;
-  border-radius: var(--ds-radius-md);
+  border-radius: 10px;
 }
 
 .landing-page .landing-header .nav-link:is(:hover, .active) {
@@ -124,8 +134,9 @@
   border-color: var(--kt-header-border);
 }
 
+/* Aktiver Tab: rundum goldumrandet. */
 .landing-page .landing-header .nav-link.active {
-  border-bottom-color: var(--kt-layout-heading-accent);
+  border-color: var(--kt-layout-heading-accent);
 }
 
 .landing-page .landing-header .nav-link.active::after {
@@ -134,12 +145,12 @@
 
 .landing-page .landing-header .nav-link-editor {
   color: #fff;
-  background: var(--kt-header-gold);
+  background: var(--kt-gold-gradient);
 }
 
 .landing-page .landing-header .nav-link-editor:hover {
   color: #fff;
-  background: var(--kt-header-gold-hover);
+  background: var(--kt-gold-gradient-hover);
 }
 
 @media (max-width: 768px) {
