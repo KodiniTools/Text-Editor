@@ -39,10 +39,24 @@ export async function loadGlobalNav(): Promise<void> {
     // Nur uebernehmen, wenn es wirklich die Navigation ist (kein index.html-
     // Fallback, keine Fehlerseite).
     if (!html.includes(NAV_MARKER)) return
+    // Erst nach DOMContentLoaded tauschen: Das eingebackene Nav-Skript bindet
+    // seine Listener per DOMContentLoaded an die dann vorhandenen Knoten. Kommt
+    // die Antwort vorher, wuerde es auf die NEUEN Knoten binden, die das neu
+    // ausgefuehrte Skript ebenfalls bindet -- doppelte Klick-Handler, und der
+    // Theme-Schalter schaltet hin und zurueck (wirkt "tot").
+    await domReady()
     replaceSlot(slot, html)
   } catch {
     /* offline / nicht erreichbar -> Fallback bleibt */
   }
+}
+
+/** Wartet, bis DOMContentLoaded gefeuert hat (sofort, wenn schon geschehen). */
+function domReady(): Promise<void> {
+  if (document.readyState !== 'loading') return Promise.resolve()
+  return new Promise((resolve) => {
+    document.addEventListener('DOMContentLoaded', () => resolve(), { once: true })
+  })
 }
 
 /**

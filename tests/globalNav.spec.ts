@@ -69,6 +69,22 @@ describe('loadGlobalNav', () => {
     expect(document.getElementById('global-nav-slot')!.innerHTML).toContain('EINGEBACKEN')
   })
 
+  it('tauscht erst nach DOMContentLoaded (keine doppelten Nav-Listener)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(response(LIVE))),
+    )
+    const state = vi.spyOn(document, 'readyState', 'get').mockReturnValue('loading')
+    const done = loadGlobalNav()
+    await new Promise((r) => setTimeout(r, 0))
+    const slot = document.getElementById('global-nav-slot')!
+    expect(slot.innerHTML).toContain('EINGEBACKEN')
+    state.mockReturnValue('interactive')
+    document.dispatchEvent(new Event('DOMContentLoaded'))
+    await done
+    expect(slot.innerHTML).toContain('LIVE-SERVER')
+  })
+
   it('macht nichts, wenn der Slot fehlt', async () => {
     document.body.innerHTML = ''
     const fetchMock = vi.fn(() => Promise.resolve(response(LIVE)))
